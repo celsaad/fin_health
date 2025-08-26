@@ -1,0 +1,206 @@
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  createdAt: String!
+  updatedAt: String!
+  accounts: [Account!]!
+  transactions: [Transaction!]!
+  categories: [Category!]!
+}
+
+type Account {
+  id: ID!
+  name: String!
+  type: AccountType!
+  balance: Float!
+  icon: String!
+  userId: ID!
+  user: User!
+  transactions: [Transaction!]!
+  createdAt: String!
+  updatedAt: String!
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT_CARD
+  INVESTMENT
+  LOAN
+}
+
+type Category {
+  id: ID!
+  name: String!
+  icon: String!
+  color: String!
+  userId: ID!
+  user: User!
+  subcategories: [Subcategory!]!
+  transactions: [Transaction!]!
+}
+
+type Subcategory {
+  id: ID!
+  name: String!
+  categoryId: ID!
+  category: Category!
+  transactions: [Transaction!]!
+}
+
+type Transaction {
+  id: ID!
+  name: String!
+  amount: Float!
+  date: String!
+  notes: String
+  hasNote: Boolean!
+  icon: String!
+  color: String!
+  userId: ID!
+  user: User!
+  accountId: ID!
+  account: Account!
+  categoryId: ID!
+  category: Category!
+  subcategoryId: ID
+  subcategory: Subcategory
+  createdAt: String!
+  updatedAt: String!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  name: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateAccountInput {
+  name: String!
+  type: AccountType!
+  balance: Float!
+  icon: String!
+}
+
+input UpdateAccountInput {
+  name: String
+  balance: Float
+  icon: String
+}
+
+input CreateTransactionInput {
+  name: String!
+  amount: Float!
+  date: String!
+  notes: String
+  icon: String!
+  color: String!
+  accountId: ID!
+  categoryId: ID!
+  subcategoryId: ID
+}
+
+input UpdateTransactionInput {
+  name: String
+  amount: Float
+  date: String
+  notes: String
+  icon: String
+  color: String
+  accountId: ID
+  categoryId: ID
+  subcategoryId: ID
+}
+
+input CreateCategoryInput {
+  name: String!
+  icon: String!
+  color: String!
+}
+
+input UpdateCategoryInput {
+  name: String
+  icon: String
+  color: String
+}
+
+input CreateSubcategoryInput {
+  name: String!
+  categoryId: ID!
+}
+
+input UpdateSubcategoryInput {
+  name: String
+  categoryId: ID
+}
+
+input TransactionFilter {
+  accountId: ID
+  categoryId: ID
+  subcategoryId: ID
+  dateFrom: String
+  dateTo: String
+  amountMin: Float
+  amountMax: Float
+  search: String
+}
+
+type Query {
+  # User queries
+  me: User!
+  
+  # Account queries
+  accounts: [Account!]!
+  account(id: ID!): Account
+  
+  # Transaction queries
+  transactions(filter: TransactionFilter, limit: Int, offset: Int): [Transaction!]!
+  transaction(id: ID!): Transaction
+  
+  # Category queries
+  categories: [Category!]!
+  category(id: ID!): Category
+  
+  # Financial metrics
+  netWorth: Float!
+  monthlySpending(year: Int!, month: Int!): Float!
+  savingsRate(year: Int!, month: Int!): Float!
+  debtToIncomeRatio: Float!
+}
+
+type Mutation {
+  # Auth mutations
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  
+  # Account mutations
+  createAccount(input: CreateAccountInput!): Account!
+  updateAccount(id: ID!, input: UpdateAccountInput!): Account!
+  deleteAccount(id: ID!): Boolean!
+  
+  # Transaction mutations
+  createTransaction(input: CreateTransactionInput!): Transaction!
+  updateTransaction(id: ID!, input: UpdateTransactionInput!): Transaction!
+  deleteTransaction(id: ID!): Boolean!
+  
+  # Category mutations
+  createCategory(input: CreateCategoryInput!): Category!
+  updateCategory(id: ID!, input: UpdateCategoryInput!): Category!
+  deleteCategory(id: ID!): Boolean!
+  
+  # Subcategory mutations
+  createSubcategory(input: CreateSubcategoryInput!): Subcategory!
+  updateSubcategory(id: ID!, input: UpdateSubcategoryInput!): Subcategory!
+  deleteSubcategory(id: ID!): Boolean!
+}
