@@ -17,11 +17,55 @@ A Go-based GraphQL API server for the Finance Health mobile application with JWT
 
 ### Prerequisites
 
-- Go 1.21 or higher
+#### Docker Installation (Recommended)
+- Docker
+- Docker Compose
+
+#### Local Development
+- Go 1.23 or higher
 - PostgreSQL database
 - Environment variables (optional)
 
 ### Installation
+
+#### Option 1: Docker (Recommended)
+
+1. Navigate to the server directory:
+
+```bash
+cd server
+```
+
+2. Start the services (PostgreSQL + Go server):
+
+```bash
+docker-compose up -d
+```
+
+3. View logs:
+
+```bash
+docker-compose logs -f
+```
+
+4. Stop the services:
+
+```bash
+docker-compose down
+```
+
+5. Rebuild and restart (if you make code changes):
+
+```bash
+docker-compose up --build -d
+```
+
+**Access points:**
+- Server: http://localhost:8080
+- GraphQL Playground: http://localhost:8080/
+- Database: localhost:5432 (postgres/password)
+
+#### Option 2: Local Development
 
 1. Clone the repository and navigate to the server directory:
 

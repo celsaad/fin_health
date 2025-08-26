@@ -471,7 +471,14 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 
 // Accounts is the resolver for the accounts field.
 func (r *queryResolver) Accounts(ctx context.Context) ([]*model.Account, error) {
-	userID := ctx.Value("user_id").(uint)
+	userIDValue := ctx.Value("user_id")
+	fmt.Printf("DEBUG: userID from context: %v (type: %T)\n", userIDValue, userIDValue)
+	
+	if userIDValue == nil {
+		return nil, fmt.Errorf("user not authenticated")
+	}
+	
+	userID := userIDValue.(uint)
 
 	var accounts []database.Account
 	if err := r.DB.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
