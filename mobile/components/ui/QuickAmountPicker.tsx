@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -8,9 +8,9 @@ import {
 } from "react-native";
 
 export interface QuickAmountPickerProps {
-  amounts: string[];
-  selectedAmount?: string;
-  onAmountSelect: (amount: string) => void;
+  amounts: number[];
+  selectedAmount?: number;
+  onAmountSelect: (amount: number) => void;
   style?: ViewStyle;
 }
 
@@ -21,7 +21,7 @@ export default function QuickAmountPicker({
   style,
 }: QuickAmountPickerProps) {
   const handleAmountSelect = useCallback(
-    (amount: string) => () => {
+    (amount: number) => () => {
       onAmountSelect(amount);
     },
     [onAmountSelect]
@@ -44,7 +44,7 @@ export default function QuickAmountPicker({
               selectedAmount === amount && styles.selectedText,
             ]}
           >
-            {amount}
+            ${amount}
           </Text>
         </TouchableOpacity>
       ))}

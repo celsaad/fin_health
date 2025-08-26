@@ -9,7 +9,7 @@ export type TransactionData = {
   category: Category;
   subcategory: Subcategory;
   account: AccountData;
-  amount: string;
+  amount: number;
   icon: SFSymbol;
   color: string;
   notes?: string;

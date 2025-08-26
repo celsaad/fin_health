@@ -1,9 +1,11 @@
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { IconSymbol } from "@/components/ui/IconSymbol";
 import { TransactionData } from "@/types/transaction";
+
+import useFormatCurrency from "../hooks/useFormatCurrency";
 
 export type TransactionProps = {
   transaction: TransactionData;
@@ -32,6 +34,13 @@ export default function Transaction({
       });
     }
   }, [onPress, router, transaction]);
+
+  const formatCurrency = useFormatCurrency();
+
+  const amount = useMemo(
+    () => formatCurrency(transaction.amount),
+    [transaction.amount, formatCurrency]
+  );
 
   return (
     <TouchableOpacity style={styles.transactionCard} onPress={handlePress}>
@@ -62,7 +71,7 @@ export default function Transaction({
       </View>
       <View style={styles.transactionRight}>
         <Text style={[styles.transactionAmount, { color: transaction.color }]}>
-          {transaction.amount}
+          {amount}
         </Text>
         {transaction.date && (
           <Text style={styles.transactionDate}>{transaction.date}</Text>

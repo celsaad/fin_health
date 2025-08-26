@@ -14,7 +14,7 @@ import {
 import { useNavigationUtils } from "@/hooks/useNavigationUtils";
 import { Category } from "@/types/category";
 
-const quickAmounts = ["$10", "$20", "$50", "$100"];
+const quickAmounts = [10, 20, 50, 100];
 
 const categories: Category[] = [
   { id: "groceries", name: "Groceries" },
@@ -31,7 +31,9 @@ const categories: Category[] = [
 export default function AddTransactionScreen() {
   const router = useRouter();
   const [amount, setAmount] = useState("");
-  const [selectedQuickAmount, setSelectedQuickAmount] = useState("");
+  const [selectedQuickAmount, setSelectedQuickAmount] = useState<
+    number | undefined
+  >(undefined);
   const [date, setDate] = useState(new Date());
   const [category, setCategory] = useState("");
   const [subcategory, setSubcategory] = useState("");
@@ -72,9 +74,9 @@ export default function AddTransactionScreen() {
   }, []);
 
   const handleQuickAmountSelect = useCallback(
-    (quickAmount: string) => {
+    (quickAmount: number) => {
       setSelectedQuickAmount(quickAmount);
-      setAmount(quickAmount.replace("$", ""));
+      setAmount(quickAmount.toString());
     },
     [setSelectedQuickAmount, setAmount]
   );

@@ -1,15 +1,12 @@
 import { useLocalSearchParams } from "expo-router";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import {
-  Card,
-  Header,
-  IconSymbol,
-  ScreenContainer,
-  Section,
-} from "@/components/ui";
+import { Header, IconSymbol, ScreenContainer, Section } from "@/components/ui";
 import { useNavigationUtils } from "@/hooks/useNavigationUtils";
 import { AccountData } from "@/types/account";
+
+import Detail, { DetailData } from "../components/Detail";
+import useFormatCurrency from "../hooks/useFormatCurrency";
 
 export default function AccountDetailsScreen() {
   const { back } = useNavigationUtils();
@@ -17,20 +14,18 @@ export default function AccountDetailsScreen() {
   const { account: accountParam } = useLocalSearchParams<{
     account: string;
   }>();
-  const account: AccountData = accountParam
-    ? JSON.parse(accountParam)
-    : {
-        id: "1",
-        name: "Checking",
-        amount: "$1,234.56",
-        icon: "building.columns.fill",
-      };
+  const account: AccountData = accountParam ? JSON.parse(accountParam) : null;
 
-  const accountDetails = [
+  const formatCurrency = useFormatCurrency();
+
+  if (!account) {
+    return null;
+  }
+
+  const accountDetails: DetailData[] = [
     {
       icon: "dollarsign.circle.fill",
-      label: "Amount",
-      value: account.amount,
+      value: formatCurrency(account.amount),
       valueColor: account.amount > 0 ? "#34c759" : "#ff3b30",
     },
   ];
@@ -53,22 +48,7 @@ export default function AccountDetailsScreen() {
 
         <Section title="Account Details">
           {accountDetails.map((detail, index) => (
-            <Card key={index} margin="small">
-              <View style={styles.detailContent}>
-                <View style={styles.detailIcon}>
-                  <IconSymbol name={detail.icon} size={20} color="#666" />
-                </View>
-                <View>
-                  <Text
-                    style={[styles.detailValue, { color: detail.valueColor }]}
-                    numberOfLines={1}
-                  >
-                    {detail.value}
-                  </Text>
-                  <Text style={styles.detailLabel}>{detail.label}</Text>
-                </View>
-              </View>
-            </Card>
+            <Detail key={index} detail={detail} />
           ))}
         </Section>
       </ScrollView>
@@ -101,28 +81,5 @@ const styles = StyleSheet.create({
   accountAmount: {
     fontSize: 20,
     fontWeight: "bold",
-  },
-  detailContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  detailIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f0f0f0",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
-  },
-  detailValue: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000",
-    marginBottom: 2,
-  },
-  detailLabel: {
-    fontSize: 13,
-    color: "#666",
   },
 });
