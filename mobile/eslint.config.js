@@ -74,7 +74,7 @@ module.exports = defineConfig([
       "prefer-const": "error",
       "no-var": "error",
       quotes: "off", // Let Prettier handle quotes
-      "arrow-parens": ["error", "as-needed"], // Align with Prettier's arrowParens: "avoid"
+      "arrow-parens": "off", // Let Prettier handle arrow function parentheses
 
       // Import/Export rules
       "import/no-unresolved": "off", // TypeScript handles this

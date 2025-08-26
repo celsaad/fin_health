@@ -89,7 +89,6 @@ input LoginInput {
 input CreateAccountInput {
   name: String!
   type: AccountType!
-  balance: Float!
   icon: String!
 }
 
@@ -108,7 +107,7 @@ input CreateTransactionInput {
   color: String!
   accountId: ID!
   categoryId: ID!
-  subcategoryId: ID
+  subcategory: String
 }
 
 input UpdateTransactionInput {
@@ -120,7 +119,7 @@ input UpdateTransactionInput {
   color: String
   accountId: ID
   categoryId: ID
-  subcategoryId: ID
+  subcategory: String
 }
 
 input CreateCategoryInput {
@@ -159,19 +158,23 @@ input TransactionFilter {
 type Query {
   # User queries
   me: User!
-  
+
   # Account queries
   accounts: [Account!]!
   account(id: ID!): Account
-  
+
   # Transaction queries
-  transactions(filter: TransactionFilter, limit: Int, offset: Int): [Transaction!]!
+  transactions(
+    filter: TransactionFilter
+    limit: Int
+    offset: Int
+  ): [Transaction!]!
   transaction(id: ID!): Transaction
-  
+
   # Category queries
   categories: [Category!]!
   category(id: ID!): Category
-  
+
   # Financial metrics
   netWorth: Float!
   monthlySpending(year: Int!, month: Int!): Float!
@@ -183,22 +186,22 @@ type Mutation {
   # Auth mutations
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
-  
+
   # Account mutations
   createAccount(input: CreateAccountInput!): Account!
   updateAccount(id: ID!, input: UpdateAccountInput!): Account!
   deleteAccount(id: ID!): Boolean!
-  
+
   # Transaction mutations
   createTransaction(input: CreateTransactionInput!): Transaction!
   updateTransaction(id: ID!, input: UpdateTransactionInput!): Transaction!
   deleteTransaction(id: ID!): Boolean!
-  
+
   # Category mutations
   createCategory(input: CreateCategoryInput!): Category!
   updateCategory(id: ID!, input: UpdateCategoryInput!): Category!
   deleteCategory(id: ID!): Boolean!
-  
+
   # Subcategory mutations
   createSubcategory(input: CreateSubcategoryInput!): Subcategory!
   updateSubcategory(id: ID!, input: UpdateSubcategoryInput!): Subcategory!

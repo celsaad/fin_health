@@ -1,11 +1,10 @@
 package main
 
 import (
+	"fin-health-server/graph"
 	"fin-health-server/internal/auth"
 	"fin-health-server/internal/config"
 	"fin-health-server/internal/database"
-	"fin-health-server/internal/graph"
-	"fin-health-server/internal/graph/generated"
 	"log"
 	"net/http"
 
@@ -30,7 +29,7 @@ func main() {
 	}
 
 	// Initialize GraphQL server
-	srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
 		Resolvers: &graph.Resolver{
 			DB: db,
 		},

@@ -39,10 +39,9 @@ type Category struct {
 }
 
 type CreateAccountInput struct {
-	Name    string      `json:"name"`
-	Type    AccountType `json:"type"`
-	Balance float64     `json:"balance"`
-	Icon    string      `json:"icon"`
+	Name string      `json:"name"`
+	Type AccountType `json:"type"`
+	Icon string      `json:"icon"`
 }
 
 type CreateCategoryInput struct {
@@ -57,15 +56,15 @@ type CreateSubcategoryInput struct {
 }
 
 type CreateTransactionInput struct {
-	Name          string  `json:"name"`
-	Amount        float64 `json:"amount"`
-	Date          string  `json:"date"`
-	Notes         *string `json:"notes,omitempty"`
-	Icon          string  `json:"icon"`
-	Color         string  `json:"color"`
-	AccountID     string  `json:"accountId"`
-	CategoryID    string  `json:"categoryId"`
-	SubcategoryID *string `json:"subcategoryId,omitempty"`
+	Name        string  `json:"name"`
+	Amount      float64 `json:"amount"`
+	Date        string  `json:"date"`
+	Notes       *string `json:"notes,omitempty"`
+	Icon        string  `json:"icon"`
+	Color       string  `json:"color"`
+	AccountID   string  `json:"accountId"`
+	CategoryID  string  `json:"categoryId"`
+	Subcategory *string `json:"subcategory,omitempty"`
 }
 
 type LoginInput struct {
@@ -143,15 +142,15 @@ type UpdateSubcategoryInput struct {
 }
 
 type UpdateTransactionInput struct {
-	Name          *string  `json:"name,omitempty"`
-	Amount        *float64 `json:"amount,omitempty"`
-	Date          *string  `json:"date,omitempty"`
-	Notes         *string  `json:"notes,omitempty"`
-	Icon          *string  `json:"icon,omitempty"`
-	Color         *string  `json:"color,omitempty"`
-	AccountID     *string  `json:"accountId,omitempty"`
-	CategoryID    *string  `json:"categoryId,omitempty"`
-	SubcategoryID *string  `json:"subcategoryId,omitempty"`
+	Name        *string  `json:"name,omitempty"`
+	Amount      *float64 `json:"amount,omitempty"`
+	Date        *string  `json:"date,omitempty"`
+	Notes       *string  `json:"notes,omitempty"`
+	Icon        *string  `json:"icon,omitempty"`
+	Color       *string  `json:"color,omitempty"`
+	AccountID   *string  `json:"accountId,omitempty"`
+	CategoryID  *string  `json:"categoryId,omitempty"`
+	Subcategory *string  `json:"subcategory,omitempty"`
 }
 
 type User struct {

@@ -8,7 +8,10 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useColorScheme } from "@/src/hooks/useColorScheme";
+import AuthGuard from "@/src/components/AuthGuard";
+
+import RelayProvider from "@/src/relay/RelayProvider";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -22,27 +25,38 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="transaction-details"
-          options={{
-            headerShown: false,
-            presentation: "modal",
-          }}
-        />
-        <Stack.Screen
-          name="add-account"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="account-details"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <RelayProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <AuthGuard>
+          <Stack>
+            <Stack.Screen
+              name="onboarding"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="auth"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="transaction-details"
+              options={{
+                headerShown: false,
+                presentation: "modal",
+              }}
+            />
+            <Stack.Screen
+              name="add-account"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="account-details"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+          </Stack>
+        </AuthGuard>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </RelayProvider>
   );
 }

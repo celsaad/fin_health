@@ -100,11 +100,10 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input model.Create
 	userID := ctx.Value("user_id").(uint)
 
 	account := database.Account{
-		Name:    input.Name,
-		Type:    string(input.Type),
-		Balance: input.Balance,
-		Icon:    input.Icon,
-		UserID:  userID,
+		Name:   input.Name,
+		Type:   string(input.Type),
+		Icon:   input.Icon,
+		UserID: userID,
 	}
 
 	if err := r.DB.Create(&account).Error; err != nil {
@@ -197,10 +196,26 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Cr
 		CategoryID: uint(categoryID),
 	}
 
-	if input.SubcategoryID != nil {
-		subcategoryID, _ := strconv.Atoi(*input.SubcategoryID)
-		subcategoryIDUint := uint(subcategoryID)
-		transaction.SubcategoryID = &subcategoryIDUint
+		// Handle subcategory: find existing or create new one
+	if input.Subcategory != nil && *input.Subcategory != "" {
+		var subcategory database.Subcategory
+
+		// First, try to find existing subcategory with this name under the given category
+		err := r.DB.Where("name = ? AND category_id = ?", *input.Subcategory, categoryID).First(&subcategory).Error
+
+		if err != nil {
+			// Subcategory doesn't exist, create it
+			subcategory = database.Subcategory{
+				Name:       *input.Subcategory,
+				CategoryID: uint(categoryID),
+			}
+
+			if err := r.DB.Create(&subcategory).Error; err != nil {
+				return nil, fmt.Errorf("failed to create subcategory: %v", err)
+			}
+		}
+
+		transaction.SubcategoryID = &subcategory.ID
 	}
 
 	if err := r.DB.Create(&transaction).Error; err != nil {
@@ -208,19 +223,19 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Cr
 	}
 
 	return &model.Transaction{
-		ID:        strconv.Itoa(int(transaction.ID)),
-		Name:      transaction.Name,
-		Amount:    transaction.Amount,
-		Date:      transaction.Date.Format(time.RFC3339),
-		Notes:     transaction.Notes,
-		HasNote:   transaction.HasNote(),
-		Icon:      transaction.Icon,
-		Color:     transaction.Color,
-		UserID:    strconv.Itoa(int(transaction.UserID)),
-		AccountID: strconv.Itoa(int(transaction.AccountID)),
+		ID:         strconv.Itoa(int(transaction.ID)),
+		Name:       transaction.Name,
+		Amount:     transaction.Amount,
+		Date:       transaction.Date.Format(time.RFC3339),
+		Notes:      transaction.Notes,
+		HasNote:    transaction.HasNote(),
+		Icon:       transaction.Icon,
+		Color:      transaction.Color,
+		UserID:     strconv.Itoa(int(transaction.UserID)),
+		AccountID:  strconv.Itoa(int(transaction.AccountID)),
 		CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-		CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -265,10 +280,30 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, inp
 		categoryID, _ := strconv.Atoi(*input.CategoryID)
 		transaction.CategoryID = uint(categoryID)
 	}
-	if input.SubcategoryID != nil {
-		subcategoryID, _ := strconv.Atoi(*input.SubcategoryID)
-		subcategoryIDUint := uint(subcategoryID)
-		transaction.SubcategoryID = &subcategoryIDUint
+		if input.Subcategory != nil {
+		if *input.Subcategory == "" {
+			// Empty string means remove subcategory
+			transaction.SubcategoryID = nil
+		} else {
+			var subcategory database.Subcategory
+
+			// First, try to find existing subcategory with this name under the transaction's category
+			err := r.DB.Where("name = ? AND category_id = ?", *input.Subcategory, transaction.CategoryID).First(&subcategory).Error
+
+			if err != nil {
+				// Subcategory doesn't exist, create it
+				subcategory = database.Subcategory{
+					Name:       *input.Subcategory,
+					CategoryID: transaction.CategoryID,
+				}
+
+				if err := r.DB.Create(&subcategory).Error; err != nil {
+					return nil, fmt.Errorf("failed to create subcategory: %v", err)
+				}
+			}
+
+			transaction.SubcategoryID = &subcategory.ID
+		}
 	}
 
 	if err := r.DB.Save(&transaction).Error; err != nil {
@@ -276,19 +311,19 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, inp
 	}
 
 	return &model.Transaction{
-		ID:        strconv.Itoa(int(transaction.ID)),
-		Name:      transaction.Name,
-		Amount:    transaction.Amount,
-		Date:      transaction.Date.Format(time.RFC3339),
-		Notes:     transaction.Notes,
-		HasNote:   transaction.HasNote(),
-		Icon:      transaction.Icon,
-		Color:     transaction.Color,
-		UserID:    strconv.Itoa(int(transaction.UserID)),
-		AccountID: strconv.Itoa(int(transaction.AccountID)),
+		ID:         strconv.Itoa(int(transaction.ID)),
+		Name:       transaction.Name,
+		Amount:     transaction.Amount,
+		Date:       transaction.Date.Format(time.RFC3339),
+		Notes:      transaction.Notes,
+		HasNote:    transaction.HasNote(),
+		Icon:       transaction.Icon,
+		Color:      transaction.Color,
+		UserID:     strconv.Itoa(int(transaction.UserID)),
+		AccountID:  strconv.Itoa(int(transaction.AccountID)),
 		CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-		CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -473,11 +508,11 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 func (r *queryResolver) Accounts(ctx context.Context) ([]*model.Account, error) {
 	userIDValue := ctx.Value("user_id")
 	fmt.Printf("DEBUG: userID from context: %v (type: %T)\n", userIDValue, userIDValue)
-	
+
 	if userIDValue == nil {
 		return nil, fmt.Errorf("user not authenticated")
 	}
-	
+
 	userID := userIDValue.(uint)
 
 	var accounts []database.Account
@@ -576,19 +611,19 @@ func (r *queryResolver) Transactions(ctx context.Context, filter *model.Transact
 	var result []*model.Transaction
 	for _, transaction := range transactions {
 		result = append(result, &model.Transaction{
-			ID:        strconv.Itoa(int(transaction.ID)),
-			Name:      transaction.Name,
-			Amount:    transaction.Amount,
-			Date:      transaction.Date.Format(time.RFC3339),
-			Notes:     transaction.Notes,
-			HasNote:   transaction.HasNote(),
-			Icon:      transaction.Icon,
-			Color:     transaction.Color,
-			UserID:    strconv.Itoa(int(transaction.UserID)),
-			AccountID: strconv.Itoa(int(transaction.AccountID)),
+			ID:         strconv.Itoa(int(transaction.ID)),
+			Name:       transaction.Name,
+			Amount:     transaction.Amount,
+			Date:       transaction.Date.Format(time.RFC3339),
+			Notes:      transaction.Notes,
+			HasNote:    transaction.HasNote(),
+			Icon:       transaction.Icon,
+			Color:      transaction.Color,
+			UserID:     strconv.Itoa(int(transaction.UserID)),
+			AccountID:  strconv.Itoa(int(transaction.AccountID)),
 			CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-			CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
+			CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
 		})
 	}
 
@@ -606,19 +641,19 @@ func (r *queryResolver) Transaction(ctx context.Context, id string) (*model.Tran
 	}
 
 	return &model.Transaction{
-		ID:        strconv.Itoa(int(transaction.ID)),
-		Name:      transaction.Name,
-		Amount:    transaction.Amount,
-		Date:      transaction.Date.Format(time.RFC3339),
-		Notes:     transaction.Notes,
-		HasNote:   transaction.HasNote(),
-		Icon:      transaction.Icon,
-		Color:     transaction.Color,
-		UserID:    strconv.Itoa(int(transaction.UserID)),
-		AccountID: strconv.Itoa(int(transaction.AccountID)),
+		ID:         strconv.Itoa(int(transaction.ID)),
+		Name:       transaction.Name,
+		Amount:     transaction.Amount,
+		Date:       transaction.Date.Format(time.RFC3339),
+		Notes:      transaction.Notes,
+		HasNote:    transaction.HasNote(),
+		Icon:       transaction.Icon,
+		Color:      transaction.Color,
+		UserID:     strconv.Itoa(int(transaction.UserID)),
+		AccountID:  strconv.Itoa(int(transaction.AccountID)),
 		CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-		CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -753,347 +788,11 @@ func (r *queryResolver) DebtToIncomeRatio(ctx context.Context) (float64, error) 
 	return debtToIncomeRatio, nil
 }
 
-// User is the resolver for the user field.
-func (r *accountResolver) User(ctx context.Context, obj *model.Account) (*model.User, error) {
-	userID, _ := strconv.Atoi(obj.UserID)
-
-	var user database.User
-	if err := r.DB.First(&user, userID).Error; err != nil {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	return &model.User{
-		ID:        strconv.Itoa(int(user.ID)),
-		Email:     user.Email,
-		Name:      user.Name,
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-	}, nil
-}
-
-// Transactions is the resolver for the transactions field.
-func (r *accountResolver) Transactions(ctx context.Context, obj *model.Account) ([]*model.Transaction, error) {
-	accountID, _ := strconv.Atoi(obj.ID)
-
-	var transactions []database.Transaction
-	if err := r.DB.Where("account_id = ?", accountID).Find(&transactions).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch transactions")
-	}
-
-	var result []*model.Transaction
-	for _, transaction := range transactions {
-		result = append(result, &model.Transaction{
-			ID:        strconv.Itoa(int(transaction.ID)),
-			Name:      transaction.Name,
-			Amount:    transaction.Amount,
-			Date:      transaction.Date.Format(time.RFC3339),
-			Notes:     transaction.Notes,
-			HasNote:   transaction.HasNote(),
-			Icon:      transaction.Icon,
-			Color:     transaction.Color,
-			UserID:    strconv.Itoa(int(transaction.UserID)),
-			AccountID: strconv.Itoa(int(transaction.AccountID)),
-			CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-			CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
-		})
-	}
-
-	return result, nil
-}
-
-// User is the resolver for the user field.
-func (r *categoryResolver) User(ctx context.Context, obj *model.Category) (*model.User, error) {
-	userID, _ := strconv.Atoi(obj.UserID)
-
-	var user database.User
-	if err := r.DB.First(&user, userID).Error; err != nil {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	return &model.User{
-		ID:        strconv.Itoa(int(user.ID)),
-		Email:     user.Email,
-		Name:      user.Name,
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-	}, nil
-}
-
-// Subcategories is the resolver for the subcategories field.
-func (r *categoryResolver) Subcategories(ctx context.Context, obj *model.Category) ([]*model.Subcategory, error) {
-	categoryID, _ := strconv.Atoi(obj.ID)
-
-	var subcategories []database.Subcategory
-	if err := r.DB.Where("category_id = ?", categoryID).Find(&subcategories).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch subcategories")
-	}
-
-	var result []*model.Subcategory
-	for _, subcategory := range subcategories {
-		result = append(result, &model.Subcategory{
-			ID:         strconv.Itoa(int(subcategory.ID)),
-			Name:       subcategory.Name,
-			CategoryID: strconv.Itoa(int(subcategory.CategoryID)),
-		})
-	}
-
-	return result, nil
-}
-
-// Transactions is the resolver for the transactions field.
-func (r *categoryResolver) Transactions(ctx context.Context, obj *model.Category) ([]*model.Transaction, error) {
-	categoryID, _ := strconv.Atoi(obj.ID)
-
-	var transactions []database.Transaction
-	if err := r.DB.Where("category_id = ?", categoryID).Find(&transactions).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch transactions")
-	}
-
-	var result []*model.Transaction
-	for _, transaction := range transactions {
-		result = append(result, &model.Transaction{
-			ID:        strconv.Itoa(int(transaction.ID)),
-			Name:      transaction.Name,
-			Amount:    transaction.Amount,
-			Date:      transaction.Date.Format(time.RFC3339),
-			Notes:     transaction.Notes,
-			HasNote:   transaction.HasNote(),
-			Icon:      transaction.Icon,
-			Color:     transaction.Color,
-			UserID:    strconv.Itoa(int(transaction.UserID)),
-			AccountID: strconv.Itoa(int(transaction.AccountID)),
-			CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-			CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
-		})
-	}
-
-	return result, nil
-}
-
-// Category is the resolver for the category field.
-func (r *subcategoryResolver) Category(ctx context.Context, obj *model.Subcategory) (*model.Category, error) {
-	categoryID, _ := strconv.Atoi(obj.CategoryID)
-
-	var category database.Category
-	if err := r.DB.First(&category, categoryID).Error; err != nil {
-		return nil, fmt.Errorf("category not found")
-	}
-
-	return &model.Category{
-		ID:     strconv.Itoa(int(category.ID)),
-		Name:   category.Name,
-		Icon:   category.Icon,
-		Color:  category.Color,
-		UserID: strconv.Itoa(int(category.UserID)),
-	}, nil
-}
-
-// Transactions is the resolver for the transactions field.
-func (r *subcategoryResolver) Transactions(ctx context.Context, obj *model.Subcategory) ([]*model.Transaction, error) {
-	subcategoryID, _ := strconv.Atoi(obj.ID)
-
-	var transactions []database.Transaction
-	if err := r.DB.Where("subcategory_id = ?", subcategoryID).Find(&transactions).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch transactions")
-	}
-
-	var result []*model.Transaction
-	for _, transaction := range transactions {
-		result = append(result, &model.Transaction{
-			ID:        strconv.Itoa(int(transaction.ID)),
-			Name:      transaction.Name,
-			Amount:    transaction.Amount,
-			Date:      transaction.Date.Format(time.RFC3339),
-			Notes:     transaction.Notes,
-			HasNote:   transaction.HasNote(),
-			Icon:      transaction.Icon,
-			Color:     transaction.Color,
-			UserID:    strconv.Itoa(int(transaction.UserID)),
-			AccountID: strconv.Itoa(int(transaction.AccountID)),
-			CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-			CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
-		})
-	}
-
-	return result, nil
-}
-
-// User is the resolver for the user field.
-func (r *transactionResolver) User(ctx context.Context, obj *model.Transaction) (*model.User, error) {
-	userID, _ := strconv.Atoi(obj.UserID)
-
-	var user database.User
-	if err := r.DB.First(&user, userID).Error; err != nil {
-		return nil, fmt.Errorf("user not found")
-	}
-
-	return &model.User{
-		ID:        strconv.Itoa(int(user.ID)),
-		Email:     user.Email,
-		Name:      user.Name,
-		CreatedAt: user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: user.UpdatedAt.Format(time.RFC3339),
-	}, nil
-}
-
-// Account is the resolver for the account field.
-func (r *transactionResolver) Account(ctx context.Context, obj *model.Transaction) (*model.Account, error) {
-	accountID, _ := strconv.Atoi(obj.AccountID)
-
-	var account database.Account
-	if err := r.DB.First(&account, accountID).Error; err != nil {
-		return nil, fmt.Errorf("account not found")
-	}
-
-	return &model.Account{
-		ID:        strconv.Itoa(int(account.ID)),
-		Name:      account.Name,
-		Type:      model.AccountType(account.Type),
-		Balance:   account.Balance,
-		Icon:      account.Icon,
-		UserID:    strconv.Itoa(int(account.UserID)),
-		CreatedAt: account.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: account.UpdatedAt.Format(time.RFC3339),
-	}, nil
-}
-
-// Category is the resolver for the category field.
-func (r *transactionResolver) Category(ctx context.Context, obj *model.Transaction) (*model.Category, error) {
-	categoryID, _ := strconv.Atoi(obj.CategoryID)
-
-	var category database.Category
-	if err := r.DB.First(&category, categoryID).Error; err != nil {
-		return nil, fmt.Errorf("category not found")
-	}
-
-	return &model.Category{
-		ID:     strconv.Itoa(int(category.ID)),
-		Name:   category.Name,
-		Icon:   category.Icon,
-		Color:  category.Color,
-		UserID: strconv.Itoa(int(category.UserID)),
-	}, nil
-}
-
-// Subcategory is the resolver for the subcategory field.
-func (r *transactionResolver) Subcategory(ctx context.Context, obj *model.Transaction) (*model.Subcategory, error) {
-	if obj.SubcategoryID == nil {
-		return nil, nil
-	}
-
-	subcategoryID, _ := strconv.Atoi(*obj.SubcategoryID)
-
-	var subcategory database.Subcategory
-	if err := r.DB.First(&subcategory, subcategoryID).Error; err != nil {
-		return nil, fmt.Errorf("subcategory not found")
-	}
-
-	return &model.Subcategory{
-		ID:         strconv.Itoa(int(subcategory.ID)),
-		Name:       subcategory.Name,
-		CategoryID: strconv.Itoa(int(subcategory.CategoryID)),
-	}, nil
-}
-
-// HasNote is the resolver for the hasNote field.
-func (r *transactionResolver) HasNote(ctx context.Context, obj *model.Transaction) (bool, error) {
-	return obj.Notes != nil && *obj.Notes != "", nil
-}
-
-// Accounts is the resolver for the accounts field.
-func (r *userResolver) Accounts(ctx context.Context, obj *model.User) ([]*model.Account, error) {
-	userID, _ := strconv.Atoi(obj.ID)
-
-	var accounts []database.Account
-	if err := r.DB.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch accounts")
-	}
-
-	var result []*model.Account
-	for _, account := range accounts {
-		result = append(result, &model.Account{
-			ID:        strconv.Itoa(int(account.ID)),
-			Name:      account.Name,
-			Type:      model.AccountType(account.Type),
-			Balance:   account.Balance,
-			Icon:      account.Icon,
-			UserID:    strconv.Itoa(int(account.UserID)),
-			CreatedAt: account.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: account.UpdatedAt.Format(time.RFC3339),
-		})
-	}
-
-	return result, nil
-}
-
-// Transactions is the resolver for the transactions field.
-func (r *userResolver) Transactions(ctx context.Context, obj *model.User) ([]*model.Transaction, error) {
-	userID, _ := strconv.Atoi(obj.ID)
-
-	var transactions []database.Transaction
-	if err := r.DB.Where("user_id = ?", userID).Find(&transactions).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch transactions")
-	}
-
-	var result []*model.Transaction
-	for _, transaction := range transactions {
-		result = append(result, &model.Transaction{
-			ID:        strconv.Itoa(int(transaction.ID)),
-			Name:      transaction.Name,
-			Amount:    transaction.Amount,
-			Date:      transaction.Date.Format(time.RFC3339),
-			Notes:     transaction.Notes,
-			HasNote:   transaction.HasNote(),
-			Icon:      transaction.Icon,
-			Color:     transaction.Color,
-			UserID:    strconv.Itoa(int(transaction.UserID)),
-			AccountID: strconv.Itoa(int(transaction.AccountID)),
-			CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-			CreatedAt: transaction.CreatedAt.Format(time.RFC3339),
-			UpdatedAt: transaction.UpdatedAt.Format(time.RFC3339),
-		})
-	}
-
-	return result, nil
-}
-
-// Categories is the resolver for the categories field.
-func (r *userResolver) Categories(ctx context.Context, obj *model.User) ([]*model.Category, error) {
-	userID, _ := strconv.Atoi(obj.ID)
-
-	var categories []database.Category
-	if err := r.DB.Where("user_id = ?", userID).Find(&categories).Error; err != nil {
-		return nil, fmt.Errorf("failed to fetch categories")
-	}
-
-	var result []*model.Category
-	for _, category := range categories {
-		result = append(result, &model.Category{
-			ID:     strconv.Itoa(int(category.ID)),
-			Name:   category.Name,
-			Icon:   category.Icon,
-			Color:  category.Color,
-			UserID: strconv.Itoa(int(category.UserID)),
-		})
-	}
-
-	return result, nil
-}
-
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
-type accountResolver struct{ *Resolver }
-type categoryResolver struct{ *Resolver }
-type subcategoryResolver struct{ *Resolver }
-type transactionResolver struct{ *Resolver }
-type userResolver struct{ *Resolver }

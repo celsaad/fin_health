@@ -7634,7 +7634,7 @@ func (ec *executionContext) unmarshalInputCreateAccountInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "type", "balance", "icon"}
+	fieldsInOrder := [...]string{"name", "type", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7655,13 +7655,6 @@ func (ec *executionContext) unmarshalInputCreateAccountInput(ctx context.Context
 				return it, err
 			}
 			it.Type = data
-		case "balance":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("balance"))
-			data, err := ec.unmarshalNFloat2float64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Balance = data
 		case "icon":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
 			data, err := ec.unmarshalNString2string(ctx, v)
@@ -7757,7 +7750,7 @@ func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "icon", "color", "accountId", "categoryId", "subcategoryId"}
+	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "icon", "color", "accountId", "categoryId", "subcategory"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7820,13 +7813,13 @@ func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.CategoryID = data
-		case "subcategoryId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subcategoryId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+		case "subcategory":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subcategory"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SubcategoryID = data
+			it.Subcategory = data
 		}
 	}
 
@@ -8107,7 +8100,7 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "icon", "color", "accountId", "categoryId", "subcategoryId"}
+	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "icon", "color", "accountId", "categoryId", "subcategory"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8170,13 +8163,13 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.CategoryID = data
-		case "subcategoryId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subcategoryId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+		case "subcategory":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subcategory"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.SubcategoryID = data
+			it.Subcategory = data
 		}
 	}
 
