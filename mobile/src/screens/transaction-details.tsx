@@ -3,13 +3,12 @@ import { noop } from "lodash";
 import { useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 
+import Detail, { DetailData } from "@/src/components/Detail";
 import { Header, Card, Button, ScreenContainer } from "@/src/components/ui";
 import { IconSymbol } from "@/src/components/ui/IconSymbol";
+import useFormatCurrency from "@/src/hooks/useFormatCurrency";
 import { useNavigationUtils } from "@/src/hooks/useNavigationUtils";
 import { TransactionData } from "@/src/types/transaction";
-
-import Detail, { DetailData } from "@/src/components/Detail";
-import useFormatCurrency from "@/src/hooks/useFormatCurrency";
 
 export default function TransactionDetailsScreen() {
   const { transaction: transactionParam } = useLocalSearchParams<{

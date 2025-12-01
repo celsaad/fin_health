@@ -1,23 +1,24 @@
 import { useRouter } from "expo-router";
+import { SFSymbol } from "expo-symbols";
 import { useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { IconSymbol } from "@/src/components/ui/IconSymbol";
-import { TransactionData } from "@/src/types/transaction";
 
 import useFormatCurrency from "../hooks/useFormatCurrency";
+import { TransactionData } from "../types/transaction";
 
 export type TransactionProps = {
-  transaction: TransactionData;
   index?: number;
   onPress?: () => void;
   compact?: boolean; // For different layouts (dashboard vs transactions list)
+  transaction: TransactionData;
 };
 
 export default function Transaction({
-  transaction,
   onPress,
   compact = false,
+  transaction,
 }: TransactionProps) {
   const router = useRouter();
 
@@ -38,7 +39,7 @@ export default function Transaction({
   const formatCurrency = useFormatCurrency();
 
   const amount = useMemo(
-    () => formatCurrency(transaction.amount),
+    () => formatCurrency(transaction.amount || 0),
     [transaction.amount, formatCurrency],
   );
 
@@ -52,7 +53,7 @@ export default function Transaction({
           ]}
         >
           <IconSymbol
-            name={transaction.icon}
+            name={transaction.category.icon as SFSymbol}
             size={compact ? 20 : 20}
             color="#666"
           />

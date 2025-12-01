@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   FlatList,
   Pressable,
   TextInput,
+  Animated,
+  Dimensions,
+  PanResponder,
 } from "react-native";
 
 import { IconSymbol } from "./IconSymbol";
@@ -34,12 +37,12 @@ import { IconSymbol } from "./IconSymbol";
 export interface DropdownItem {
   id: string;
   label: string;
-  value: any;
+  value: string | number;
 }
 
 export interface DropdownProps {
   items: DropdownItem[];
-  selectedValue?: any;
+  selectedValue?: string | number;
   onSelect: (item: DropdownItem) => void;
   placeholder?: string;
   disabled?: boolean;
@@ -55,6 +58,9 @@ export interface DropdownProps {
   renderItem?: (item: DropdownItem, isSelected: boolean) => React.ReactNode;
 }
 
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+const TRAY_MAX_HEIGHT = SCREEN_HEIGHT * 0.7;
+
 export default function Dropdown({
   items,
   selectedValue,
@@ -68,12 +74,14 @@ export default function Dropdown({
   placeholderStyle,
   variant = "default",
   size = "medium",
-  maxHeight = 300,
+  maxHeight: _maxHeight = 300,
   searchable = false,
   renderItem,
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const backdropAnim = useRef(new Animated.Value(0)).current;
 
   const selectedItem = items.find((item) => item.value === selectedValue);
 
@@ -99,26 +107,55 @@ export default function Dropdown({
     ...(!selectedItem && !placeholderStyle ? [styles.placeholderText] : []),
   ];
 
-  const toggleDropdown = useCallback(() => {
-    if (!disabled) {
-      setIsOpen(!isOpen);
+  const openTray = useCallback(() => {
+    if (disabled) return;
+
+    setIsOpen(true);
+    setSearchQuery("");
+
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [disabled, slideAnim, backdropAnim]);
+
+  const closeTray = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(backdropAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setIsOpen(false);
       setSearchQuery("");
-    }
-  }, [disabled, isOpen]);
+    });
+  }, [slideAnim, backdropAnim]);
 
   const handleSelect = useCallback(
     (item: DropdownItem) => {
       onSelect(item);
-      setIsOpen(false);
-      setSearchQuery("");
+      closeTray();
     },
-    [onSelect],
+    [onSelect, closeTray],
   );
 
   const handleClose = useCallback(() => {
-    setIsOpen(false);
-    setSearchQuery("");
-  }, []);
+    closeTray();
+  }, [closeTray]);
 
   const handleSearch = useCallback((text: string) => {
     setSearchQuery(text);
@@ -130,6 +167,46 @@ export default function Dropdown({
     },
     [handleSelect],
   );
+
+  // Pan responder for swipe-to-close gesture
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return (
+          gestureState.dy > 20 &&
+          Math.abs(gestureState.dx) < Math.abs(gestureState.dy)
+        );
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          const progress = Math.min(gestureState.dy / 200, 1);
+          slideAnim.setValue(1 - progress);
+          backdropAnim.setValue(1 - progress * 0.5);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100) {
+          closeTray();
+        } else {
+          // Snap back to open position
+          Animated.parallel([
+            Animated.timing(slideAnim, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+            Animated.timing(backdropAnim, {
+              toValue: 1,
+              duration: 200,
+              useNativeDriver: true,
+            }),
+          ]).start();
+        }
+      },
+    }),
+  ).current;
+
+  const keyExtractor = useCallback((item: DropdownItem) => item.id, []);
 
   const renderDropdownItem = useCallback(
     ({ item }: { item: DropdownItem }) => {
@@ -169,11 +246,26 @@ export default function Dropdown({
     [handleSelectItem, itemStyle, renderItem, selectedValue],
   );
 
+  const trayHeight = Math.min(
+    filteredItems.length * 56 + (searchable ? 60 : 0) + 40,
+    TRAY_MAX_HEIGHT,
+  );
+
+  const slideTranslateY = slideAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [trayHeight, 0],
+  });
+
+  const backdropOpacity = backdropAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.5],
+  });
+
   return (
     <View>
       <TouchableOpacity
         style={dropdownButtonStyle}
-        onPress={toggleDropdown}
+        onPress={openTray}
         disabled={disabled}
         activeOpacity={disabled ? 1 : 0.7}
       >
@@ -190,11 +282,29 @@ export default function Dropdown({
       <Modal
         visible={isOpen}
         transparent={true}
-        animationType="fade"
+        animationType="none"
         onRequestClose={handleClose}
       >
-        <Pressable style={styles.modalOverlay} onPress={handleClose}>
-          <View style={[styles.dropdownContainer, dropdownStyle]}>
+        <View style={styles.trayContainer}>
+          <Animated.View
+            style={[styles.trayBackdrop, { opacity: backdropOpacity }]}
+          >
+            <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.tray,
+              dropdownStyle,
+              {
+                height: trayHeight,
+                transform: [{ translateY: slideTranslateY }],
+              },
+            ]}
+            {...panResponder.panHandlers}
+          >
+            <View style={styles.trayHandle} />
+
             {searchable && (
               <View style={styles.searchContainer}>
                 <IconSymbol name="magnifyingglass" size={16} color="#666" />
@@ -207,16 +317,20 @@ export default function Dropdown({
                 />
               </View>
             )}
+
             <FlatList
               data={filteredItems}
-              keyExtractor={(item) => item.id}
+              keyExtractor={keyExtractor}
               renderItem={renderDropdownItem}
-              style={[styles.dropdownList, { maxHeight }]}
+              style={[
+                styles.dropdownList,
+                { maxHeight: trayHeight - (searchable ? 60 : 0) - 40 },
+              ]}
               showsVerticalScrollIndicator={true}
               keyboardShouldPersistTaps="handled"
             />
-          </View>
-        </Pressable>
+          </Animated.View>
+        </View>
       </Modal>
     </View>
   );
@@ -288,27 +402,36 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 
-  // Modal styles
-  modalOverlay: {
+  // Tray styles
+  trayContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
+    justifyContent: "flex-end",
   },
-  dropdownContainer: {
+  trayBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#000",
+  },
+  tray: {
     backgroundColor: "#fff",
-    borderRadius: 12,
-    maxWidth: "100%",
-    minWidth: 250,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: -4,
     },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
+  },
+  trayHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#d0d0d0",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: 8,
+    marginBottom: 8,
   },
   searchContainer: {
     flexDirection: "row",

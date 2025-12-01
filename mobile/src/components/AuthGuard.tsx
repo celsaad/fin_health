@@ -27,12 +27,14 @@ export default function AuthGuard({ children }: AuthGuardProps) {
       inAuthFlow,
     });
 
-    if (!isAuthenticated && inTabsGroup) {
-      // Unauthenticated user trying to access protected tabs
-      console.log("Redirecting to onboarding: unauthenticated user in tabs");
+    if (!isAuthenticated && !inAuthFlow) {
+      // Unauthenticated user not on auth flow - redirect to onboarding
+      console.log(
+        "Redirecting to onboarding: unauthenticated user not in auth flow",
+      );
       router.replace("/onboarding");
-    } else if (isAuthenticated && (inAuthFlow || segments.length === 0)) {
-      // Authenticated user on auth pages or root - redirect to tabs
+    } else if (isAuthenticated && inAuthFlow) {
+      // Authenticated user on auth pages - redirect to tabs
       console.log("Redirecting to tabs: authenticated user in auth flow");
       router.replace("/(tabs)");
     }

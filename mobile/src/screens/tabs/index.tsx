@@ -6,91 +6,13 @@ import { useLazyLoadQuery, graphql } from "react-relay";
 import Account from "@/src/components/Account";
 import Transaction from "@/src/components/Transaction";
 import { Header, Section, Card, ScreenContainer } from "@/src/components/ui";
-import { TransactionData } from "@/src/types/transaction";
 
 import type { tabs_indexQuery } from "./__generated__/tabs_indexQuery.graphql";
-
-// const accounts: AccountData[] = [
-//   {
-//     id: "checking",
-//     name: "Checking",
-//     amount: 1234.56,
-//     icon: "building.columns.fill",
-//   },
-//   { id: "savings", name: "Savings", amount: 5678.9, icon: "banknote" },
-// ];
-
-const recentTransactions: TransactionData[] = [
-  {
-    name: "Supermarket",
-    category: {
-      id: "groceries",
-      name: "Groceries",
-    },
-    subcategory: {
-      id: "groceries",
-      name: "Food",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      balance: 1234.56,
-      icon: "building.columns.fill",
-    },
-    date: "Today",
-    hasNote: true,
-    amount: -50,
-    icon: "cart.fill",
-    color: "#ff3b30",
-  },
-  {
-    name: "Tech Corp",
-    category: {
-      id: "salary",
-      name: "Salary",
-    },
-    subcategory: {
-      id: "salary",
-      name: "Salary",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      balance: 1234.56,
-      icon: "building.columns.fill",
-    },
-    date: "Yesterday",
-    hasNote: false,
-    amount: 2000,
-    icon: "briefcase.fill",
-    color: "#34c759",
-  },
-  {
-    name: "Restaurant",
-    category: {
-      id: "dining-out",
-      name: "Dining Out",
-    },
-    subcategory: {
-      id: "dining-out",
-      name: "Dining Out",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      balance: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -30,
-    icon: "fork.knife",
-    color: "#ff3b30",
-  },
-];
 
 const monthlyData = ["Jan", "Feb", "Mar", "Apr", "May"];
 
 export default function DashboardScreen() {
-  const { accounts } = useLazyLoadQuery<tabs_indexQuery>(
+  const { accounts, transactions } = useLazyLoadQuery<tabs_indexQuery>(
     graphql`
       query tabs_indexQuery {
         accounts {
@@ -99,6 +21,23 @@ export default function DashboardScreen() {
           type
           balance
           icon
+        }
+        transactions(limit: 3) {
+          id
+          name
+          amount
+          date
+          hasNote
+          notes
+          category {
+            id
+            name
+            icon
+          }
+          subcategory {
+            id
+            name
+          }
         }
       }
     `,
@@ -135,7 +74,7 @@ export default function DashboardScreen() {
 
         {/* Recent Transactions */}
         <Section title="Recent Transactions">
-          {recentTransactions.map((transaction, index) => (
+          {transactions.map((transaction, index) => (
             <Transaction
               key={index}
               transaction={transaction}

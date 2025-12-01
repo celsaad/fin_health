@@ -9,8 +9,8 @@ import (
 	"fin-health-server/graph/model"
 	"fin-health-server/internal/auth"
 	"fin-health-server/internal/database"
+	"fin-health-server/internal/utils"
 	"fmt"
-	"strconv"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -55,7 +55,7 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 	return &model.AuthPayload{
 		Token: token,
 		User: &model.User{
-			ID:        strconv.Itoa(int(user.ID)),
+			ID:        utils.ToSimpleGlobalID("User", user.ID),
 			Email:     user.Email,
 			Name:      user.Name,
 			CreatedAt: user.CreatedAt.Format(time.RFC3339),
@@ -86,7 +86,7 @@ func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*
 	return &model.AuthPayload{
 		Token: token,
 		User: &model.User{
-			ID:        strconv.Itoa(int(user.ID)),
+			ID:        utils.ToSimpleGlobalID("User", user.ID),
 			Email:     user.Email,
 			Name:      user.Name,
 			CreatedAt: user.CreatedAt.Format(time.RFC3339),
@@ -110,13 +110,22 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input model.Create
 		return nil, fmt.Errorf("failed to create account")
 	}
 
+	// Calculate balance from sum of all transactions for this account (should be 0 for new account)
+	var calculatedBalance float64
+	if err := r.DB.Model(&database.Transaction{}).
+		Where("account_id = ?", account.ID).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&calculatedBalance).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate account balance")
+	}
+
 	return &model.Account{
-		ID:        strconv.Itoa(int(account.ID)),
+		ID:        utils.ToSimpleGlobalID("Account", account.ID),
 		Name:      account.Name,
 		Type:      model.AccountType(account.Type),
-		Balance:   account.Balance,
+		Balance:   calculatedBalance,
 		Icon:      account.Icon,
-		UserID:    strconv.Itoa(int(account.UserID)),
+		UserID:    utils.ToSimpleGlobalID("User", account.UserID),
 		CreatedAt: account.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: account.UpdatedAt.Format(time.RFC3339),
 	}, nil
@@ -125,35 +134,46 @@ func (r *mutationResolver) CreateAccount(ctx context.Context, input model.Create
 // UpdateAccount is the resolver for the updateAccount field.
 func (r *mutationResolver) UpdateAccount(ctx context.Context, id string, input model.UpdateAccountInput) (*model.Account, error) {
 	userID := ctx.Value("user_id").(uint)
-	accountID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account ID")
+	}
+	accountID := localID
 
 	var account database.Account
 	if err := r.DB.Where("id = ? AND user_id = ?", accountID, userID).First(&account).Error; err != nil {
 		return nil, fmt.Errorf("account not found")
 	}
 
-	// Update fields if provided
+	// Update fields if provided (but not balance, which is calculated)
 	if input.Name != nil {
 		account.Name = *input.Name
-	}
-	if input.Balance != nil {
-		account.Balance = *input.Balance
 	}
 	if input.Icon != nil {
 		account.Icon = *input.Icon
 	}
+	// Note: Balance is not updated here as it's now calculated from transactions
 
 	if err := r.DB.Save(&account).Error; err != nil {
 		return nil, fmt.Errorf("failed to update account")
 	}
 
+	// Calculate balance from sum of all transactions for this account
+	var calculatedBalance float64
+	if err := r.DB.Model(&database.Transaction{}).
+		Where("account_id = ?", account.ID).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&calculatedBalance).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate account balance")
+	}
+
 	return &model.Account{
-		ID:        strconv.Itoa(int(account.ID)),
+		ID:        utils.ToSimpleGlobalID("Account", account.ID),
 		Name:      account.Name,
 		Type:      model.AccountType(account.Type),
-		Balance:   account.Balance,
+		Balance:   calculatedBalance,
 		Icon:      account.Icon,
-		UserID:    strconv.Itoa(int(account.UserID)),
+		UserID:    utils.ToSimpleGlobalID("User", account.UserID),
 		CreatedAt: account.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: account.UpdatedAt.Format(time.RFC3339),
 	}, nil
@@ -162,7 +182,11 @@ func (r *mutationResolver) UpdateAccount(ctx context.Context, id string, input m
 // DeleteAccount is the resolver for the deleteAccount field.
 func (r *mutationResolver) DeleteAccount(ctx context.Context, id string) (bool, error) {
 	userID := ctx.Value("user_id").(uint)
-	accountID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid account ID")
+	}
+	accountID := localID
 
 	result := r.DB.Where("id = ? AND user_id = ?", accountID, userID).Delete(&database.Account{})
 	if result.Error != nil {
@@ -175,8 +199,16 @@ func (r *mutationResolver) DeleteAccount(ctx context.Context, id string) (bool, 
 // CreateTransaction is the resolver for the createTransaction field.
 func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.CreateTransactionInput) (*model.Transaction, error) {
 	userID := ctx.Value("user_id").(uint)
-	accountID, _ := strconv.Atoi(input.AccountID)
-	categoryID, _ := strconv.Atoi(input.CategoryID)
+	_, accountLocalID, err := utils.FromSimpleGlobalID(input.AccountID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account ID")
+	}
+	_, categoryLocalID, err := utils.FromSimpleGlobalID(input.CategoryID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid category ID")
+	}
+	accountID := accountLocalID
+	categoryID := categoryLocalID
 
 	// Parse date
 	date, err := time.Parse(time.RFC3339, input.Date)
@@ -189,24 +221,22 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Cr
 		Amount:     input.Amount,
 		Date:       date,
 		Notes:      input.Notes,
-		Icon:       input.Icon,
-		Color:      input.Color,
 		UserID:     userID,
 		AccountID:  uint(accountID),
 		CategoryID: uint(categoryID),
 	}
 
-		// Handle subcategory: find existing or create new one
-	if input.Subcategory != nil && *input.Subcategory != "" {
+	// Handle subcategory: find existing or create new one
+	if input.Subcategory != "" {
 		var subcategory database.Subcategory
 
 		// First, try to find existing subcategory with this name under the given category
-		err := r.DB.Where("name = ? AND category_id = ?", *input.Subcategory, categoryID).First(&subcategory).Error
+		err := r.DB.Where("name = ? AND category_id = ?", input.Subcategory, categoryID).First(&subcategory).Error
 
 		if err != nil {
 			// Subcategory doesn't exist, create it
 			subcategory = database.Subcategory{
-				Name:       *input.Subcategory,
+				Name:       input.Subcategory,
 				CategoryID: uint(categoryID),
 			}
 
@@ -222,27 +252,160 @@ func (r *mutationResolver) CreateTransaction(ctx context.Context, input model.Cr
 		return nil, fmt.Errorf("failed to create transaction")
 	}
 
+	var subcategoryID *string
+	if transaction.SubcategoryID != nil {
+		id := utils.ToSimpleGlobalID("Subcategory", *transaction.SubcategoryID)
+		subcategoryID = &id
+	}
+
 	return &model.Transaction{
-		ID:         strconv.Itoa(int(transaction.ID)),
-		Name:       transaction.Name,
-		Amount:     transaction.Amount,
-		Date:       transaction.Date.Format(time.RFC3339),
-		Notes:      transaction.Notes,
-		HasNote:    transaction.HasNote(),
-		Icon:       transaction.Icon,
-		Color:      transaction.Color,
-		UserID:     strconv.Itoa(int(transaction.UserID)),
-		AccountID:  strconv.Itoa(int(transaction.AccountID)),
-		CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-		CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
+		ID:            utils.ToSimpleGlobalID("Transaction", transaction.ID),
+		Name:          transaction.Name,
+		Amount:        transaction.Amount,
+		Date:          transaction.Date.Format(time.RFC3339),
+		Notes:         transaction.Notes,
+		HasNote:       transaction.HasNote(),
+		UserID:        utils.ToSimpleGlobalID("User", transaction.UserID),
+		AccountID:     utils.ToSimpleGlobalID("Account", transaction.AccountID),
+		CategoryID:    utils.ToSimpleGlobalID("Category", transaction.CategoryID),
+		SubcategoryID: subcategoryID,
+		CreatedAt:     transaction.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:     transaction.UpdatedAt.Format(time.RFC3339),
+	}, nil
+}
+
+// CreateTransfer is the resolver for the createTransfer field.
+func (r *mutationResolver) CreateTransfer(ctx context.Context, input model.CreateTransferInput) ([]*model.Transaction, error) {
+	userID := ctx.Value("user_id").(uint)
+	_, fromAccountLocalID, err := utils.FromSimpleGlobalID(input.FromAccountID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid from account ID")
+	}
+	_, toAccountLocalID, err := utils.FromSimpleGlobalID(input.ToAccountID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid to account ID")
+	}
+	fromAccountID := fromAccountLocalID
+	toAccountID := toAccountLocalID
+
+	// Verify both accounts belong to the user
+	var fromAccount, toAccount database.Account
+	if err := r.DB.Where("id = ? AND user_id = ?", fromAccountID, userID).First(&fromAccount).Error; err != nil {
+		return nil, fmt.Errorf("from account not found")
+	}
+	if err := r.DB.Where("id = ? AND user_id = ?", toAccountID, userID).First(&toAccount).Error; err != nil {
+		return nil, fmt.Errorf("to account not found")
+	}
+
+	// Parse date
+	date, err := time.Parse(time.RFC3339, input.Date)
+	if err != nil {
+		return nil, fmt.Errorf("invalid date format")
+	}
+
+	// Find or create "Transfer" category
+	var transferCategory database.Category
+	err = r.DB.Where("name = ? AND user_id = ?", "Transfer", userID).First(&transferCategory).Error
+	if err != nil {
+		// Create transfer category if it doesn't exist
+		transferCategory = database.Category{
+			Name:   "Transfer",
+			Icon:   "arrow.left.arrow.right",
+			Color:  "#6c757d",
+			UserID: userID,
+		}
+		if err := r.DB.Create(&transferCategory).Error; err != nil {
+			return nil, fmt.Errorf("failed to create transfer category")
+		}
+	}
+
+	// Start database transaction
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		return nil, fmt.Errorf("failed to start transaction")
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Create outgoing transaction (negative amount from source account)
+	outgoingTransaction := database.Transaction{
+		Name:       fmt.Sprintf("Transfer to %s: %s", toAccount.Name, input.Name),
+		Amount:     -input.Amount, // Negative for outgoing
+		Date:       date,
+		Notes:      input.Notes,
+		UserID:     userID,
+		AccountID:  uint(fromAccountID),
+		CategoryID: transferCategory.ID,
+	}
+
+	if err := tx.Create(&outgoingTransaction).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to create outgoing transaction")
+	}
+
+	// Create incoming transaction (positive amount to destination account)
+	incomingTransaction := database.Transaction{
+		Name:       fmt.Sprintf("Transfer from %s: %s", fromAccount.Name, input.Name),
+		Amount:     input.Amount, // Positive for incoming
+		Date:       date,
+		Notes:      input.Notes,
+		UserID:     userID,
+		AccountID:  uint(toAccountID),
+		CategoryID: transferCategory.ID,
+	}
+
+	if err := tx.Create(&incomingTransaction).Error; err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to create incoming transaction")
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit transfer")
+	}
+
+	// Return both transactions
+	return []*model.Transaction{
+		{
+			ID:         utils.ToSimpleGlobalID("Transaction", outgoingTransaction.ID),
+			Name:       outgoingTransaction.Name,
+			Amount:     outgoingTransaction.Amount,
+			Date:       outgoingTransaction.Date.Format(time.RFC3339),
+			Notes:      outgoingTransaction.Notes,
+			HasNote:    outgoingTransaction.HasNote(),
+			UserID:     utils.ToSimpleGlobalID("User", outgoingTransaction.UserID),
+			AccountID:  utils.ToSimpleGlobalID("Account", outgoingTransaction.AccountID),
+			CategoryID: utils.ToSimpleGlobalID("Category", outgoingTransaction.CategoryID),
+			CreatedAt:  outgoingTransaction.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:  outgoingTransaction.UpdatedAt.Format(time.RFC3339),
+		},
+		{
+			ID:         utils.ToSimpleGlobalID("Transaction", incomingTransaction.ID),
+			Name:       incomingTransaction.Name,
+			Amount:     incomingTransaction.Amount,
+			Date:       incomingTransaction.Date.Format(time.RFC3339),
+			Notes:      incomingTransaction.Notes,
+			HasNote:    incomingTransaction.HasNote(),
+			UserID:     utils.ToSimpleGlobalID("User", incomingTransaction.UserID),
+			AccountID:  utils.ToSimpleGlobalID("Account", incomingTransaction.AccountID),
+			CategoryID: utils.ToSimpleGlobalID("Category", incomingTransaction.CategoryID),
+			CreatedAt:  incomingTransaction.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:  incomingTransaction.UpdatedAt.Format(time.RFC3339),
+		},
 	}, nil
 }
 
 // UpdateTransaction is the resolver for the updateTransaction field.
 func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, input model.UpdateTransactionInput) (*model.Transaction, error) {
 	userID := ctx.Value("user_id").(uint)
-	transactionID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid transaction ID")
+	}
+	transactionID := localID
 
 	var transaction database.Transaction
 	if err := r.DB.Where("id = ? AND user_id = ?", transactionID, userID).First(&transaction).Error; err != nil {
@@ -266,21 +429,21 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, inp
 	if input.Notes != nil {
 		transaction.Notes = input.Notes
 	}
-	if input.Icon != nil {
-		transaction.Icon = *input.Icon
-	}
-	if input.Color != nil {
-		transaction.Color = *input.Color
-	}
 	if input.AccountID != nil {
-		accountID, _ := strconv.Atoi(*input.AccountID)
-		transaction.AccountID = uint(accountID)
+		_, accountLocalID, err := utils.FromSimpleGlobalID(*input.AccountID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid account ID")
+		}
+		transaction.AccountID = accountLocalID
 	}
 	if input.CategoryID != nil {
-		categoryID, _ := strconv.Atoi(*input.CategoryID)
-		transaction.CategoryID = uint(categoryID)
+		_, categoryLocalID, err := utils.FromSimpleGlobalID(*input.CategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid category ID")
+		}
+		transaction.CategoryID = categoryLocalID
 	}
-		if input.Subcategory != nil {
+	if input.Subcategory != nil {
 		if *input.Subcategory == "" {
 			// Empty string means remove subcategory
 			transaction.SubcategoryID = nil
@@ -310,27 +473,36 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, inp
 		return nil, fmt.Errorf("failed to update transaction")
 	}
 
+	var subcategoryID *string
+	if transaction.SubcategoryID != nil {
+		id := utils.ToSimpleGlobalID("Subcategory", *transaction.SubcategoryID)
+		subcategoryID = &id
+	}
+
 	return &model.Transaction{
-		ID:         strconv.Itoa(int(transaction.ID)),
-		Name:       transaction.Name,
-		Amount:     transaction.Amount,
-		Date:       transaction.Date.Format(time.RFC3339),
-		Notes:      transaction.Notes,
-		HasNote:    transaction.HasNote(),
-		Icon:       transaction.Icon,
-		Color:      transaction.Color,
-		UserID:     strconv.Itoa(int(transaction.UserID)),
-		AccountID:  strconv.Itoa(int(transaction.AccountID)),
-		CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-		CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
+		ID:            utils.ToSimpleGlobalID("Transaction", transaction.ID),
+		Name:          transaction.Name,
+		Amount:        transaction.Amount,
+		Date:          transaction.Date.Format(time.RFC3339),
+		Notes:         transaction.Notes,
+		HasNote:       transaction.HasNote(),
+		UserID:        utils.ToSimpleGlobalID("User", transaction.UserID),
+		AccountID:     utils.ToSimpleGlobalID("Account", transaction.AccountID),
+		CategoryID:    utils.ToSimpleGlobalID("Category", transaction.CategoryID),
+		SubcategoryID: subcategoryID,
+		CreatedAt:     transaction.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:     transaction.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
 // DeleteTransaction is the resolver for the deleteTransaction field.
 func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (bool, error) {
 	userID := ctx.Value("user_id").(uint)
-	transactionID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid transaction ID")
+	}
+	transactionID := localID
 
 	result := r.DB.Where("id = ? AND user_id = ?", transactionID, userID).Delete(&database.Transaction{})
 	if result.Error != nil {
@@ -356,18 +528,22 @@ func (r *mutationResolver) CreateCategory(ctx context.Context, input model.Creat
 	}
 
 	return &model.Category{
-		ID:     strconv.Itoa(int(category.ID)),
+		ID:     utils.ToSimpleGlobalID("Category", category.ID),
 		Name:   category.Name,
 		Icon:   category.Icon,
 		Color:  category.Color,
-		UserID: strconv.Itoa(int(category.UserID)),
+		UserID: utils.ToSimpleGlobalID("User", category.UserID),
 	}, nil
 }
 
 // UpdateCategory is the resolver for the updateCategory field.
 func (r *mutationResolver) UpdateCategory(ctx context.Context, id string, input model.UpdateCategoryInput) (*model.Category, error) {
 	userID := ctx.Value("user_id").(uint)
-	categoryID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid category ID")
+	}
+	categoryID := localID
 
 	var category database.Category
 	if err := r.DB.Where("id = ? AND user_id = ?", categoryID, userID).First(&category).Error; err != nil {
@@ -390,18 +566,22 @@ func (r *mutationResolver) UpdateCategory(ctx context.Context, id string, input 
 	}
 
 	return &model.Category{
-		ID:     strconv.Itoa(int(category.ID)),
+		ID:     utils.ToSimpleGlobalID("Category", category.ID),
 		Name:   category.Name,
 		Icon:   category.Icon,
 		Color:  category.Color,
-		UserID: strconv.Itoa(int(category.UserID)),
+		UserID: utils.ToSimpleGlobalID("User", category.UserID),
 	}, nil
 }
 
 // DeleteCategory is the resolver for the deleteCategory field.
 func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (bool, error) {
 	userID := ctx.Value("user_id").(uint)
-	categoryID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid category ID")
+	}
+	categoryID := localID
 
 	result := r.DB.Where("id = ? AND user_id = ?", categoryID, userID).Delete(&database.Category{})
 	if result.Error != nil {
@@ -414,7 +594,11 @@ func (r *mutationResolver) DeleteCategory(ctx context.Context, id string) (bool,
 // CreateSubcategory is the resolver for the createSubcategory field.
 func (r *mutationResolver) CreateSubcategory(ctx context.Context, input model.CreateSubcategoryInput) (*model.Subcategory, error) {
 	userID := ctx.Value("user_id").(uint)
-	categoryID, _ := strconv.Atoi(input.CategoryID)
+	_, categoryLocalID, err := utils.FromSimpleGlobalID(input.CategoryID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid category ID")
+	}
+	categoryID := categoryLocalID
 
 	// Verify that the category belongs to the user
 	var category database.Category
@@ -432,16 +616,20 @@ func (r *mutationResolver) CreateSubcategory(ctx context.Context, input model.Cr
 	}
 
 	return &model.Subcategory{
-		ID:         strconv.Itoa(int(subcategory.ID)),
+		ID:         utils.ToSimpleGlobalID("Subcategory", subcategory.ID),
 		Name:       subcategory.Name,
-		CategoryID: strconv.Itoa(int(subcategory.CategoryID)),
+		CategoryID: utils.ToSimpleGlobalID("Category", subcategory.CategoryID),
 	}, nil
 }
 
 // UpdateSubcategory is the resolver for the updateSubcategory field.
 func (r *mutationResolver) UpdateSubcategory(ctx context.Context, id string, input model.UpdateSubcategoryInput) (*model.Subcategory, error) {
 	userID := ctx.Value("user_id").(uint)
-	subcategoryID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid subcategory ID")
+	}
+	subcategoryID := localID
 
 	var subcategory database.Subcategory
 	if err := r.DB.Joins("Category").Where("subcategories.id = ? AND Category.user_id = ?", subcategoryID, userID).First(&subcategory).Error; err != nil {
@@ -453,13 +641,16 @@ func (r *mutationResolver) UpdateSubcategory(ctx context.Context, id string, inp
 		subcategory.Name = *input.Name
 	}
 	if input.CategoryID != nil {
-		newCategoryID, _ := strconv.Atoi(*input.CategoryID)
+		_, newCategoryLocalID, err := utils.FromSimpleGlobalID(*input.CategoryID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid category ID")
+		}
 		// Verify that the new category belongs to the user
 		var category database.Category
-		if err := r.DB.Where("id = ? AND user_id = ?", newCategoryID, userID).First(&category).Error; err != nil {
+		if err := r.DB.Where("id = ? AND user_id = ?", newCategoryLocalID, userID).First(&category).Error; err != nil {
 			return nil, fmt.Errorf("category not found")
 		}
-		subcategory.CategoryID = uint(newCategoryID)
+		subcategory.CategoryID = newCategoryLocalID
 	}
 
 	if err := r.DB.Save(&subcategory).Error; err != nil {
@@ -467,16 +658,20 @@ func (r *mutationResolver) UpdateSubcategory(ctx context.Context, id string, inp
 	}
 
 	return &model.Subcategory{
-		ID:         strconv.Itoa(int(subcategory.ID)),
+		ID:         utils.ToSimpleGlobalID("Subcategory", subcategory.ID),
 		Name:       subcategory.Name,
-		CategoryID: strconv.Itoa(int(subcategory.CategoryID)),
+		CategoryID: utils.ToSimpleGlobalID("Category", subcategory.CategoryID),
 	}, nil
 }
 
 // DeleteSubcategory is the resolver for the deleteSubcategory field.
 func (r *mutationResolver) DeleteSubcategory(ctx context.Context, id string) (bool, error) {
 	userID := ctx.Value("user_id").(uint)
-	subcategoryID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return false, fmt.Errorf("invalid subcategory ID")
+	}
+	subcategoryID := localID
 
 	result := r.DB.Joins("Category").Where("subcategories.id = ? AND Category.user_id = ?", subcategoryID, userID).Delete(&database.Subcategory{})
 	if result.Error != nil {
@@ -496,7 +691,7 @@ func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
 	}
 
 	return &model.User{
-		ID:        strconv.Itoa(int(user.ID)),
+		ID:        utils.ToSimpleGlobalID("User", user.ID),
 		Email:     user.Email,
 		Name:      user.Name,
 		CreatedAt: user.CreatedAt.Format(time.RFC3339),
@@ -522,13 +717,22 @@ func (r *queryResolver) Accounts(ctx context.Context) ([]*model.Account, error) 
 
 	var result []*model.Account
 	for _, account := range accounts {
+		// Calculate balance from sum of all transactions for this account
+		var calculatedBalance float64
+		if err := r.DB.Model(&database.Transaction{}).
+			Where("account_id = ?", account.ID).
+			Select("COALESCE(SUM(amount), 0)").
+			Scan(&calculatedBalance).Error; err != nil {
+			return nil, fmt.Errorf("failed to calculate account balance")
+		}
+
 		result = append(result, &model.Account{
-			ID:        strconv.Itoa(int(account.ID)),
+			ID:        utils.ToSimpleGlobalID("Account", account.ID),
 			Name:      account.Name,
 			Type:      model.AccountType(account.Type),
-			Balance:   account.Balance,
+			Balance:   calculatedBalance,
 			Icon:      account.Icon,
-			UserID:    strconv.Itoa(int(account.UserID)),
+			UserID:    utils.ToSimpleGlobalID("User", account.UserID),
 			CreatedAt: account.CreatedAt.Format(time.RFC3339),
 			UpdatedAt: account.UpdatedAt.Format(time.RFC3339),
 		})
@@ -540,20 +744,33 @@ func (r *queryResolver) Accounts(ctx context.Context) ([]*model.Account, error) 
 // Account is the resolver for the account field.
 func (r *queryResolver) Account(ctx context.Context, id string) (*model.Account, error) {
 	userID := ctx.Value("user_id").(uint)
-	accountID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid account ID")
+	}
+	accountID := localID
 
 	var account database.Account
 	if err := r.DB.Where("id = ? AND user_id = ?", accountID, userID).First(&account).Error; err != nil {
 		return nil, fmt.Errorf("account not found")
 	}
 
+	// Calculate balance from sum of all transactions for this account
+	var calculatedBalance float64
+	if err := r.DB.Model(&database.Transaction{}).
+		Where("account_id = ?", account.ID).
+		Select("COALESCE(SUM(amount), 0)").
+		Scan(&calculatedBalance).Error; err != nil {
+		return nil, fmt.Errorf("failed to calculate account balance")
+	}
+
 	return &model.Account{
-		ID:        strconv.Itoa(int(account.ID)),
+		ID:        utils.ToSimpleGlobalID("Account", account.ID),
 		Name:      account.Name,
 		Type:      model.AccountType(account.Type),
-		Balance:   account.Balance,
+		Balance:   calculatedBalance,
 		Icon:      account.Icon,
-		UserID:    strconv.Itoa(int(account.UserID)),
+		UserID:    utils.ToSimpleGlobalID("User", account.UserID),
 		CreatedAt: account.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: account.UpdatedAt.Format(time.RFC3339),
 	}, nil
@@ -604,26 +821,77 @@ func (r *queryResolver) Transactions(ctx context.Context, filter *model.Transact
 	}
 
 	var transactions []database.Transaction
-	if err := query.Order("date DESC").Find(&transactions).Error; err != nil {
+	if err := query.Preload("Account").Preload("Category").Preload("Subcategory").Order("date DESC").Find(&transactions).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch transactions")
 	}
 
 	var result []*model.Transaction
 	for _, transaction := range transactions {
+		var subcategoryID *string
+		if transaction.SubcategoryID != nil {
+			id := utils.ToSimpleGlobalID("Subcategory", *transaction.SubcategoryID)
+			subcategoryID = &id
+		}
+
+		var account *model.Account
+		if transaction.Account.ID != 0 {
+			// Calculate balance from sum of all transactions for this account
+			var calculatedBalance float64
+			if err := r.DB.Model(&database.Transaction{}).
+				Where("account_id = ?", transaction.Account.ID).
+				Select("COALESCE(SUM(amount), 0)").
+				Scan(&calculatedBalance).Error; err != nil {
+				return nil, fmt.Errorf("failed to calculate account balance")
+			}
+
+			account = &model.Account{
+				ID:        utils.ToSimpleGlobalID("Account", transaction.Account.ID),
+				Name:      transaction.Account.Name,
+				Type:      model.AccountType(transaction.Account.Type),
+				Balance:   calculatedBalance,
+				Icon:      transaction.Account.Icon,
+				UserID:    utils.ToSimpleGlobalID("User", transaction.Account.UserID),
+				CreatedAt: transaction.Account.CreatedAt.Format(time.RFC3339),
+				UpdatedAt: transaction.Account.UpdatedAt.Format(time.RFC3339),
+			}
+		}
+
+		var category *model.Category
+		if transaction.Category.ID != 0 {
+			category = &model.Category{
+				ID:     utils.ToSimpleGlobalID("Category", transaction.Category.ID),
+				Name:   transaction.Category.Name,
+				Icon:   transaction.Category.Icon,
+				Color:  transaction.Category.Color,
+				UserID: utils.ToSimpleGlobalID("User", transaction.Category.UserID),
+			}
+		}
+
+		var subcategory *model.Subcategory
+		if transaction.Subcategory != nil && transaction.Subcategory.ID != 0 {
+			subcategory = &model.Subcategory{
+				ID:         utils.ToSimpleGlobalID("Subcategory", transaction.Subcategory.ID),
+				Name:       transaction.Subcategory.Name,
+				CategoryID: utils.ToSimpleGlobalID("Category", transaction.Subcategory.CategoryID),
+			}
+		}
+
 		result = append(result, &model.Transaction{
-			ID:         strconv.Itoa(int(transaction.ID)),
-			Name:       transaction.Name,
-			Amount:     transaction.Amount,
-			Date:       transaction.Date.Format(time.RFC3339),
-			Notes:      transaction.Notes,
-			HasNote:    transaction.HasNote(),
-			Icon:       transaction.Icon,
-			Color:      transaction.Color,
-			UserID:     strconv.Itoa(int(transaction.UserID)),
-			AccountID:  strconv.Itoa(int(transaction.AccountID)),
-			CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-			CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
-			UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
+			ID:            utils.ToSimpleGlobalID("Transaction", transaction.ID),
+			Name:          transaction.Name,
+			Amount:        transaction.Amount,
+			Date:          transaction.Date.Format(time.RFC3339),
+			Notes:         transaction.Notes,
+			HasNote:       transaction.HasNote(),
+			UserID:        utils.ToSimpleGlobalID("User", transaction.UserID),
+			AccountID:     utils.ToSimpleGlobalID("Account", transaction.AccountID),
+			CategoryID:    utils.ToSimpleGlobalID("Category", transaction.CategoryID),
+			SubcategoryID: subcategoryID,
+			Account:       account,
+			Category:      category,
+			Subcategory:   subcategory,
+			CreatedAt:     transaction.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:     transaction.UpdatedAt.Format(time.RFC3339),
 		})
 	}
 
@@ -633,27 +901,36 @@ func (r *queryResolver) Transactions(ctx context.Context, filter *model.Transact
 // Transaction is the resolver for the transaction field.
 func (r *queryResolver) Transaction(ctx context.Context, id string) (*model.Transaction, error) {
 	userID := ctx.Value("user_id").(uint)
-	transactionID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid transaction ID")
+	}
+	transactionID := localID
 
 	var transaction database.Transaction
-	if err := r.DB.Where("id = ? AND user_id = ?", transactionID, userID).First(&transaction).Error; err != nil {
+	if err := r.DB.Preload("Account").Preload("Category").Preload("Subcategory").Where("id = ? AND user_id = ?", transactionID, userID).First(&transaction).Error; err != nil {
 		return nil, fmt.Errorf("transaction not found")
 	}
 
+	var subcategoryID *string
+	if transaction.SubcategoryID != nil {
+		id := utils.ToSimpleGlobalID("Subcategory", *transaction.SubcategoryID)
+		subcategoryID = &id
+	}
+
 	return &model.Transaction{
-		ID:         strconv.Itoa(int(transaction.ID)),
-		Name:       transaction.Name,
-		Amount:     transaction.Amount,
-		Date:       transaction.Date.Format(time.RFC3339),
-		Notes:      transaction.Notes,
-		HasNote:    transaction.HasNote(),
-		Icon:       transaction.Icon,
-		Color:      transaction.Color,
-		UserID:     strconv.Itoa(int(transaction.UserID)),
-		AccountID:  strconv.Itoa(int(transaction.AccountID)),
-		CategoryID: strconv.Itoa(int(transaction.CategoryID)),
-		CreatedAt:  transaction.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:  transaction.UpdatedAt.Format(time.RFC3339),
+		ID:            utils.ToSimpleGlobalID("Transaction", transaction.ID),
+		Name:          transaction.Name,
+		Amount:        transaction.Amount,
+		Date:          transaction.Date.Format(time.RFC3339),
+		Notes:         transaction.Notes,
+		HasNote:       transaction.HasNote(),
+		UserID:        utils.ToSimpleGlobalID("User", transaction.UserID),
+		AccountID:     utils.ToSimpleGlobalID("Account", transaction.AccountID),
+		CategoryID:    utils.ToSimpleGlobalID("Category", transaction.CategoryID),
+		SubcategoryID: subcategoryID,
+		CreatedAt:     transaction.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:     transaction.UpdatedAt.Format(time.RFC3339),
 	}, nil
 }
 
@@ -669,11 +946,11 @@ func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, erro
 	var result []*model.Category
 	for _, category := range categories {
 		result = append(result, &model.Category{
-			ID:     strconv.Itoa(int(category.ID)),
+			ID:     utils.ToSimpleGlobalID("Category", category.ID),
 			Name:   category.Name,
 			Icon:   category.Icon,
 			Color:  category.Color,
-			UserID: strconv.Itoa(int(category.UserID)),
+			UserID: utils.ToSimpleGlobalID("User", category.UserID),
 		})
 	}
 
@@ -683,7 +960,11 @@ func (r *queryResolver) Categories(ctx context.Context) ([]*model.Category, erro
 // Category is the resolver for the category field.
 func (r *queryResolver) Category(ctx context.Context, id string) (*model.Category, error) {
 	userID := ctx.Value("user_id").(uint)
-	categoryID, _ := strconv.Atoi(id)
+	_, localID, err := utils.FromSimpleGlobalID(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid category ID")
+	}
+	categoryID := localID
 
 	var category database.Category
 	if err := r.DB.Where("id = ? AND user_id = ?", categoryID, userID).First(&category).Error; err != nil {
@@ -691,11 +972,11 @@ func (r *queryResolver) Category(ctx context.Context, id string) (*model.Categor
 	}
 
 	return &model.Category{
-		ID:     strconv.Itoa(int(category.ID)),
+		ID:     utils.ToSimpleGlobalID("Category", category.ID),
 		Name:   category.Name,
 		Icon:   category.Icon,
 		Color:  category.Color,
-		UserID: strconv.Itoa(int(category.UserID)),
+		UserID: utils.ToSimpleGlobalID("User", category.UserID),
 	}, nil
 }
 
@@ -703,12 +984,26 @@ func (r *queryResolver) Category(ctx context.Context, id string) (*model.Categor
 func (r *queryResolver) NetWorth(ctx context.Context) (float64, error) {
 	userID := ctx.Value("user_id").(uint)
 
-	var totalBalance float64
-	if err := r.DB.Model(&database.Account{}).Where("user_id = ?", userID).Select("COALESCE(SUM(balance), 0)").Scan(&totalBalance).Error; err != nil {
-		return 0, fmt.Errorf("failed to calculate net worth")
+	// Get all accounts for the user
+	var accounts []database.Account
+	if err := r.DB.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
+		return 0, fmt.Errorf("failed to fetch accounts")
 	}
 
-	return totalBalance, nil
+	var totalNetWorth float64
+	for _, account := range accounts {
+		// Calculate balance for each account from transactions
+		var accountBalance float64
+		if err := r.DB.Model(&database.Transaction{}).
+			Where("account_id = ?", account.ID).
+			Select("COALESCE(SUM(amount), 0)").
+			Scan(&accountBalance).Error; err != nil {
+			return 0, fmt.Errorf("failed to calculate account balance")
+		}
+		totalNetWorth += accountBalance
+	}
+
+	return totalNetWorth, nil
 }
 
 // MonthlySpending is the resolver for the monthlySpending field.
@@ -763,12 +1058,26 @@ func (r *queryResolver) SavingsRate(ctx context.Context, year int32, month int32
 func (r *queryResolver) DebtToIncomeRatio(ctx context.Context) (float64, error) {
 	userID := ctx.Value("user_id").(uint)
 
-	// Get total debt (negative account balances - credit cards, loans)
+	// Get debt accounts (credit cards, loans)
+	var debtAccounts []database.Account
+	if err := r.DB.Where("user_id = ? AND type IN ('CREDIT_CARD', 'LOAN')", userID).Find(&debtAccounts).Error; err != nil {
+		return 0, fmt.Errorf("failed to fetch debt accounts")
+	}
+
 	var totalDebt float64
-	if err := r.DB.Model(&database.Account{}).
-		Where("user_id = ? AND type IN ('CREDIT_CARD', 'LOAN') AND balance < 0", userID).
-		Select("COALESCE(SUM(ABS(balance)), 0)").Scan(&totalDebt).Error; err != nil {
-		return 0, fmt.Errorf("failed to calculate debt")
+	for _, account := range debtAccounts {
+		// Calculate balance for each debt account from transactions
+		var accountBalance float64
+		if err := r.DB.Model(&database.Transaction{}).
+			Where("account_id = ?", account.ID).
+			Select("COALESCE(SUM(amount), 0)").
+			Scan(&accountBalance).Error; err != nil {
+			return 0, fmt.Errorf("failed to calculate account balance")
+		}
+		// For debt accounts, negative balances represent debt
+		if accountBalance < 0 {
+			totalDebt += -accountBalance // Convert to positive debt amount
+		}
 	}
 
 	// Get monthly income (last 30 days)

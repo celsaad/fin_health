@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { SFSymbol } from "expo-symbols";
 import { useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
@@ -40,7 +41,11 @@ export default function Account({ account }: AccountProps) {
       <Card margin="small">
         <View style={styles.accountContent}>
           <View style={styles.accountIcon}>
-            <IconSymbol name={account.icon} size={24} color="#666" />
+            <IconSymbol
+              name={account.icon as SFSymbol}
+              size={24}
+              color="#666"
+            />
           </View>
           <View>
             <Text style={styles.accountName}>{account.name}</Text>

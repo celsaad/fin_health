@@ -60,11 +60,18 @@ type CreateTransactionInput struct {
 	Amount      float64 `json:"amount"`
 	Date        string  `json:"date"`
 	Notes       *string `json:"notes,omitempty"`
-	Icon        string  `json:"icon"`
-	Color       string  `json:"color"`
 	AccountID   string  `json:"accountId"`
 	CategoryID  string  `json:"categoryId"`
-	Subcategory *string `json:"subcategory,omitempty"`
+	Subcategory string  `json:"subcategory"`
+}
+
+type CreateTransferInput struct {
+	Name          string  `json:"name"`
+	Amount        float64 `json:"amount"`
+	Date          string  `json:"date"`
+	Notes         *string `json:"notes,omitempty"`
+	FromAccountID string  `json:"fromAccountId"`
+	ToAccountID   string  `json:"toAccountId"`
 }
 
 type LoginInput struct {
@@ -99,8 +106,6 @@ type Transaction struct {
 	Date          string       `json:"date"`
 	Notes         *string      `json:"notes,omitempty"`
 	HasNote       bool         `json:"hasNote"`
-	Icon          string       `json:"icon"`
-	Color         string       `json:"color"`
 	UserID        string       `json:"userId"`
 	User          *User        `json:"user"`
 	AccountID     string       `json:"accountId"`
@@ -125,9 +130,8 @@ type TransactionFilter struct {
 }
 
 type UpdateAccountInput struct {
-	Name    *string  `json:"name,omitempty"`
-	Balance *float64 `json:"balance,omitempty"`
-	Icon    *string  `json:"icon,omitempty"`
+	Name *string `json:"name,omitempty"`
+	Icon *string `json:"icon,omitempty"`
 }
 
 type UpdateCategoryInput struct {
@@ -146,8 +150,6 @@ type UpdateTransactionInput struct {
 	Amount      *float64 `json:"amount,omitempty"`
 	Date        *string  `json:"date,omitempty"`
 	Notes       *string  `json:"notes,omitempty"`
-	Icon        *string  `json:"icon,omitempty"`
-	Color       *string  `json:"color,omitempty"`
 	AccountID   *string  `json:"accountId,omitempty"`
 	CategoryID  *string  `json:"categoryId,omitempty"`
 	Subcategory *string  `json:"subcategory,omitempty"`

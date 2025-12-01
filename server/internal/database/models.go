@@ -61,8 +61,6 @@ type Transaction struct {
 	Amount        float64   `json:"amount" gorm:"not null"`
 	Date          time.Time `json:"date" gorm:"not null"`
 	Notes         *string   `json:"notes"`
-	Icon          string    `json:"icon" gorm:"not null"`
-	Color         string    `json:"color" gorm:"not null"`
 	UserID        uint      `json:"user_id" gorm:"not null"`
 	AccountID     uint      `json:"account_id" gorm:"not null"`
 	CategoryID    uint      `json:"category_id" gorm:"not null"`

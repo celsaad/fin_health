@@ -1,10 +1,7 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState, useEffect, createContext, useContext } from "react";
-import { useMutation } from "react-relay";
+import { useState, useEffect, createContext } from "react";
 
-import { AuthMutations_LoginMutation } from "@/src/mutations/__generated__/AuthMutations_LoginMutation.graphql";
-import { AuthMutations_RegisterMutation } from "@/src/mutations/__generated__/AuthMutations_RegisterMutation.graphql";
-import { LoginMutation, RegisterMutation } from "@/src/mutations/AuthMutations";
+import { AuthManager } from "@/src/relay/Environment";
+import { AuthService } from "@/src/services/AuthService";
 
 interface User {
   id: string;
@@ -42,11 +39,6 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const [loginMutation] =
-    useMutation<AuthMutations_LoginMutation>(LoginMutation);
-  const [registerMutation] =
-    useMutation<AuthMutations_RegisterMutation>(RegisterMutation);
-
   const isAuthenticated = !!user;
 
   useEffect(() => {
@@ -55,15 +47,13 @@ export function useAuth() {
 
   const checkAuthStatus = async () => {
     try {
-      const token = await AsyncStorage.getItem("authToken");
-      const userData = await AsyncStorage.getItem("userData");
+      const isAuth = await AuthService.isAuthenticated();
+      console.log("Auth check:", { isAuthenticated: isAuth });
 
-      console.log("Auth check:", { token: !!token, userData: !!userData });
-
-      if (token && userData) {
-        const parsedUser = JSON.parse(userData);
-        console.log("Setting user:", parsedUser);
-        setUser(parsedUser);
+      if (isAuth) {
+        const userData = await AuthService.getCurrentUser();
+        console.log("Setting user:", userData);
+        setUser(userData);
       }
     } catch (error) {
       console.error("Error checking auth status:", error);
@@ -75,37 +65,9 @@ export function useAuth() {
   const login = async (credentials: LoginInput) => {
     try {
       setLoading(true);
-
-      const response = await new Promise<any>((resolve, reject) => {
-        loginMutation({
-          variables: {
-            input: credentials,
-          },
-          onCompleted: (data) => {
-            console.log("Login response:", data);
-            resolve(data);
-          },
-          onError: (error) => {
-            console.error("Login error:", error);
-            reject(error);
-          },
-        });
-      });
-
-      console.log("Processing login response:", response);
-
-      if (response.login?.token && response.login?.user) {
-        await AsyncStorage.setItem("authToken", response.login.token);
-        await AsyncStorage.setItem(
-          "userData",
-          JSON.stringify(response.login.user),
-        );
-        console.log("Login successful, setting user:", response.login.user);
-        setUser(response.login.user);
-      } else {
-        console.error("Invalid login response structure:", response);
-        throw new Error("Invalid login response");
-      }
+      const authData = await AuthService.login(credentials);
+      console.log("Login successful, setting user:", authData.user);
+      setUser(authData.user);
     } catch (error) {
       throw error;
     } finally {
@@ -116,31 +78,8 @@ export function useAuth() {
   const register = async (data: RegisterInput) => {
     try {
       setLoading(true);
-
-      const response = await new Promise<any>((resolve, reject) => {
-        registerMutation({
-          variables: {
-            input: data,
-          },
-          onCompleted: (data) => {
-            resolve(data);
-          },
-          onError: (error) => {
-            reject(error);
-          },
-        });
-      });
-
-      if (response.register?.token && response.register?.user) {
-        await AsyncStorage.setItem("authToken", response.register.token);
-        await AsyncStorage.setItem(
-          "userData",
-          JSON.stringify(response.register.user),
-        );
-        setUser(response.register.user);
-      } else {
-        throw new Error("Invalid registration response");
-      }
+      const authData = await AuthService.register(data);
+      setUser(authData.user);
     } catch (error) {
       throw error;
     } finally {
@@ -150,8 +89,7 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await AsyncStorage.removeItem("authToken");
-      await AsyncStorage.removeItem("userData");
+      await AuthService.logout();
       setUser(null);
     } catch (error) {
       console.error("Error during logout:", error);

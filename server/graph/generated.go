@@ -81,6 +81,7 @@ type ComplexityRoot struct {
 		CreateCategory    func(childComplexity int, input model.CreateCategoryInput) int
 		CreateSubcategory func(childComplexity int, input model.CreateSubcategoryInput) int
 		CreateTransaction func(childComplexity int, input model.CreateTransactionInput) int
+		CreateTransfer    func(childComplexity int, input model.CreateTransferInput) int
 		DeleteAccount     func(childComplexity int, id string) int
 		DeleteCategory    func(childComplexity int, id string) int
 		DeleteSubcategory func(childComplexity int, id string) int
@@ -121,12 +122,10 @@ type ComplexityRoot struct {
 		Amount        func(childComplexity int) int
 		Category      func(childComplexity int) int
 		CategoryID    func(childComplexity int) int
-		Color         func(childComplexity int) int
 		CreatedAt     func(childComplexity int) int
 		Date          func(childComplexity int) int
 		HasNote       func(childComplexity int) int
 		ID            func(childComplexity int) int
-		Icon          func(childComplexity int) int
 		Name          func(childComplexity int) int
 		Notes         func(childComplexity int) int
 		Subcategory   func(childComplexity int) int
@@ -155,6 +154,7 @@ type MutationResolver interface {
 	UpdateAccount(ctx context.Context, id string, input model.UpdateAccountInput) (*model.Account, error)
 	DeleteAccount(ctx context.Context, id string) (bool, error)
 	CreateTransaction(ctx context.Context, input model.CreateTransactionInput) (*model.Transaction, error)
+	CreateTransfer(ctx context.Context, input model.CreateTransferInput) ([]*model.Transaction, error)
 	UpdateTransaction(ctx context.Context, id string, input model.UpdateTransactionInput) (*model.Transaction, error)
 	DeleteTransaction(ctx context.Context, id string) (bool, error)
 	CreateCategory(ctx context.Context, input model.CreateCategoryInput) (*model.Category, error)
@@ -384,6 +384,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.CreateTransaction(childComplexity, args["input"].(model.CreateTransactionInput)), true
+
+	case "Mutation.createTransfer":
+		if e.complexity.Mutation.CreateTransfer == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTransfer_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTransfer(childComplexity, args["input"].(model.CreateTransferInput)), true
 
 	case "Mutation.deleteAccount":
 		if e.complexity.Mutation.DeleteAccount == nil {
@@ -682,13 +694,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Transaction.CategoryID(childComplexity), true
 
-	case "Transaction.color":
-		if e.complexity.Transaction.Color == nil {
-			break
-		}
-
-		return e.complexity.Transaction.Color(childComplexity), true
-
 	case "Transaction.createdAt":
 		if e.complexity.Transaction.CreatedAt == nil {
 			break
@@ -716,13 +721,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Transaction.ID(childComplexity), true
-
-	case "Transaction.icon":
-		if e.complexity.Transaction.Icon == nil {
-			break
-		}
-
-		return e.complexity.Transaction.Icon(childComplexity), true
 
 	case "Transaction.name":
 		if e.complexity.Transaction.Name == nil {
@@ -841,6 +839,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateCategoryInput,
 		ec.unmarshalInputCreateSubcategoryInput,
 		ec.unmarshalInputCreateTransactionInput,
+		ec.unmarshalInputCreateTransferInput,
 		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputTransactionFilter,
@@ -1001,6 +1000,17 @@ func (ec *executionContext) field_Mutation_createTransaction_args(ctx context.Co
 	var err error
 	args := map[string]any{}
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateTransactionInput2finᚑhealthᚑserverᚋgraphᚋmodelᚐCreateTransactionInput)
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createTransfer_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input", ec.unmarshalNCreateTransferInput2finᚑhealthᚑserverᚋgraphᚋmodelᚐCreateTransferInput)
 	if err != nil {
 		return nil, err
 	}
@@ -1664,10 +1674,6 @@ func (ec *executionContext) fieldContext_Account_transactions(_ context.Context,
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -2278,10 +2284,6 @@ func (ec *executionContext) fieldContext_Category_transactions(_ context.Context
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -2691,10 +2693,6 @@ func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -2727,6 +2725,95 @@ func (ec *executionContext) fieldContext_Mutation_createTransaction(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createTransaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createTransfer(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createTransfer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTransfer(rctx, fc.Args["input"].(model.CreateTransferInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Transaction)
+	fc.Result = res
+	return ec.marshalNTransaction2ᚕᚖfinᚑhealthᚑserverᚋgraphᚋmodelᚐTransactionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createTransfer(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Transaction_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Transaction_name(ctx, field)
+			case "amount":
+				return ec.fieldContext_Transaction_amount(ctx, field)
+			case "date":
+				return ec.fieldContext_Transaction_date(ctx, field)
+			case "notes":
+				return ec.fieldContext_Transaction_notes(ctx, field)
+			case "hasNote":
+				return ec.fieldContext_Transaction_hasNote(ctx, field)
+			case "userId":
+				return ec.fieldContext_Transaction_userId(ctx, field)
+			case "user":
+				return ec.fieldContext_Transaction_user(ctx, field)
+			case "accountId":
+				return ec.fieldContext_Transaction_accountId(ctx, field)
+			case "account":
+				return ec.fieldContext_Transaction_account(ctx, field)
+			case "categoryId":
+				return ec.fieldContext_Transaction_categoryId(ctx, field)
+			case "category":
+				return ec.fieldContext_Transaction_category(ctx, field)
+			case "subcategoryId":
+				return ec.fieldContext_Transaction_subcategoryId(ctx, field)
+			case "subcategory":
+				return ec.fieldContext_Transaction_subcategory(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Transaction_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Transaction_updatedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Transaction", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createTransfer_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2784,10 +2871,6 @@ func (ec *executionContext) fieldContext_Mutation_updateTransaction(ctx context.
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -3524,10 +3607,6 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -3614,10 +3693,6 @@ func (ec *executionContext) fieldContext_Query_transaction(ctx context.Context, 
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -4362,10 +4437,6 @@ func (ec *executionContext) fieldContext_Subcategory_transactions(_ context.Cont
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -4649,94 +4720,6 @@ func (ec *executionContext) fieldContext_Transaction_hasNote(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Transaction_icon(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Transaction_icon(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Icon, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Transaction_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Transaction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Transaction_color(ctx context.Context, field graphql.CollectedField, obj *model.Transaction) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Transaction_color(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Color, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Transaction_color(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Transaction",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5583,10 +5566,6 @@ func (ec *executionContext) fieldContext_User_transactions(_ context.Context, fi
 				return ec.fieldContext_Transaction_notes(ctx, field)
 			case "hasNote":
 				return ec.fieldContext_Transaction_hasNote(ctx, field)
-			case "icon":
-				return ec.fieldContext_Transaction_icon(ctx, field)
-			case "color":
-				return ec.fieldContext_Transaction_color(ctx, field)
 			case "userId":
 				return ec.fieldContext_Transaction_userId(ctx, field)
 			case "user":
@@ -7750,7 +7729,7 @@ func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "icon", "color", "accountId", "categoryId", "subcategory"}
+	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "accountId", "categoryId", "subcategory"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7785,20 +7764,6 @@ func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.Notes = data
-		case "icon":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Icon = data
-		case "color":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Color = data
 		case "accountId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
 			data, err := ec.unmarshalNID2string(ctx, v)
@@ -7815,11 +7780,73 @@ func (ec *executionContext) unmarshalInputCreateTransactionInput(ctx context.Con
 			it.CategoryID = data
 		case "subcategory":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subcategory"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			data, err := ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Subcategory = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputCreateTransferInput(ctx context.Context, obj any) (model.CreateTransferInput, error) {
+	var it model.CreateTransferInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "fromAccountId", "toAccountId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "date":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("date"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Date = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "fromAccountId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromAccountId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FromAccountID = data
+		case "toAccountId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toAccountId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToAccountID = data
 		}
 	}
 
@@ -7984,7 +8011,7 @@ func (ec *executionContext) unmarshalInputUpdateAccountInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "balance", "icon"}
+	fieldsInOrder := [...]string{"name", "icon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7998,13 +8025,6 @@ func (ec *executionContext) unmarshalInputUpdateAccountInput(ctx context.Context
 				return it, err
 			}
 			it.Name = data
-		case "balance":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("balance"))
-			data, err := ec.unmarshalOFloat2ᚖfloat64(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Balance = data
 		case "icon":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -8100,7 +8120,7 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "icon", "color", "accountId", "categoryId", "subcategory"}
+	fieldsInOrder := [...]string{"name", "amount", "date", "notes", "accountId", "categoryId", "subcategory"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8135,20 +8155,6 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.Notes = data
-		case "icon":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icon"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Icon = data
-		case "color":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("color"))
-			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Color = data
 		case "accountId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("accountId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
@@ -8443,6 +8449,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createTransaction":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createTransaction(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createTransfer":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createTransfer(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -8903,16 +8916,6 @@ func (ec *executionContext) _Transaction(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._Transaction_notes(ctx, field, obj)
 		case "hasNote":
 			out.Values[i] = ec._Transaction_hasNote(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "icon":
-			out.Values[i] = ec._Transaction_icon(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "color":
-			out.Values[i] = ec._Transaction_color(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9565,6 +9568,11 @@ func (ec *executionContext) unmarshalNCreateSubcategoryInput2finᚑhealthᚑserv
 
 func (ec *executionContext) unmarshalNCreateTransactionInput2finᚑhealthᚑserverᚋgraphᚋmodelᚐCreateTransactionInput(ctx context.Context, v any) (model.CreateTransactionInput, error) {
 	res, err := ec.unmarshalInputCreateTransactionInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateTransferInput2finᚑhealthᚑserverᚋgraphᚋmodelᚐCreateTransferInput(ctx context.Context, v any) (model.CreateTransferInput, error) {
+	res, err := ec.unmarshalInputCreateTransferInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 

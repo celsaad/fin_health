@@ -1,3 +1,4 @@
+import { RelativePathString, useRouter } from "expo-router";
 import { SFSymbol } from "expo-symbols";
 import { useCallback } from "react";
 import { View, Text, StyleSheet, ScrollView, Button } from "react-native";
@@ -5,11 +6,14 @@ import { View, Text, StyleSheet, ScrollView, Button } from "react-native";
 import { Header, Section, Card, ScreenContainer } from "@/src/components/ui";
 import { IconSymbol } from "@/src/components/ui/IconSymbol";
 
+import { useAuth } from "../../hooks/useAuth";
+
 type SettingItem = {
   icon: SFSymbol;
   title: string;
   description: string;
-  action: () => void;
+  action?: () => void;
+  navigationPath?: RelativePathString;
 };
 
 const accountSettings: SettingItem[] = [
@@ -30,6 +34,12 @@ const accountSettings: SettingItem[] = [
     title: "Linked Accounts",
     description: "Manage your linked accounts",
     action: () => console.log("Linked Accounts"),
+  },
+  {
+    icon: "arrow.triangle.swap",
+    title: "Categories",
+    description: "Manage your categories",
+    navigationPath: "/categories",
   },
 ];
 
@@ -70,8 +80,27 @@ const supportSettings: SettingItem[] = [
 ];
 
 export default function SettingsScreen() {
+  const { logout } = useAuth();
+  const router = useRouter();
+
+  const handleNavigation = (route: RelativePathString) => {
+    router.push(route);
+  };
+
+  const handlePress = useCallback(
+    (item: SettingItem) => () => {
+      if (item.action) {
+        item.action();
+      }
+      if (item.navigationPath) {
+        handleNavigation(item.navigationPath);
+      }
+    },
+    [handleNavigation],
+  );
+
   const renderSettingItem = (item: SettingItem) => (
-    <Card key={item.title} margin="small" onPress={item.action}>
+    <Card key={item.title} margin="small" onPress={handlePress(item)}>
       <View style={styles.settingContent}>
         <View style={styles.settingIcon}>
           <IconSymbol name={item.icon} size={20} color="#666" />
@@ -84,10 +113,6 @@ export default function SettingsScreen() {
       </View>
     </Card>
   );
-
-  const logout = useCallback(() => {
-    console.log("Logout");
-  }, []);
 
   return (
     <ScreenContainer hasTabBar>

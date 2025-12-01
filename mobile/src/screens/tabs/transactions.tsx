@@ -1,168 +1,198 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
+import { graphql, useLazyLoadQuery } from "react-relay";
 
 import Transaction from "@/src/components/Transaction";
 import { Header, Input, Button, ScreenContainer } from "@/src/components/ui";
-import { TransactionData } from "@/src/types/transaction";
 
-const transactions: TransactionData[] = [
-  {
-    name: "Whole Foods",
-    category: {
-      id: "groceries",
-      name: "Groceries",
-    },
-    subcategory: {
-      id: "groceries",
-      name: "Groceries",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -50,
-    icon: "cart.fill",
-    color: "#ff3b30",
-    date: "Today",
-    hasNote: true,
-  },
-  {
-    name: "Tech Solutions Inc.",
-    category: {
-      id: "salary",
-      name: "Salary",
-    },
-    subcategory: {
-      id: "salary",
-      name: "Salary",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: 2500,
-    icon: "briefcase.fill",
-    color: "#34c759",
-    date: "Yesterday",
-    hasNote: false,
-  },
-  {
-    name: "Apartment Complex",
-    category: {
-      id: "rent",
-      name: "Rent",
-    },
-    subcategory: {
-      id: "rent",
-      name: "Rent",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -1200,
-    icon: "house.fill",
-    color: "#ff3b30",
-    date: "2 days ago",
-    hasNote: false,
-  },
-  {
-    name: "Sushi Bar",
-    category: {
-      id: "dining-out",
-      name: "Dining Out",
-    },
-    subcategory: {
-      id: "dining-out",
-      name: "Dining Out",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -30,
-    icon: "fork.knife",
-    color: "#ff3b30",
-    date: "3 days ago",
-    hasNote: true,
-  },
-  {
-    name: "Energy Co.",
-    category: {
-      id: "utilities",
-      name: "Utilities",
-    },
-    subcategory: {
-      id: "utilities",
-      name: "Utilities",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -150,
-    icon: "lightbulb.fill",
-    color: "#ff3b30",
-    date: "1 week ago",
-    hasNote: false,
-  },
-  {
-    name: "Movie Theater",
-    category: {
-      id: "entertainment",
-      name: "Entertainment",
-    },
-    subcategory: {
-      id: "entertainment",
-      name: "Entertainment",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -25,
-    icon: "tv.fill",
-    color: "#ff3b30",
-    date: "1 week ago",
-    hasNote: false,
-  },
-  {
-    name: "Gas Station",
-    category: {
-      id: "transportation",
-      name: "Transportation",
-    },
-    subcategory: {
-      id: "transportation",
-      name: "Transportation",
-    },
-    account: {
-      id: "checking",
-      name: "Checking",
-      amount: 1234.56,
-      icon: "building.columns.fill",
-    },
-    amount: -40,
-    icon: "car.fill",
-    color: "#ff3b30",
-    date: "1 week ago",
-    hasNote: false,
-  },
-];
+import { transactionsScreenQuery } from "./__generated__/transactionsScreenQuery.graphql";
+
+// const transactions: TransactionData[] = [
+//   {
+//     name: "Whole Foods",
+//     category: {
+//       id: "groceries",
+//       name: "Groceries",
+//     },
+//     subcategory: {
+//       id: "groceries",
+//       name: "Groceries",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: -50,
+//     icon: "cart.fill",
+//     color: "#ff3b30",
+//     date: "Today",
+//     hasNote: true,
+//   },
+//   {
+//     name: "Tech Solutions Inc.",
+//     category: {
+//       id: "salary",
+//       name: "Salary",
+//     },
+//     subcategory: {
+//       id: "salary",
+//       name: "Salary",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: 2500,
+//     icon: "briefcase.fill",
+//     color: "#34c759",
+//     date: "Yesterday",
+//     hasNote: false,
+//   },
+//   {
+//     name: "Apartment Complex",
+//     category: {
+//       id: "rent",
+//       name: "Rent",
+//     },
+//     subcategory: {
+//       id: "rent",
+//       name: "Rent",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: -1200,
+//     icon: "house.fill",
+//     color: "#ff3b30",
+//     date: "2 days ago",
+//     hasNote: false,
+//   },
+//   {
+//     name: "Sushi Bar",
+//     category: {
+//       id: "dining-out",
+//       name: "Dining Out",
+//     },
+//     subcategory: {
+//       id: "dining-out",
+//       name: "Dining Out",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: -30,
+//     icon: "fork.knife",
+//     color: "#ff3b30",
+//     date: "3 days ago",
+//     hasNote: true,
+//   },
+//   {
+//     name: "Energy Co.",
+//     category: {
+//       id: "utilities",
+//       name: "Utilities",
+//     },
+//     subcategory: {
+//       id: "utilities",
+//       name: "Utilities",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: -150,
+//     icon: "lightbulb.fill",
+//     color: "#ff3b30",
+//     date: "1 week ago",
+//     hasNote: false,
+//   },
+//   {
+//     name: "Movie Theater",
+//     category: {
+//       id: "entertainment",
+//       name: "Entertainment",
+//     },
+//     subcategory: {
+//       id: "entertainment",
+//       name: "Entertainment",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: -25,
+//     icon: "tv.fill",
+//     color: "#ff3b30",
+//     date: "1 week ago",
+//     hasNote: false,
+//   },
+//   {
+//     name: "Gas Station",
+//     category: {
+//       id: "transportation",
+//       name: "Transportation",
+//     },
+//     subcategory: {
+//       id: "transportation",
+//       name: "Transportation",
+//     },
+//     account: {
+//       id: "checking",
+//       name: "Checking",
+//       amount: 1234.56,
+//       icon: "building.columns.fill",
+//     },
+//     amount: -40,
+//     icon: "car.fill",
+//     color: "#ff3b30",
+//     date: "1 week ago",
+//     hasNote: false,
+//   },
+// ];
 
 export default function TransactionsScreen() {
+  const { transactions } = useLazyLoadQuery<transactionsScreenQuery>(
+    graphql`
+      query transactionsScreenQuery {
+        transactions {
+          amount
+          date
+          name
+          notes
+          hasNote
+          category {
+            id
+            name
+            icon
+          }
+          subcategory {
+            id
+            name
+          }
+          account {
+            id
+            name
+          }
+        }
+      }
+    `,
+    {},
+  );
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date");
 
@@ -174,14 +204,14 @@ export default function TransactionsScreen() {
           transaction.category.name
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
-          transaction.subcategory.name
+          transaction?.subcategory?.name
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
           transaction.account.name
             .toLowerCase()
             .includes(searchQuery.toLowerCase()),
       ),
-    [searchQuery],
+    [transactions, searchQuery],
   );
 
   const handleSortByDate = useCallback(() => {
@@ -234,7 +264,7 @@ export default function TransactionsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {filteredTransactions.map((transaction, index) => (
-          <Transaction key={index} transaction={transaction} index={index} />
+          <Transaction key={index} index={index} transaction={transaction} />
         ))}
       </ScrollView>
     </ScreenContainer>

@@ -21,22 +21,12 @@ export const CreateTransactionMutation = graphql`
       date
       notes
       hasNote
-      icon
-      color
-      account {
-        id
-        name
-        type
-      }
-      category {
-        id
-        name
-        icon
-        color
-      }
+      accountId
+      categoryId
       subcategory {
         id
         name
+        categoryId
       }
       createdAt
       updatedAt
@@ -51,10 +41,43 @@ export const CreateCategoryMutation = graphql`
       name
       icon
       color
-      subcategories {
-        id
-        name
-      }
+    }
+  }
+`;
+
+export const UpdateCategoryMutation = graphql`
+  mutation DataMutations_UpdateCategoryMutation(
+    $id: ID!
+    $input: UpdateCategoryInput!
+  ) {
+    updateCategory(id: $id, input: $input) {
+      id
+      name
+      icon
+      color
+    }
+  }
+`;
+
+export const DeleteCategoryMutation = graphql`
+  mutation DataMutations_DeleteCategoryMutation($id: ID!) {
+    deleteCategory(id: $id)
+  }
+`;
+
+export const CreateTransferMutation = graphql`
+  mutation DataMutations_CreateTransferMutation($input: CreateTransferInput!) {
+    createTransfer(input: $input) {
+      id
+      name
+      amount
+      date
+      notes
+      hasNote
+      accountId
+      categoryId
+      createdAt
+      updatedAt
     }
   }
 `;
