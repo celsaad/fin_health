@@ -1,8 +1,0 @@
-{
-  "recommendations": [
-    "esbenp.prettier-vscode",
-    "@typescript-eslint.typescript-eslint",
-    "ms-vscode.vscode-typescript-next",
-    "expo.vscode-expo-tools"
-  ]
-}
