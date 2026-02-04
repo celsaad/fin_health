@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database (optional - use if not using Supabase)
+  postgres:
+    image: postgres:15-alpine
+    container_name: fin-health-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: finhealth
+      POSTGRES_PASSWORD: finhealth_dev_password
+      POSTGRES_DB: finhealth
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finhealth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: fin-health-api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      # Database - use Supabase or local postgres
+      DATABASE_URL: ${DATABASE_URL:-postgresql://finhealth:finhealth_dev_password@postgres:5432/finhealth}
+
+      # Supabase
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+      # Server
+      NODE_ENV: production
+      PORT: 3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+  # Web Service
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: fin-health-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # API connection
+      API_URL: ${API_URL:-http://api:3001}
+
+      # Supabase
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+
+      # Session
+      SESSION_SECRET: ${SESSION_SECRET}
+
+      # Server
+      NODE_ENV: production
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
