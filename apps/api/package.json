@@ -1,0 +1,40 @@
+{
+  "name": "@fin-health/api",
+  "version": "1.0.0",
+  "description": "tRPC API server (BFF pattern)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@fin-health/db": "workspace:*",
+    "@fin-health/domain": "workspace:*",
+    "@supabase/supabase-js": "^2.39.3",
+    "@trpc/server": "^10.45.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "drizzle-orm": "^0.35.3",
+    "express": "^4.18.2",
+    "superjson": "^2.2.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

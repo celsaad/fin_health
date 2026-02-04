@@ -146,3 +146,19 @@ vite.config.ts.timestamp-*
 
 # Relay generated files
 **/__generated__/**
+
+# Monorepo build artifacts
+**/dist/
+**/build/
+**/.turbo/
+
+# Expo
+**/expo-env.d.ts
+**/.expo/
+
+# Drizzle
+**/drizzle/
+packages/db/migrations/*.sql
+
+# macOS
+.DS_Store

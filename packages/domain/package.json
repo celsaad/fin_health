@@ -1,0 +1,33 @@
+{
+  "name": "@fin-health/domain",
+  "version": "1.0.0",
+  "description": "Pure TypeScript business logic and domain models",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types/index.js",
+    "./utils": "./dist/utils/index.js",
+    "./calculations": "./dist/calculations/index.js",
+    "./operations": "./dist/operations/index.js",
+    "./schemas": "./dist/schemas/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.22.4",
+    "luxon": "^3.4.4"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.1"
+  }
+}
