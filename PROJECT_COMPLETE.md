@@ -22,7 +22,7 @@ The Fin Health budgeting application has been **fully implemented** with all cor
 - **49 passing unit tests**
 
 ### Phase 2: Database Package ✅
-- Drizzle ORM schema (6 tables)
+- Prisma ORM schema (6 tables)
 - Foreign keys and relations
 - Indexes and constraints
 - Migration system
@@ -119,7 +119,7 @@ The Fin Health budgeting application has been **fully implemented** with all cor
                     │
                     ▼
          ┌──────────────────────┐
-         │  Database (Drizzle)  │
+         │  Database (Prisma)   │
          │  - PostgreSQL        │
          │  - Supabase          │
          └──────────────────────┘
@@ -231,7 +231,7 @@ pnpm --filter @fin-health/web dev
 
 ### Backend
 - **API**: Node.js + Express + tRPC
-- **Database**: PostgreSQL + Drizzle ORM
+- **Database**: PostgreSQL + Prisma ORM
 - **Auth**: Supabase Auth
 - **Validation**: Zod schemas
 

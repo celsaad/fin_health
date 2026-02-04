@@ -1,32 +1,39 @@
 {
   "name": "@fin-health/db",
   "version": "1.0.0",
-  "description": "Database schema and migrations using Drizzle ORM",
+  "description": "Database schema and migrations using Prisma ORM",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./schema": "./dist/schema.js",
-    "./client": "./dist/client.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc && npm run postbuild",
+    "postbuild": "mkdir -p dist/generated && cp -r src/generated/prisma dist/generated/",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx src/migrate.ts",
-    "db:studio": "drizzle-kit studio",
-    "db:push": "drizzle-kit push"
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:push": "prisma db push"
   },
   "dependencies": {
     "@fin-health/domain": "workspace:*",
-    "drizzle-orm": "^0.35.3",
-    "postgres": "^3.4.5"
+    "@prisma/client": "^7.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
-    "drizzle-kit": "^0.31.8",
+    "prisma": "^7.3.0",
     "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }

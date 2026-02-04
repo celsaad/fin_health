@@ -5,9 +5,13 @@
 import { TRPCError } from '@trpc/server';
 import { router } from '../trpc.js';
 import { protectedProcedure } from '../middleware/index.js';
-import { schemas, monthKeyToRange, calculateMonthBudgetOverview, copyAllocationsForward, getPreviousMonthKey } from '@fin-health/domain';
-import { budgets, budgetAllocations, expenses, categories, subcategories, users } from '@fin-health/db';
-import { eq, and, gte, lt } from 'drizzle-orm';
+import {
+  schemas,
+  monthKeyToRange,
+  calculateMonthBudgetOverview,
+  copyAllocationsForward,
+  getPreviousMonthKey,
+} from '@fin-health/domain';
 
 export const budgetsRouter = router({
   /**
@@ -17,14 +21,13 @@ export const budgetsRouter = router({
     .input(schemas.getMonthBudgetSchema)
     .query(async ({ input, ctx }) => {
       // Get user settings for timezone and month start day
-      const [user] = await ctx.db
-        .select({
-          timezone: users.timezone,
-          monthStartDay: users.monthStartDay,
-        })
-        .from(users)
-        .where(eq(users.id, ctx.userId))
-        .limit(1);
+      const user = await ctx.db.user.findUnique({
+        where: { id: ctx.userId },
+        select: {
+          timezone: true,
+          monthStartDay: true,
+        },
+      });
 
       if (!user) {
         throw new TRPCError({
@@ -34,61 +37,56 @@ export const budgetsRouter = router({
       }
 
       // Find or create budget for the month
-      let [budget] = await ctx.db
-        .select()
-        .from(budgets)
-        .where(and(eq(budgets.userId, ctx.userId), eq(budgets.monthKey, input.monthKey)))
-        .limit(1);
+      let budget = await ctx.db.budget.findFirst({
+        where: {
+          userId: ctx.userId,
+          monthKey: input.monthKey,
+        },
+      });
 
       // If budget doesn't exist, create it
       if (!budget) {
-        [budget] = await ctx.db
-          .insert(budgets)
-          .values({
+        budget = await ctx.db.budget.create({
+          data: {
             userId: ctx.userId,
             monthKey: input.monthKey,
-          })
-          .returning();
-
-        if (!budget) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Failed to create budget',
-          });
-        }
+          },
+        });
       }
 
       // Get allocations for this budget
-      const allAllocations = await ctx.db
-        .select()
-        .from(budgetAllocations)
-        .where(eq(budgetAllocations.budgetId, budget.id));
+      const allAllocations = await ctx.db.budgetAllocation.findMany({
+        where: {
+          budgetId: budget.id,
+        },
+      });
 
       // Get date range for the month
       const range = monthKeyToRange(input.monthKey, user.timezone, user.monthStartDay);
 
       // Get expenses in this date range
-      const monthExpenses = await ctx.db
-        .select()
-        .from(expenses)
-        .where(
-          and(
-            eq(expenses.userId, ctx.userId),
-            gte(expenses.occurredAt, range.start),
-            lt(expenses.occurredAt, range.end)
-          )
-        );
+      const monthExpenses = await ctx.db.expense.findMany({
+        where: {
+          userId: ctx.userId,
+          occurredAt: {
+            gte: range.start,
+            lt: range.end,
+          },
+        },
+      });
 
       // Get all categories and subcategories
-      const userCategories = await ctx.db
-        .select()
-        .from(categories)
-        .where(eq(categories.userId, ctx.userId));
+      const userCategories = await ctx.db.category.findMany({
+        where: {
+          userId: ctx.userId,
+        },
+      });
 
-      const userSubcategories = await ctx.db
-        .select()
-        .from(subcategories)
-        .where(eq(subcategories.userId, ctx.userId));
+      const userSubcategories = await ctx.db.subcategory.findMany({
+        where: {
+          userId: ctx.userId,
+        },
+      });
 
       // Calculate month overview using domain logic
       const overview = calculateMonthBudgetOverview({
@@ -110,11 +108,12 @@ export const budgetsRouter = router({
     .input(schemas.createBudgetSchema)
     .mutation(async ({ input, ctx }) => {
       // Check if budget already exists
-      const [existingBudget] = await ctx.db
-        .select()
-        .from(budgets)
-        .where(and(eq(budgets.userId, ctx.userId), eq(budgets.monthKey, input.monthKey)))
-        .limit(1);
+      const existingBudget = await ctx.db.budget.findFirst({
+        where: {
+          userId: ctx.userId,
+          monthKey: input.monthKey,
+        },
+      });
 
       if (existingBudget) {
         throw new TRPCError({
@@ -124,38 +123,32 @@ export const budgetsRouter = router({
       }
 
       // Create new budget
-      const [newBudget] = await ctx.db
-        .insert(budgets)
-        .values({
+      const newBudget = await ctx.db.budget.create({
+        data: {
           userId: ctx.userId,
           monthKey: input.monthKey,
-        })
-        .returning();
-
-      if (!newBudget) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create budget',
-        });
-      }
+        },
+      });
 
       // Optionally copy from previous month
       if (input.copyFromPrevious) {
         const previousMonthKey = getPreviousMonthKey(input.monthKey);
 
         // Find previous month's budget
-        const [previousBudget] = await ctx.db
-          .select()
-          .from(budgets)
-          .where(and(eq(budgets.userId, ctx.userId), eq(budgets.monthKey, previousMonthKey)))
-          .limit(1);
+        const previousBudget = await ctx.db.budget.findFirst({
+          where: {
+            userId: ctx.userId,
+            monthKey: previousMonthKey,
+          },
+        });
 
         if (previousBudget) {
           // Get previous allocations
-          const previousAllocations = await ctx.db
-            .select()
-            .from(budgetAllocations)
-            .where(eq(budgetAllocations.budgetId, previousBudget.id));
+          const previousAllocations = await ctx.db.budgetAllocation.findMany({
+            where: {
+              budgetId: previousBudget.id,
+            },
+          });
 
           // Copy allocations to new budget
           const newAllocations = copyAllocationsForward({
@@ -164,7 +157,9 @@ export const budgetsRouter = router({
           });
 
           if (newAllocations.length > 0) {
-            await ctx.db.insert(budgetAllocations).values(newAllocations);
+            await ctx.db.budgetAllocation.createMany({
+              data: newAllocations,
+            });
           }
         }
       }
@@ -179,11 +174,12 @@ export const budgetsRouter = router({
     .input(schemas.updateBudgetAllocationsSchema)
     .mutation(async ({ input, ctx }) => {
       // Verify budget belongs to user
-      const [budget] = await ctx.db
-        .select()
-        .from(budgets)
-        .where(and(eq(budgets.id, input.budgetId), eq(budgets.userId, ctx.userId)))
-        .limit(1);
+      const budget = await ctx.db.budget.findFirst({
+        where: {
+          id: input.budgetId,
+          userId: ctx.userId,
+        },
+      });
 
       if (!budget) {
         throw new TRPCError({
@@ -193,27 +189,30 @@ export const budgetsRouter = router({
       }
 
       // Delete existing allocations
-      await ctx.db
-        .delete(budgetAllocations)
-        .where(eq(budgetAllocations.budgetId, input.budgetId));
+      await ctx.db.budgetAllocation.deleteMany({
+        where: {
+          budgetId: input.budgetId,
+        },
+      });
 
       // Insert new allocations
       if (input.allocations.length > 0) {
-        await ctx.db.insert(budgetAllocations).values(
-          input.allocations.map((alloc) => ({
+        await ctx.db.budgetAllocation.createMany({
+          data: input.allocations.map((alloc) => ({
             budgetId: input.budgetId,
             categoryId: alloc.categoryId,
             subcategoryId: alloc.subcategoryId,
             amountCents: alloc.amountCents,
-          }))
-        );
+          })),
+        });
       }
 
       // Return updated allocations
-      const updatedAllocations = await ctx.db
-        .select()
-        .from(budgetAllocations)
-        .where(eq(budgetAllocations.budgetId, input.budgetId));
+      const updatedAllocations = await ctx.db.budgetAllocation.findMany({
+        where: {
+          budgetId: input.budgetId,
+        },
+      });
 
       return updatedAllocations;
     }),
@@ -225,11 +224,12 @@ export const budgetsRouter = router({
     .input(schemas.copyMonthBudgetSchema)
     .mutation(async ({ input, ctx }) => {
       // Find source budget
-      const [sourceBudget] = await ctx.db
-        .select()
-        .from(budgets)
-        .where(and(eq(budgets.userId, ctx.userId), eq(budgets.monthKey, input.sourceMonthKey)))
-        .limit(1);
+      const sourceBudget = await ctx.db.budget.findFirst({
+        where: {
+          userId: ctx.userId,
+          monthKey: input.sourceMonthKey,
+        },
+      });
 
       if (!sourceBudget) {
         throw new TRPCError({
@@ -239,39 +239,35 @@ export const budgetsRouter = router({
       }
 
       // Get source allocations
-      const sourceAllocations = await ctx.db
-        .select()
-        .from(budgetAllocations)
-        .where(eq(budgetAllocations.budgetId, sourceBudget.id));
+      const sourceAllocations = await ctx.db.budgetAllocation.findMany({
+        where: {
+          budgetId: sourceBudget.id,
+        },
+      });
 
       // Find or create target budget
-      let [targetBudget] = await ctx.db
-        .select()
-        .from(budgets)
-        .where(and(eq(budgets.userId, ctx.userId), eq(budgets.monthKey, input.targetMonthKey)))
-        .limit(1);
+      let targetBudget = await ctx.db.budget.findFirst({
+        where: {
+          userId: ctx.userId,
+          monthKey: input.targetMonthKey,
+        },
+      });
 
       if (!targetBudget) {
-        [targetBudget] = await ctx.db
-          .insert(budgets)
-          .values({
+        targetBudget = await ctx.db.budget.create({
+          data: {
             userId: ctx.userId,
             monthKey: input.targetMonthKey,
-          })
-          .returning();
-      }
-
-      if (!targetBudget) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to create target budget',
+          },
         });
       }
 
       // Delete existing target allocations
-      await ctx.db
-        .delete(budgetAllocations)
-        .where(eq(budgetAllocations.budgetId, targetBudget.id));
+      await ctx.db.budgetAllocation.deleteMany({
+        where: {
+          budgetId: targetBudget.id,
+        },
+      });
 
       // Copy allocations
       const newAllocations = copyAllocationsForward({
@@ -280,7 +276,9 @@ export const budgetsRouter = router({
       });
 
       if (newAllocations.length > 0) {
-        await ctx.db.insert(budgetAllocations).values(newAllocations);
+        await ctx.db.budgetAllocation.createMany({
+          data: newAllocations,
+        });
       }
 
       return targetBudget;

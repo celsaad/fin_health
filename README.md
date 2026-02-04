@@ -9,7 +9,7 @@ A full-stack personal budgeting application built with a monorepo architecture f
 - **Monorepo**: pnpm workspaces
 - **Language**: TypeScript (strict mode)
 - **API**: Node.js + Express + tRPC
-- **Database**: PostgreSQL (Supabase) + Drizzle ORM
+- **Database**: PostgreSQL (Supabase) + Prisma ORM
 - **Mobile**: Expo (React Native) - Planned
 - **Web**: Remix - Planned
 - **Validation**: Zod schemas
@@ -25,7 +25,7 @@ A full-stack personal budgeting application built with a monorepo architecture f
 │   └── web/          # Remix app (📋 Planned)
 ├── packages/
 │   ├── domain/       # Pure TS business logic (✅ Complete)
-│   ├── db/           # Drizzle schema + migrations (✅ Complete)
+│   ├── db/           # Prisma schema + migrations (✅ Complete)
 │   └── tsconfig/     # Shared TypeScript configs (✅ Complete)
 └── package.json
 ```
@@ -48,7 +48,7 @@ A full-stack personal budgeting application built with a monorepo architecture f
 - [x] Comprehensive unit tests (49 tests passing)
 
 ### ✅ Phase 2: Database Package
-- [x] Drizzle ORM schema with all tables
+- [x] Prisma ORM schema with all tables
 - [x] Foreign keys and cascade rules
 - [x] Database indexes for performance
 - [x] Unique constraints
@@ -139,15 +139,16 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ### Database Setup
 
 ```bash
-# Generate migration from schema
+# Option 1: From root directory using filter
+pnpm --filter @fin-health/db db:generate
+pnpm --filter @fin-health/db db:migrate
+pnpm --filter @fin-health/db db:studio
+
+# Option 2: From packages/db directory
 cd packages/db
-pnpm db:generate
-
-# Run migrations
-pnpm db:migrate
-
-# Open Drizzle Studio (optional)
-pnpm db:studio
+pnpm db:generate  # Generate Prisma client
+pnpm db:migrate   # Create and run migrations
+pnpm db:studio    # Open Prisma Studio
 ```
 
 ### Running the API

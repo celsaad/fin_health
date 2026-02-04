@@ -6,8 +6,6 @@ import { TRPCError } from '@trpc/server';
 import { router, publicProcedure } from '../trpc.js';
 import { protectedProcedure } from '../middleware/index.js';
 import { schemas } from '@fin-health/domain';
-import { users } from '@fin-health/db';
-import { eq } from 'drizzle-orm';
 
 export const authRouter = router({
   /**
@@ -23,6 +21,8 @@ export const authRouter = router({
         password,
       });
 
+      console.log('data', data);
+
       if (error || !data.user) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -31,12 +31,14 @@ export const authRouter = router({
       }
 
       // Insert user into our database
-      await ctx.db.insert(users).values({
-        id: data.user.id,
-        email: data.user.email!,
-        currency: 'USD',
-        timezone: 'America/New_York',
-        monthStartDay: 1,
+      await ctx.db.user.create({
+        data: {
+          id: data.user.id,
+          email: data.user.email!,
+          currency: 'USD',
+          timezone: 'America/New_York',
+          monthStartDay: 1,
+        },
       });
 
       return {
@@ -106,11 +108,11 @@ export const authRouter = router({
    * Get current user info
    */
   me: protectedProcedure.query(async ({ ctx }) => {
-    const [user] = await ctx.db
-      .select()
-      .from(users)
-      .where(eq(users.id, ctx.userId))
-      .limit(1);
+    const user = await ctx.db.user.findUnique({
+      where: {
+        id: ctx.userId,
+      },
+    });
 
     if (!user) {
       throw new TRPCError({

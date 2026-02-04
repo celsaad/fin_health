@@ -43,7 +43,7 @@ Pure TypeScript business logic with comprehensive test coverage:
 **Package:** `@fin-health/domain`
 
 ### Phase 2: Database Package (100%)
-Drizzle ORM schema with all tables, relations, and indexes:
+Prisma ORM schema with all tables, relations, and indexes:
 - ✅ Users table (with Supabase auth integration)
 - ✅ Categories table (with unique constraints)
 - ✅ Subcategories table (nested under categories)
@@ -51,8 +51,8 @@ Drizzle ORM schema with all tables, relations, and indexes:
 - ✅ Budget allocations table (amounts per category/subcategory)
 - ✅ Expenses table (with restrict on delete for categories)
 - ✅ Database client with singleton pattern
-- ✅ Migration runner setup
-- ✅ Drizzle Kit configuration
+- ✅ Migration system setup
+- ✅ Prisma configuration
 
 **Database Design:**
 - Foreign keys with appropriate cascade/restrict rules
@@ -146,12 +146,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 ### 3. Set Up Database
 ```bash
-# Generate migration from schema
-cd packages/db
-pnpm db:generate
+# Option 1: From root directory
+pnpm --filter @fin-health/db db:generate
+pnpm --filter @fin-health/db db:migrate
 
-# Run migrations
-pnpm db:migrate
+# Option 2: From packages/db directory
+cd packages/db
+pnpm db:generate  # Generate Prisma client
+pnpm db:migrate   # Create and run migrations
 ```
 
 ### 4. Run Tests

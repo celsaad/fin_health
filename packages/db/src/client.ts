@@ -1,37 +1,38 @@
 /**
- * Database client using Drizzle ORM with postgres.js
+ * Database client using Prisma ORM
  */
 
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from './schema.js';
+import { PrismaClient } from './generated/prisma';
 
-let dbInstance: ReturnType<typeof drizzle> | null = null;
-let connection: ReturnType<typeof postgres> | null = null;
+let prisma: PrismaClient | null = null;
 
 /**
  * Get database connection (singleton pattern)
+ * Connection string is configured via DATABASE_URL environment variable
  */
-export function getDatabase(connectionString: string) {
-  if (!dbInstance) {
-    connection = postgres(connectionString);
-    dbInstance = drizzle(connection, { schema });
+export function getDatabase(): PrismaClient {
+  if (!prisma) {
+    prisma = new PrismaClient();
   }
-  return dbInstance;
+  return prisma;
 }
 
 /**
  * Close database connection
  */
 export async function closeDatabase() {
-  if (connection) {
-    await connection.end();
-    connection = null;
-    dbInstance = null;
+  if (prisma) {
+    await prisma.$disconnect();
+    prisma = null;
   }
 }
 
 /**
+ * Export Prisma client instance
+ */
+export { prisma };
+
+/**
  * Export database type for use in tRPC context and elsewhere
  */
-export type Database = ReturnType<typeof getDatabase>;
+export type Database = PrismaClient;

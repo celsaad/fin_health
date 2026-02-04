@@ -2,15 +2,34 @@
   "name": "@fin-health/domain",
   "version": "1.0.0",
   "description": "Pure TypeScript business logic and domain models",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./types": "./dist/types/index.js",
-    "./utils": "./dist/utils/index.js",
-    "./calculations": "./dist/calculations/index.js",
-    "./operations": "./dist/operations/index.js",
-    "./schemas": "./dist/schemas/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "default": "./dist/utils/index.js"
+    },
+    "./calculations": {
+      "types": "./dist/calculations/index.d.ts",
+      "default": "./dist/calculations/index.js"
+    },
+    "./operations": {
+      "types": "./dist/operations/index.d.ts",
+      "default": "./dist/operations/index.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "default": "./dist/schemas/index.js"
+    }
   },
   "scripts": {
     "build": "tsc",

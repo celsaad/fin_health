@@ -2,15 +2,29 @@
  * Express server with tRPC endpoints
  */
 
+// Load environment variables FIRST, before any other imports
+// In Docker: environment variables are passed directly via docker-compose.yml
+// In local dev: load from .env file in monorepo root
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Try to load .env file if it exists (for local development)
+// In Docker, this file won't exist and env vars are passed directly
+const envPath = join(__dirname, '../../../.env');
+if (existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+}
+
 import express from 'express';
 import cors from 'cors';
 import { createExpressMiddleware } from '@trpc/server/adapters/express';
-import dotenv from 'dotenv';
 import { appRouter } from './router.js';
 import { createContext } from './context.js';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
