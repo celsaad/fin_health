@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { parseError } from '@/lib/api';
-import { Heart, TrendingUp, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,10 +59,7 @@ export default function Signup() {
       <div className="w-full max-w-md space-y-8">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-            <TrendingUp className="size-7" strokeWidth={2.5} />
-            <Heart className="size-4 -ml-1.5 mt-3" strokeWidth={2.5} />
-          </div>
+          <img src="/logo.png" alt="FinHealth" className="size-16 rounded-2xl shadow-lg" />
           <div className="text-center">
             <h1 className="text-2xl font-bold">{t('auth.appName')}</h1>
             <p className="text-sm text-muted-foreground">{t('auth.createAccount')}</p>

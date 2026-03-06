@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signupSchema } from '@fin-health/shared/validators';
-import { BarChart3, Heart } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { parseError } from '../services/api';
@@ -42,12 +41,11 @@ export default function SignupScreen({ navigation }: any) {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logoContainer}>
-          <View style={[styles.logoBox, { backgroundColor: colors.primary }]}>
-            <BarChart3 size={32} color="#ffffff" />
-            <View style={styles.heartBadge}>
-              <Heart size={12} color="#ffffff" fill="#ffffff" />
-            </View>
-          </View>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.logoImage}
+            accessibilityLabel="FinHealth"
+          />
           <Text style={[styles.appName, { color: colors.text }]}>FinHealth</Text>
           <Text style={[styles.tagline, { color: colors.textSecondary }]}>Create your account</Text>
         </View>
@@ -128,24 +126,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xxxl + 8,
   },
-  logoBox: {
+  logoImage: {
     width: 64,
     height: 64,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: Spacing.md,
-  },
-  heartBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: '#dc2626',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   appName: {
     fontSize: FontSize.pageTitle,
