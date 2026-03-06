@@ -5,7 +5,8 @@
   "workspaces": [
     "packages/*",
     "backend",
-    "frontend"
+    "frontend",
+    "mobile"
   ],
   "scripts": {
     "dev": "turbo run dev",

@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "FinHealth",
+    "slug": "fin-health",
+    "version": "2.4.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6366f1"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.finhealth.app",
+      "buildNumber": "890"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#6366f1"
+      },
+      "package": "com.finhealth.app",
+      "versionCode": 890
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "scheme": "finhealth"
+  }
+}
