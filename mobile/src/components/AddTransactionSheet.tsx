@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { useTheme } from '../contexts/ThemeContext';
 import { createTransaction, updateTransaction } from '../services/transactions';
 import { getCategories } from '../services/categories';
+import { parseError } from '../services/api';
 import Input from './Input';
 import Button from './Button';
 import SegmentedControl from './SegmentedControl';
@@ -70,7 +71,7 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
   const filteredCategories =
     categoriesData?.categories?.filter((c: Category) => c.type === selectedType) ?? [];
   const selectedCategory = filteredCategories.find(
-    (c: Category) => c.name === selectedCategoryName
+    (c: Category) => c.name === selectedCategoryName,
   );
 
   useEffect(() => {
@@ -119,8 +120,8 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
       });
       onClose();
     },
-    onError: (err: any) => {
-      Alert.alert('Error', err.response?.data?.error ?? 'Something went wrong');
+    onError: (err: unknown) => {
+      Alert.alert('Error', parseError(err).message);
     },
   });
 
@@ -188,17 +189,19 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
                   <Text style={[styles.label, { color: colors.text, marginBottom: Spacing.sm }]}>
                     Category
                   </Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 4 }}>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={{ marginBottom: 4 }}
+                  >
                     {filteredCategories.map((cat: Category) => (
                       <TouchableOpacity
                         key={cat.id}
                         style={[
                           styles.chipOption,
                           {
-                            backgroundColor:
-                              value === cat.name ? colors.primary : colors.inputBg,
-                            borderColor:
-                              value === cat.name ? colors.primary : colors.border,
+                            backgroundColor: value === cat.name ? colors.primary : colors.inputBg,
+                            borderColor: value === cat.name ? colors.primary : colors.border,
                           },
                         ]}
                         onPress={() => onChange(cat.name)}
@@ -241,10 +244,8 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
                           style={[
                             styles.chipOption,
                             {
-                              backgroundColor:
-                                value === sub.name ? colors.primary : colors.inputBg,
-                              borderColor:
-                                value === sub.name ? colors.primary : colors.border,
+                              backgroundColor: value === sub.name ? colors.primary : colors.inputBg,
+                              borderColor: value === sub.name ? colors.primary : colors.border,
                             },
                           ]}
                           onPress={() => onChange(sub.name)}

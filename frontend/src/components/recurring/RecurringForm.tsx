@@ -20,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateRecurring, useUpdateRecurring, type RecurringTransaction } from '@/hooks/useRecurring';
+import {
+  useCreateRecurring,
+  useUpdateRecurring,
+  type RecurringTransaction,
+} from '@/hooks/useRecurring';
 import { format } from 'date-fns';
 
 const recurringSchema = z.object({
@@ -43,11 +47,7 @@ interface RecurringFormProps {
   editingTransaction?: RecurringTransaction | null;
 }
 
-export function RecurringForm({
-  open,
-  onOpenChange,
-  editingTransaction,
-}: RecurringFormProps) {
+export function RecurringForm({ open, onOpenChange, editingTransaction }: RecurringFormProps) {
   const createRecurring = useCreateRecurring();
   const updateRecurring = useUpdateRecurring();
   const isEditing = !!editingTransaction;
@@ -123,7 +123,7 @@ export function RecurringForm({
             reset();
             onOpenChange(false);
           },
-        }
+        },
       );
     } else {
       createRecurring.mutate(payload, {
@@ -173,9 +173,7 @@ export function RecurringForm({
                 placeholder="0.00"
                 {...register('amount')}
               />
-              {errors.amount && (
-                <p className="text-sm text-destructive">{errors.amount.message}</p>
-              )}
+              {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -259,11 +257,7 @@ export function RecurringForm({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isPending}>

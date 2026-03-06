@@ -42,10 +42,7 @@ export function Pagination({
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2">
         <span className="text-sm text-muted-foreground">Rows per page</span>
-        <Select
-          value={String(pageSize)}
-          onValueChange={(value) => onPageSizeChange(Number(value))}
-        >
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
           <SelectTrigger className="w-18">
             <SelectValue />
           </SelectTrigger>

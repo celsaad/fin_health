@@ -25,7 +25,7 @@ const navItems = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(
-    () => localStorage.getItem('sidebarCollapsed') === 'true'
+    () => localStorage.getItem('sidebarCollapsed') === 'true',
   );
 
   function toggleCollapsed() {
@@ -40,13 +40,11 @@ export function Sidebar() {
     <aside
       className={cn(
         'hidden lg:flex lg:flex-col bg-sidebar-background transition-all duration-200',
-        collapsed ? 'lg:w-16' : 'lg:w-64'
+        collapsed ? 'lg:w-16' : 'lg:w-64',
       )}
     >
       <div className="flex h-16 items-center px-6">
-        {!collapsed && (
-          <h1 className="text-xl font-bold text-white tracking-tight">FinHealth</h1>
-        )}
+        {!collapsed && <h1 className="text-xl font-bold text-white tracking-tight">FinHealth</h1>}
       </div>
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => (
@@ -61,7 +59,7 @@ export function Sidebar() {
                 collapsed ? 'justify-center' : 'gap-3',
                 isActive
                   ? 'bg-sidebar-accent text-white'
-                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-white'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-white',
               )
             }
           >
@@ -76,7 +74,7 @@ export function Sidebar() {
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           className={cn(
             'flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-white',
-            collapsed ? 'justify-center' : 'gap-3'
+            collapsed ? 'justify-center' : 'gap-3',
           )}
         >
           {collapsed ? (

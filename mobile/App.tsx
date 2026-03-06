@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
+import * as Sentry from '@sentry/react-native';
+import { env } from './src/lib/env';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,6 +11,17 @@ import Toast from 'react-native-toast-message';
 import { ThemeProvider, useTheme } from './src/contexts/ThemeContext';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import OfflineBanner from './src/components/OfflineBanner';
+
+SplashScreen.preventAutoHideAsync();
+
+Sentry.init({
+  dsn: env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: !__DEV__,
+  tracesSampleRate: 0.2,
+  sendDefaultPii: false,
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,7 +33,19 @@ const queryClient = new QueryClient({
 });
 
 function AppContent() {
-  const { isDark, colors } = useTheme();
+  const { isDark, colors, isReady } = useTheme();
+
+  const onLayoutReady = useCallback(async () => {
+    if (isReady) {
+      await SplashScreen.hideAsync();
+    }
+  }, [isReady]);
+
+  useEffect(() => {
+    onLayoutReady();
+  }, [onLayoutReady]);
+
+  if (!isReady) return null;
 
   return (
     <NavigationContainer
@@ -43,6 +69,7 @@ function AppContent() {
     >
       <AuthProvider>
         <RootNavigator />
+        <OfflineBanner />
       </AuthProvider>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Toast />
@@ -50,16 +77,20 @@ function AppContent() {
   );
 }
 
-export default function App() {
+function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider>
-            <AppContent />
-          </ThemeProvider>
-        </QueryClientProvider>
-      </SafeAreaProvider>
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <QueryClientProvider client={queryClient}>
+            <ThemeProvider>
+              <AppContent />
+            </ThemeProvider>
+          </QueryClientProvider>
+        </SafeAreaProvider>
+      </ErrorBoundary>
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(App);

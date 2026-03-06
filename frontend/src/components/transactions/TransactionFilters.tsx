@@ -2,13 +2,6 @@ import { useState, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useCategories } from '@/hooks/useCategories';
 import type { TransactionFilters as Filters } from '@/hooks/useTransactions';
 
@@ -52,10 +45,7 @@ function FilterChip({
   );
 }
 
-export function TransactionFilters({
-  filters,
-  onFilterChange,
-}: TransactionFiltersProps) {
+export function TransactionFilters({ filters, onFilterChange }: TransactionFiltersProps) {
   const { data: categories = [] } = useCategories();
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showSubcategoryPicker, setShowSubcategoryPicker] = useState(false);
@@ -144,10 +134,7 @@ export function TransactionFilters({
         />
         {showCategoryPicker && (
           <>
-            <div
-              className="fixed inset-0 z-10"
-              onClick={() => setShowCategoryPicker(false)}
-            />
+            <div className="fixed inset-0 z-10" onClick={() => setShowCategoryPicker(false)} />
             <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-lg border bg-popover p-1 shadow-md">
               <button
                 className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
@@ -175,7 +162,7 @@ export function TransactionFilters({
           <FilterChip
             label={
               filters.subcategoryId
-                ? subcategories.find((s) => s.id === filters.subcategoryId)?.name ?? 'Subcategory'
+                ? (subcategories.find((s) => s.id === filters.subcategoryId)?.name ?? 'Subcategory')
                 : 'Subcategory'
             }
             active={!!filters.subcategoryId}
@@ -184,10 +171,7 @@ export function TransactionFilters({
           />
           {showSubcategoryPicker && (
             <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowSubcategoryPicker(false)}
-              />
+              <div className="fixed inset-0 z-10" onClick={() => setShowSubcategoryPicker(false)} />
               <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-lg border bg-popover p-1 shadow-md">
                 <button
                   className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"

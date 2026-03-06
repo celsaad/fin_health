@@ -30,9 +30,7 @@ import {
 import { format } from 'date-fns';
 
 const transactionSchema = z.object({
-  amount: z.coerce
-    .number({ message: 'Amount is required' })
-    .positive('Amount must be positive'),
+  amount: z.coerce.number({ message: 'Amount is required' }).positive('Amount must be positive'),
   type: z.enum(['expense', 'income'], {
     required_error: 'Type is required',
   }),
@@ -112,9 +110,7 @@ export function TransactionForm({
   }, [open, transaction, reset]);
 
   const categoryNames = useMemo(() => {
-    return categories
-      .filter((c) => !selectedType || c.type === selectedType)
-      .map((c) => c.name);
+    return categories.filter((c) => !selectedType || c.type === selectedType).map((c) => c.name);
   }, [categories, selectedType]);
 
   const subcategoryNames = useMemo(() => {
@@ -143,9 +139,7 @@ export function TransactionForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? 'Edit Transaction' : 'Add Transaction'}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
           <DialogDescription>
             {isEditing
               ? 'Update the transaction details below.'
@@ -165,11 +159,7 @@ export function TransactionForm({
                 placeholder="0.00"
                 {...register('amount')}
               />
-              {errors.amount && (
-                <p className="text-xs text-destructive">
-                  {errors.amount.message}
-                </p>
-              )}
+              {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
             </div>
 
             <div className="grid gap-2">
@@ -190,11 +180,7 @@ export function TransactionForm({
                   <SelectItem value="income">Income</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.type && (
-                <p className="text-xs text-destructive">
-                  {errors.type.message}
-                </p>
-              )}
+              {errors.type && <p className="text-xs text-destructive">{errors.type.message}</p>}
             </div>
           </div>
 
@@ -206,20 +192,14 @@ export function TransactionForm({
               {...register('description')}
             />
             {errors.description && (
-              <p className="text-xs text-destructive">
-                {errors.description.message}
-              </p>
+              <p className="text-xs text-destructive">{errors.description.message}</p>
             )}
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="date">Date</Label>
             <Input id="date" type="date" {...register('date')} />
-            {errors.date && (
-              <p className="text-xs text-destructive">
-                {errors.date.message}
-              </p>
-            )}
+            {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
           </div>
 
           <Autocomplete
@@ -233,9 +213,7 @@ export function TransactionForm({
             placeholder="Type or select a category"
           />
           {errors.categoryName && (
-            <p className="-mt-2 text-xs text-destructive">
-              {errors.categoryName.message}
-            </p>
+            <p className="-mt-2 text-xs text-destructive">{errors.categoryName.message}</p>
           )}
 
           <Autocomplete
@@ -243,7 +221,9 @@ export function TransactionForm({
             items={subcategoryNames}
             value={watch('subcategoryName') ?? ''}
             onChange={(value) => setValue('subcategoryName', value)}
-            placeholder={selectedCategoryName ? 'Type or select a subcategory' : 'Select a category first'}
+            placeholder={
+              selectedCategoryName ? 'Type or select a subcategory' : 'Select a category first'
+            }
             disabled={!selectedCategoryName}
           />
 
@@ -258,19 +238,11 @@ export function TransactionForm({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? 'Saving...'
-                : isEditing
-                  ? 'Update'
-                  : 'Create'}
+              {isSubmitting ? 'Saving...' : isEditing ? 'Update' : 'Create'}
             </Button>
           </DialogFooter>
         </form>

@@ -28,7 +28,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId!;
     const { skip, take, page } = getPagination(req.query as { page?: string; limit?: string });
 
-    const { type, categoryId, subcategoryId, startDate, endDate, search, sortBy, sortOrder } = req.query;
+    const { type, categoryId, subcategoryId, startDate, endDate, search, sortBy, sortOrder } =
+      req.query;
 
     const where: Prisma.TransactionWhereInput = {
       userId,
@@ -173,7 +174,7 @@ router.post(
         userId,
         categoryName,
         type,
-        subcategoryName
+        subcategoryName,
       );
 
       const transaction = await prisma.transaction.create({
@@ -197,7 +198,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // POST /api/transactions/bulk-delete — soft delete multiple
@@ -222,7 +223,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // GET /api/transactions/:id — single
@@ -283,7 +284,7 @@ router.put(
           userId,
           categoryName,
           effectiveType,
-          subcategoryName || undefined
+          subcategoryName || undefined,
         );
         updateData.category = { connect: { id: categoryId } };
         if (subcategoryId) {
@@ -308,7 +309,7 @@ router.put(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/transactions/:id — soft delete

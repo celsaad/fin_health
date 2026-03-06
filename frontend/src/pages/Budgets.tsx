@@ -3,6 +3,7 @@ import { Copy, PlusCircle, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { QueryError } from '@/components/shared/QueryError';
 import { BudgetCard } from '@/components/budgets/BudgetCard';
 import { BudgetForm } from '@/components/budgets/BudgetForm';
 import { OverallBudget } from '@/components/budgets/OverallBudget';
@@ -15,7 +16,7 @@ export default function Budgets() {
   const [year, setYear] = useState(now.getFullYear());
   const [formOpen, setFormOpen] = useState(false);
 
-  const { data: budgets, isLoading } = useBudgets(month, year);
+  const { data: budgets, isLoading, isFetching, isError, refetch } = useBudgets(month, year);
   const copyBudgets = useCopyPreviousMonthBudgets();
 
   const categoryBudgets = budgets?.filter((b) => b.categoryId !== null) ?? [];
@@ -53,7 +54,9 @@ export default function Budgets() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError onRetry={refetch} />
+      ) : isLoading ? (
         <div className="space-y-6">
           <CardSkeleton />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -83,7 +86,9 @@ export default function Budgets() {
           </div>
         </>
       ) : (
-        <div className="space-y-6">
+        <div
+          className={`space-y-6 transition-opacity duration-300 ${isFetching ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}
+        >
           <OverallBudget budgets={budgets} />
 
           {categoryBudgets.length > 0 && (

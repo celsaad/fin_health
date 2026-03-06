@@ -18,7 +18,7 @@ export const upsertBudgetSchema = z
       if (data.isRecurring) return true;
       return data.month !== undefined && data.year !== undefined;
     },
-    { message: 'Month and year are required for non-recurring budgets' }
+    { message: 'Month and year are required for non-recurring budgets' },
   );
 
 export type UpsertBudgetInput = z.infer<typeof upsertBudgetSchema>;

@@ -15,7 +15,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createRecurringSchema } from '@fin-health/shared/validators';
-import { Search, X } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { format } from 'date-fns';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../contexts/ThemeContext';
@@ -25,15 +25,16 @@ import {
   toggleRecurring,
   deleteRecurring,
 } from '../services/recurring';
-import { formatCurrency, formatDate } from '../utils/format';
+import { parseError } from '../services/api';
+import { formatCurrency } from '@fin-health/shared/format';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import CategoryIcon from '../components/CategoryIcon';
 import SegmentedControl from '../components/SegmentedControl';
 import EmptyState from '../components/EmptyState';
-import { FontSize, Spacing, BorderRadius } from '../constants/theme';
-import type { RecurringTransaction } from '@fin-health/shared/types';
+import QueryError from '../components/QueryError';
+import { FontSize, Spacing } from '../constants/theme';
 
 export default function RecurringScreen() {
   const { colors } = useTheme();
@@ -62,9 +63,7 @@ export default function RecurringScreen() {
   });
 
   const all = query.data?.recurringTransactions ?? [];
-  const items = tab === 0
-    ? all.filter((r) => r.isActive)
-    : all.filter((r) => !r.isActive);
+  const items = tab === 0 ? all.filter((r) => r.isActive) : all.filter((r) => !r.isActive);
 
   function confirmDelete(id: string) {
     Alert.alert('Delete Recurring', 'Are you sure?', [
@@ -74,12 +73,11 @@ export default function RecurringScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['bottom']}>
-      <SegmentedControl
-        options={['Active', 'Paused']}
-        selectedIndex={tab}
-        onSelect={setTab}
-      />
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['bottom']}
+    >
+      <SegmentedControl options={['Active', 'Paused']} selectedIndex={tab} onSelect={setTab} />
 
       <ScrollView
         style={styles.scrollContent}
@@ -88,7 +86,9 @@ export default function RecurringScreen() {
           <RefreshControl refreshing={query.isFetching} onRefresh={() => query.refetch()} />
         }
       >
-        {items.length === 0 ? (
+        {query.isError ? (
+          <QueryError onRetry={() => query.refetch()} />
+        ) : items.length === 0 ? (
           <EmptyState
             title={tab === 0 ? 'No active recurring' : 'No paused recurring'}
             message="Add recurring transactions to automate your tracking"
@@ -109,13 +109,11 @@ export default function RecurringScreen() {
                 activeOpacity={0.7}
               >
                 <Card style={styles.itemCard}>
-                  <CategoryIcon
-                    icon={item.category.icon}
-                    color={item.category.color}
-                    size={40}
-                  />
+                  <CategoryIcon icon={item.category.icon} color={item.category.color} size={40} />
                   <View style={styles.itemInfo}>
-                    <Text style={[styles.itemDesc, { color: colors.text }]}>{item.description}</Text>
+                    <Text style={[styles.itemDesc, { color: colors.text }]}>
+                      {item.description}
+                    </Text>
                     <Text style={[styles.itemMeta, { color: colors.textSecondary }]}>
                       {item.frequency.toUpperCase()}
                     </Text>
@@ -188,8 +186,8 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
       reset();
       onClose();
     },
-    onError: (err: any) => {
-      Alert.alert('Error', err.response?.data?.error ?? 'Failed to create');
+    onError: (err: unknown) => {
+      Alert.alert('Error', parseError(err).message);
     },
   });
 
@@ -210,14 +208,27 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
               control={control}
               name="description"
               render={({ field: { onChange, value } }) => (
-                <Input label="Description" placeholder="e.g., Netflix Premium" value={value} onChangeText={onChange} error={errors.description?.message as string} />
+                <Input
+                  label="Description"
+                  placeholder="e.g., Netflix Premium"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.description?.message as string}
+                />
               )}
             />
             <Controller
               control={control}
               name="amount"
               render={({ field: { onChange, value } }) => (
-                <Input label="Amount" placeholder="0.00" keyboardType="decimal-pad" value={value} onChangeText={onChange} error={errors.amount?.message as string} />
+                <Input
+                  label="Amount"
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.amount?.message as string}
+                />
               )}
             />
 
@@ -245,7 +256,13 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
                     ]}
                     onPress={() => setValue('frequency', f as any)}
                   >
-                    <Text style={{ color: watch('frequency') === f ? '#fff' : colors.text, fontSize: 13, fontWeight: '500' }}>
+                    <Text
+                      style={{
+                        color: watch('frequency') === f ? '#fff' : colors.text,
+                        fontSize: 13,
+                        fontWeight: '500',
+                      }}
+                    >
                       {f.charAt(0).toUpperCase() + f.slice(1)}
                     </Text>
                   </TouchableOpacity>
@@ -257,7 +274,13 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
               control={control}
               name="categoryName"
               render={({ field: { onChange, value } }) => (
-                <Input label="Category" placeholder="e.g., Entertainment" value={value} onChangeText={onChange} error={errors.categoryName?.message as string} />
+                <Input
+                  label="Category"
+                  placeholder="e.g., Entertainment"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.categoryName?.message as string}
+                />
               )}
             />
 
@@ -265,7 +288,13 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
               control={control}
               name="startDate"
               render={({ field: { onChange, value } }) => (
-                <Input label="Start Date" placeholder="YYYY-MM-DD" value={value} onChangeText={onChange} error={errors.startDate?.message as string} />
+                <Input
+                  label="Start Date"
+                  placeholder="YYYY-MM-DD"
+                  value={value}
+                  onChangeText={onChange}
+                  error={errors.startDate?.message as string}
+                />
               )}
             />
 
@@ -286,7 +315,13 @@ const addStyles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%', paddingTop: 8 },
   handle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 12 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
   title: { fontSize: 18, fontWeight: '600' },
   content: { paddingHorizontal: 16 },
 });
@@ -294,14 +329,26 @@ const addStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 120, flex: 1 },
-  sectionLabel: { fontSize: FontSize.body, fontWeight: '600', marginTop: Spacing.lg, marginBottom: Spacing.md },
+  sectionLabel: {
+    fontSize: FontSize.body,
+    fontWeight: '600',
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
   itemCard: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.sm },
   itemInfo: { flex: 1, marginLeft: Spacing.md },
   itemDesc: { fontSize: FontSize.body, fontWeight: '600' },
   itemMeta: { fontSize: FontSize.caption, fontWeight: '500', marginTop: 2 },
   itemRight: { alignItems: 'flex-end', gap: 6 },
   itemAmount: { fontSize: FontSize.body, fontWeight: '600' },
-  stickyButton: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 34 },
+  stickyButton: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    paddingBottom: 34,
+  },
   label: { fontSize: FontSize.label, fontWeight: '500', marginBottom: 4 },
   chipOption: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1 },
 });

@@ -49,9 +49,7 @@ describe('Auth routes', () => {
       const user = await createTestUser({ email, password });
       userIds.push(user.id);
 
-      const res = await api()
-        .post('/api/auth/login')
-        .send({ email, password });
+      const res = await api().post('/api/auth/login').send({ email, password });
 
       expect(res.status).toBe(200);
       expect(res.body.token).toBeDefined();
@@ -83,9 +81,7 @@ describe('Auth routes', () => {
       const user = await createTestUser();
       userIds.push(user.id);
 
-      const res = await api()
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${user.token}`);
+      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${user.token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.user.id).toBe(user.id);
@@ -98,9 +94,7 @@ describe('Auth routes', () => {
     });
 
     it('rejects invalid token', async () => {
-      const res = await api()
-        .get('/api/auth/me')
-        .set('Authorization', 'Bearer bad-token');
+      const res = await api().get('/api/auth/me').set('Authorization', 'Bearer bad-token');
 
       expect(res.status).toBe(401);
     });
@@ -135,9 +129,7 @@ describe('Auth routes', () => {
         .send({ currentPassword: 'OldPass123!', newPassword: 'NewPass456!' });
 
       // Old token should be rejected
-      const res = await api()
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${oldToken}`);
+      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${oldToken}`);
 
       expect(res.status).toBe(401);
     });
@@ -161,14 +153,15 @@ describe('Auth routes', () => {
       userIds.push(user.id);
 
       // Create some data to export
-      await api()
-        .post('/api/transactions')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ amount: 100, type: 'expense', description: 'Export test', date: '2025-01-01', categoryName: 'TestCat' });
+      await api().post('/api/transactions').set('Authorization', `Bearer ${user.token}`).send({
+        amount: 100,
+        type: 'expense',
+        description: 'Export test',
+        date: '2025-01-01',
+        categoryName: 'TestCat',
+      });
 
-      const res = await api()
-        .get('/api/auth/export')
-        .set('Authorization', `Bearer ${user.token}`);
+      const res = await api().get('/api/auth/export').set('Authorization', `Bearer ${user.token}`);
 
       expect(res.status).toBe(200);
       expect(res.headers['content-disposition']).toContain('user-data-export.json');
@@ -196,10 +189,13 @@ describe('Auth routes', () => {
       // Don't push to userIds — we're deleting in the test
 
       // Create data so we can verify cascade delete
-      await api()
-        .post('/api/transactions')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ amount: 50, type: 'expense', description: 'Will be deleted', date: '2025-01-01', categoryName: 'Temp' });
+      await api().post('/api/transactions').set('Authorization', `Bearer ${user.token}`).send({
+        amount: 50,
+        type: 'expense',
+        description: 'Will be deleted',
+        date: '2025-01-01',
+        categoryName: 'Temp',
+      });
 
       const res = await api()
         .delete('/api/auth/account')
@@ -210,9 +206,7 @@ describe('Auth routes', () => {
       expect(res.body.message).toContain('permanently deleted');
 
       // Verify the token no longer works
-      const meRes = await api()
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${user.token}`);
+      const meRes = await api().get('/api/auth/me').set('Authorization', `Bearer ${user.token}`);
       expect(meRes.status).toBe(401);
     });
 
@@ -241,9 +235,7 @@ describe('Auth routes', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      const res = await api()
-        .delete('/api/auth/account')
-        .send({ password: 'test' });
+      const res = await api().delete('/api/auth/account').send({ password: 'test' });
       expect(res.status).toBe(401);
     });
   });

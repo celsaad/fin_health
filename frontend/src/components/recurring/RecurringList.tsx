@@ -20,9 +20,7 @@ import {
   useToggleRecurring,
   type RecurringTransaction,
 } from '@/hooks/useRecurring';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface RecurringListProps {
   transactions: RecurringTransaction[];
@@ -46,12 +44,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
       {/* Card layout for mobile */}
       <div className="lg:hidden space-y-2">
         {transactions.map((txn) => (
-          <RecurringCard
-            key={txn.id}
-            transaction={txn}
-            onEdit={onEdit}
-            onDelete={setDeleteId}
-          />
+          <RecurringCard key={txn.id} transaction={txn} onEdit={onEdit} onDelete={setDeleteId} />
         ))}
       </div>
 
@@ -93,7 +86,10 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                 <TableCell>
                   {txn.category?.name ?? txn.category}
                   {txn.subcategory && (
-                    <span className="text-muted-foreground"> / {txn.subcategory?.name ?? txn.subcategory}</span>
+                    <span className="text-muted-foreground">
+                      {' '}
+                      / {txn.subcategory?.name ?? txn.subcategory}
+                    </span>
                   )}
                 </TableCell>
                 <TableCell>{format(new Date(txn.startDate), 'MMM dd, yyyy')}</TableCell>

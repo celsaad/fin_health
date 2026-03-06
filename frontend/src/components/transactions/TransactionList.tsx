@@ -12,12 +12,7 @@ import {
   useBulkDeleteTransactions,
   type Transaction,
 } from '@/hooks/useTransactions';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -41,8 +36,7 @@ function groupByDate(transactions: Transaction[]) {
 
 export function TransactionList({ transactions }: TransactionListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [editingTransaction, setEditingTransaction] =
-    useState<Transaction | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
 
@@ -51,8 +45,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
 
   const dateGroups = useMemo(() => groupByDate(transactions), [transactions]);
 
-  const allSelected =
-    transactions.length > 0 && selectedIds.size === transactions.length;
+  const allSelected = transactions.length > 0 && selectedIds.size === transactions.length;
   const someSelected = selectedIds.size > 0 && !allSelected;
 
   const toggleAll = () => {
@@ -91,14 +84,8 @@ export function TransactionList({ transactions }: TransactionListProps) {
     <>
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
-          <span className="text-sm font-medium">
-            {selectedIds.size} selected
-          </span>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setShowBulkDelete(true)}
-          >
+          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <Button variant="destructive" size="sm" onClick={() => setShowBulkDelete(true)}>
             <Trash2 className="size-4" />
             Delete selected
           </Button>
@@ -157,10 +144,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
             </thead>
             <tbody>
               {transactions.map((transaction) => (
-                <tr
-                  key={transaction.id}
-                  className="border-b last:border-0 hover:bg-muted/30"
-                >
+                <tr key={transaction.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="px-4 py-3">
                     <Checkbox
                       checked={selectedIds.has(transaction.id)}
@@ -173,9 +157,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">
-                        {transaction.description}
-                      </span>
+                      <span className="text-sm font-medium">{transaction.description}</span>
                       {transaction.notes && (
                         <span className="text-xs text-muted-foreground line-clamp-1">
                           {transaction.notes}
@@ -185,10 +167,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <Badge
-                        variant="secondary"
-                        className="text-xs"
-                      >
+                      <Badge variant="secondary" className="text-xs">
                         {transaction.category.name}
                       </Badge>
                       {transaction.subcategory && (

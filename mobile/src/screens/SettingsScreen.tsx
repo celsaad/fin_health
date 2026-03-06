@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
@@ -17,7 +10,6 @@ import {
   Monitor,
   DollarSign,
   ChevronRight,
-  LogOut,
   Grid3X3,
 } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,14 +20,15 @@ import { FontSize, Spacing, BorderRadius } from '../constants/theme';
 
 export default function SettingsScreen({ navigation }: any) {
   const { user, logout } = useAuth();
-  const { colors, preference, setPreference, isDark } = useTheme();
+  const { colors, preference, setPreference } = useTheme();
 
-  const initials = user?.name
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) ?? '?';
+  const initials =
+    user?.name
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) ?? '?';
 
   function confirmLogout() {
     Alert.alert('Logout', 'Are you sure you want to log out?', [
@@ -93,7 +86,9 @@ export default function SettingsScreen({ navigation }: any) {
         </Card>
 
         {/* Display Preferences */}
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>DISPLAY PREFERENCES</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>
+          DISPLAY PREFERENCES
+        </Text>
         <Card style={styles.sectionCard}>
           <Text style={[styles.prefLabel, { color: colors.text }]}>Appearance</Text>
           <View style={styles.themeSelector}>
@@ -112,10 +107,7 @@ export default function SettingsScreen({ navigation }: any) {
                 >
                   <Icon size={16} color={isActive ? '#fff' : colors.textSecondary} />
                   <Text
-                    style={[
-                      styles.themeLabel,
-                      { color: isActive ? '#fff' : colors.textSecondary },
-                    ]}
+                    style={[styles.themeLabel, { color: isActive ? '#fff' : colors.textSecondary }]}
                   >
                     {label}
                   </Text>
@@ -183,9 +175,15 @@ function SettingsRow({
       {icon}
       <View style={styles.rowInfo}>
         <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
-        {subtitle && <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>}
+        {subtitle && (
+          <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+        )}
       </View>
-      {value && <Text style={[styles.rowValue, { color: colors.textSecondary }]} numberOfLines={1}>{value}</Text>}
+      {value && (
+        <Text style={[styles.rowValue, { color: colors.textSecondary }]} numberOfLines={1}>
+          {value}
+        </Text>
+      )}
       {showChevron && <ChevronRight size={18} color={colors.textSecondary} />}
     </View>
   );
@@ -193,14 +191,31 @@ function SettingsRow({
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  pageTitle: { fontSize: FontSize.pageTitle, fontWeight: '700', paddingHorizontal: Spacing.lg, paddingTop: Spacing.md },
+  pageTitle: {
+    fontSize: FontSize.pageTitle,
+    fontWeight: '700',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+  },
   scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: 40 },
   profileSection: { alignItems: 'center', paddingVertical: Spacing.xxl },
-  avatar: { width: 72, height: 72, borderRadius: 36, justifyContent: 'center', alignItems: 'center' },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   avatarText: { color: '#fff', fontSize: 24, fontWeight: '700' },
   userName: { fontSize: FontSize.sectionHeader, fontWeight: '700', marginTop: Spacing.md },
   userEmail: { fontSize: FontSize.body, marginTop: 4 },
-  sectionLabel: { fontSize: FontSize.caption, fontWeight: '600', letterSpacing: 0.5, marginTop: Spacing.xl, marginBottom: Spacing.sm },
+  sectionLabel: {
+    fontSize: FontSize.caption,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginTop: Spacing.xl,
+    marginBottom: Spacing.sm,
+  },
   sectionCard: { padding: 0 },
   settingsRow: {
     flexDirection: 'row',
@@ -213,7 +228,12 @@ const styles = StyleSheet.create({
   rowSubtitle: { fontSize: FontSize.caption, marginTop: 2 },
   rowValue: { fontSize: FontSize.body, maxWidth: 150 },
   divider: { height: StyleSheet.hairlineWidth, marginHorizontal: Spacing.lg },
-  prefLabel: { fontSize: FontSize.body, fontWeight: '500', paddingHorizontal: Spacing.lg, paddingTop: Spacing.lg },
+  prefLabel: {
+    fontSize: FontSize.body,
+    fontWeight: '500',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+  },
   themeSelector: {
     flexDirection: 'row',
     marginHorizontal: Spacing.lg,

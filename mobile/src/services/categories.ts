@@ -6,7 +6,10 @@ export async function getCategories(): Promise<{ categories: Category[] }> {
   return data;
 }
 
-export async function updateCategory(id: string, body: { name?: string; icon?: string; color?: string }) {
+export async function updateCategory(
+  id: string,
+  body: { name?: string; icon?: string; color?: string },
+) {
   const { data } = await api.put(`/categories/${id}`, body);
   return data.category;
 }

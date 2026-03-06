@@ -2,7 +2,7 @@ import api from './api';
 import type { TransactionFilters, PaginatedResponse, Transaction } from '@fin-health/shared/types';
 
 export async function getTransactions(
-  filters: TransactionFilters
+  filters: TransactionFilters,
 ): Promise<PaginatedResponse<Transaction>> {
   const { data } = await api.get('/transactions', { params: filters });
   return data;
@@ -36,7 +36,7 @@ export async function updateTransaction(
     categoryName: string;
     subcategoryName?: string | null;
     notes?: string | null;
-  }>
+  }>,
 ) {
   const { data } = await api.put(`/transactions/${id}`, body);
   return data.transaction;

@@ -1,34 +1,22 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Wallet,
-  TrendingUp,
-  TrendingDown,
-  List,
-  Settings,
-} from 'lucide-react-native';
+import { Wallet, TrendingUp, TrendingDown, List, Settings } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getSummary, getBreakdown, getTrend } from '../services/dashboard';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency } from '@fin-health/shared/format';
 import Card from '../components/Card';
 import MonthSelector from '../components/MonthSelector';
 import CategoryIcon from '../components/CategoryIcon';
-import LoadingSkeleton, { CardSkeleton } from '../components/LoadingSkeleton';
-import { FontSize, Spacing, BorderRadius, CategoryColors } from '../constants/theme';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import QueryError from '../components/QueryError';
+import { FontSize, Spacing } from '../constants/theme';
 import Svg, { G, Path } from 'react-native-svg';
 
 export default function DashboardScreen({ navigation }: any) {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { user } = useAuth();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -50,6 +38,7 @@ export default function DashboardScreen({ navigation }: any) {
   });
 
   const isLoading = summaryQuery.isLoading;
+  const isError = summaryQuery.isError || breakdownQuery.isError || trendQuery.isError;
   const summary = summaryQuery.data;
   const breakdown = breakdownQuery.data?.breakdown ?? [];
   const trend = trendQuery.data?.trend ?? [];
@@ -60,22 +49,20 @@ export default function DashboardScreen({ navigation }: any) {
     trendQuery.refetch();
   }
 
-  const initials = user?.name
-    ?.split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) ?? '?';
+  const initials =
+    user?.name
+      ?.split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) ?? '?';
 
   // Donut chart data
   const donutColors = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
   const totalSpent = breakdown.reduce((sum: number, b: any) => sum + b.total, 0);
 
   // Bar chart data
-  const maxBar = Math.max(
-    ...trend.map((t: any) => Math.max(t.income || 0, t.expense || 0)),
-    1
-  );
+  const maxBar = Math.max(...trend.map((t: any) => Math.max(t.income || 0, t.expense || 0)), 1);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -94,7 +81,10 @@ export default function DashboardScreen({ navigation }: any) {
       <MonthSelector
         selectedMonth={month}
         selectedYear={year}
-        onSelect={(m, y) => { setMonth(m); setYear(y); }}
+        onSelect={(m, y) => {
+          setMonth(m);
+          setYear(y);
+        }}
       />
 
       <ScrollView
@@ -105,7 +95,9 @@ export default function DashboardScreen({ navigation }: any) {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Summary Cards */}
-        {isLoading ? (
+        {isError ? (
+          <QueryError onRetry={onRefresh} />
+        ) : isLoading ? (
           <View style={styles.grid}>
             {[1, 2, 3, 4].map((i) => (
               <Card key={i} style={summaryStyles.card}>
@@ -169,8 +161,16 @@ export default function DashboardScreen({ navigation }: any) {
               <View style={styles.legendGrid}>
                 {breakdown.slice(0, 6).map((item: any, i: number) => (
                   <View key={item.categoryId} style={styles.legendItem}>
-                    <View style={[styles.legendDot, { backgroundColor: donutColors[i % donutColors.length] }]} />
-                    <Text style={[styles.legendText, { color: colors.textSecondary }]} numberOfLines={1}>
+                    <View
+                      style={[
+                        styles.legendDot,
+                        { backgroundColor: donutColors[i % donutColors.length] },
+                      ]}
+                    />
+                    <Text
+                      style={[styles.legendText, { color: colors.textSecondary }]}
+                      numberOfLines={1}
+                    >
                       {item.categoryName} ({Math.round(item.percentage)}%)
                     </Text>
                   </View>
@@ -235,7 +235,9 @@ export default function DashboardScreen({ navigation }: any) {
             <Card key={item.categoryId} style={styles.categoryRow}>
               <CategoryIcon icon={item.icon} color={item.color} size={40} />
               <View style={styles.categoryInfo}>
-                <Text style={[styles.categoryName, { color: colors.text }]}>{item.categoryName}</Text>
+                <Text style={[styles.categoryName, { color: colors.text }]}>
+                  {item.categoryName}
+                </Text>
                 <Text style={[styles.categoryCount, { color: colors.textSecondary }]}>
                   {item.transactionCount ?? 0} transactions
                 </Text>
@@ -268,7 +270,11 @@ function SummaryCard({
     <Card style={summaryStyles.card}>
       <View style={[summaryStyles.iconCircle, { backgroundColor: iconBg }]}>{icon}</View>
       <Text style={[summaryStyles.label, { color: colors.textSecondary }]}>{label}</Text>
-      <Text style={[summaryStyles.value, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+      <Text
+        style={[summaryStyles.value, { color: colors.text }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {value}
       </Text>
     </Card>
@@ -322,9 +328,7 @@ function DonutChart({
       'Z',
     ].join(' ');
 
-    return (
-      <Path key={i} d={path} fill={chartColors[i % chartColors.length]} />
-    );
+    return <Path key={i} d={path} fill={chartColors[i % chartColors.length]} />;
   });
 
   return (
@@ -335,7 +339,20 @@ function DonutChart({
 }
 
 function getShortMonth(m: number) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return months[(m - 1) % 12] ?? '';
 }
 

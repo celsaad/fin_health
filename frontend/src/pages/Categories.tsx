@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ListSkeleton } from '@/components/shared/LoadingSkeleton';
+import { QueryError } from '@/components/shared/QueryError';
 import { CategoryList } from '@/components/categories/CategoryList';
 import { useCategories } from '@/hooks/useCategories';
 
 export default function Categories() {
-  const { data: categories = [], isLoading } = useCategories();
+  const { data: categories = [], isLoading, isError, refetch } = useCategories();
   const [activeType, setActiveType] = useState<'expense' | 'income'>('expense');
 
   const expenseCategories = categories.filter((c) => c.type === 'expense');
@@ -43,7 +44,9 @@ export default function Categories() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError onRetry={refetch} />
+      ) : isLoading ? (
         <ListSkeleton rows={6} />
       ) : categories.length === 0 ? (
         <EmptyState
@@ -62,9 +65,7 @@ export default function Categories() {
           {count > 0 ? (
             <CategoryList categories={displayedCategories} />
           ) : (
-            <p className="py-8 text-center text-muted-foreground">
-              No {activeType} categories yet
-            </p>
+            <p className="py-8 text-center text-muted-foreground">No {activeType} categories yet</p>
           )}
         </div>
       )}

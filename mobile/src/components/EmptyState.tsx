@@ -13,7 +13,13 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export default function EmptyState({ icon, title, message, actionLabel, onAction }: EmptyStateProps) {
+export default function EmptyState({
+  icon,
+  title,
+  message,
+  actionLabel,
+  onAction,
+}: EmptyStateProps) {
   const { colors } = useTheme();
 
   return (

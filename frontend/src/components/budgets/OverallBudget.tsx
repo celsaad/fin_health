@@ -2,14 +2,23 @@ import { Info } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BudgetProgressBar } from '@/components/budgets/BudgetProgressBar';
 import type { Budget } from '@/hooks/useBudgets';
+import { formatCurrency } from '@fin-health/shared/format';
 
 const MONTH_NAMES = [
-  '', 'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  '',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
 
 interface OverallBudgetProps {
   budgets: Budget[];
@@ -41,12 +50,8 @@ export function OverallBudget({ budgets }: OverallBudgetProps) {
             <p className="text-3xl font-bold">{formatCurrency(totalSpent)}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">
-              GOAL: {formatCurrency(totalBudgeted)}
-            </p>
-            <p className="text-sm font-semibold text-primary">
-              {pct}% reached
-            </p>
+            <p className="text-sm text-muted-foreground">GOAL: {formatCurrency(totalBudgeted)}</p>
+            <p className="text-sm font-semibold text-primary">{pct}% reached</p>
           </div>
         </div>
 
@@ -56,7 +61,9 @@ export function OverallBudget({ budgets }: OverallBudgetProps) {
           <Info className="size-4 shrink-0" />
           <span>
             {totalRemaining >= 0 ? (
-              <>{formatCurrency(totalRemaining)} remaining for {monthLabel}</>
+              <>
+                {formatCurrency(totalRemaining)} remaining for {monthLabel}
+              </>
             ) : (
               <span className="text-red-600 dark:text-red-400">
                 {formatCurrency(Math.abs(totalRemaining))} over budget for {monthLabel}

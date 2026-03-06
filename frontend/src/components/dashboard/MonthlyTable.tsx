@@ -12,9 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { BreakdownItem } from '@/hooks/useDashboard';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface MonthlyTableProps {
   breakdown: BreakdownItem[];
@@ -23,9 +21,7 @@ interface MonthlyTableProps {
 export function MonthlyTable({ breakdown }: MonthlyTableProps) {
   const [sortAsc, setSortAsc] = useState(false);
 
-  const sorted = [...breakdown].sort((a, b) =>
-    sortAsc ? a.total - b.total : b.total - a.total
-  );
+  const sorted = [...breakdown].sort((a, b) => (sortAsc ? a.total - b.total : b.total - a.total));
 
   if (breakdown.length === 0) {
     return (

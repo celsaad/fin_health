@@ -41,7 +41,15 @@ export default function Input({
           )}
         </View>
       )}
-      <View style={[styles.inputWrapper, { backgroundColor: colors.inputBg, borderColor: error ? colors.destructive : 'transparent' }]}>
+      <View
+        style={[
+          styles.inputWrapper,
+          {
+            backgroundColor: colors.inputBg,
+            borderColor: error ? colors.destructive : 'transparent',
+          },
+        ]}
+      >
         <TextInput
           style={[styles.input, { color: colors.text }, style]}
           placeholderTextColor={colors.textSecondary}

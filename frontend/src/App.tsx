@@ -1,16 +1,28 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { AppLayout } from '@/components/layout/AppLayout';
-import Login from '@/pages/Login';
-import Signup from '@/pages/Signup';
-import Onboarding from '@/pages/Onboarding';
-import Dashboard from '@/pages/Dashboard';
-import Transactions from '@/pages/Transactions';
-import Categories from '@/pages/Categories';
-import Budgets from '@/pages/Budgets';
-import RecurringTransactions from '@/pages/RecurringTransactions';
-import Spending from '@/pages/Spending';
-import Settings from '@/pages/Settings';
+import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
+
+const Login = lazy(() => import('@/pages/Login'));
+const Signup = lazy(() => import('@/pages/Signup'));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const Transactions = lazy(() => import('@/pages/Transactions'));
+const Categories = lazy(() => import('@/pages/Categories'));
+const Budgets = lazy(() => import('@/pages/Budgets'));
+const RecurringTransactions = lazy(() => import('@/pages/RecurringTransactions'));
+const Spending = lazy(() => import('@/pages/Spending'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <CardSkeleton />
+    </div>
+  );
+}
 
 function OnboardingGate() {
   const hasOnboarded = localStorage.getItem('hasOnboarded');
@@ -22,7 +34,7 @@ function OnboardingGate() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<OnboardingGate />} />
@@ -38,7 +50,8 @@ export default function App() {
             <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
-    </BrowserRouter>
+    </Suspense>
   );
 }

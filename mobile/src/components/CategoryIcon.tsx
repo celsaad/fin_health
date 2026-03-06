@@ -14,15 +14,21 @@ export default function CategoryIcon({ icon, color, size = 40 }: CategoryIconPro
   const { isDark } = useTheme();
   const IconComponent = getCategoryIcon(icon);
 
-  const colorConfig = color && CategoryColors[color]
-    ? CategoryColors[color]
-    : { icon: '#6b7280', bgLight: '#f3f4f6', bgDark: '#374151' };
+  const colorConfig =
+    color && CategoryColors[color]
+      ? CategoryColors[color]
+      : { icon: '#6b7280', bgLight: '#f3f4f6', bgDark: '#374151' };
 
   const bgColor = isDark ? colorConfig.bgDark : colorConfig.bgLight;
   const iconSize = size * 0.5;
 
   return (
-    <View style={[styles.container, { width: size, height: size, borderRadius: size / 2, backgroundColor: bgColor }]}>
+    <View
+      style={[
+        styles.container,
+        { width: size, height: size, borderRadius: size / 2, backgroundColor: bgColor },
+      ]}
+    >
       <IconComponent size={iconSize} color={colorConfig.icon} />
     </View>
   );

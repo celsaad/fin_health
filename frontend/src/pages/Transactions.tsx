@@ -4,16 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { SearchInput } from '@/components/shared/SearchInput';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { QueryError } from '@/components/shared/QueryError';
 import { Pagination } from '@/components/shared/Pagination';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
 import { TransactionFilters } from '@/components/transactions/TransactionFilters';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { ExportButton } from '@/components/transactions/ExportButton';
-import {
-  useTransactions,
-  type TransactionFilters as Filters,
-} from '@/hooks/useTransactions';
+import { useTransactions, type TransactionFilters as Filters } from '@/hooks/useTransactions';
 
 export default function Transactions() {
   const [formOpen, setFormOpen] = useState(false);
@@ -29,17 +27,14 @@ export default function Transactions() {
     sortOrder: 'desc',
   });
 
-  const { data, isLoading } = useTransactions(filters);
+  const { data, isLoading, isError, refetch } = useTransactions(filters);
 
   const transactions = data?.transactions ?? [];
   const pagination = data?.pagination;
 
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setFilters((prev) => ({ ...prev, search: value, page: 1 }));
-    },
-    []
-  );
+  const handleSearchChange = useCallback((value: string) => {
+    setFilters((prev) => ({ ...prev, search: value, page: 1 }));
+  }, []);
 
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
@@ -58,9 +53,7 @@ export default function Transactions() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">
-            Manage your income and expenses
-          </p>
+          <p className="text-muted-foreground">Manage your income and expenses</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton filters={filters} />
@@ -75,10 +68,7 @@ export default function Transactions() {
         <CardHeader>
           <CardTitle className="sr-only">Transaction List</CardTitle>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <TransactionFilters
-              filters={filters}
-              onFilterChange={setFilters}
-            />
+            <TransactionFilters filters={filters} onFilterChange={setFilters} />
             <SearchInput
               value={filters.search}
               onChange={handleSearchChange}
@@ -88,31 +78,23 @@ export default function Transactions() {
           </div>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {isError ? (
+            <QueryError onRetry={refetch} />
+          ) : isLoading ? (
             <TableSkeleton rows={5} columns={5} />
           ) : isEmpty ? (
             <EmptyState
               icon={Receipt}
               title={
-                filters.search || hasActiveFilters
-                  ? 'No transactions found'
-                  : 'No transactions yet'
+                filters.search || hasActiveFilters ? 'No transactions found' : 'No transactions yet'
               }
               description={
                 filters.search || hasActiveFilters
                   ? 'Try adjusting your search or filters.'
                   : 'Get started by adding your first transaction.'
               }
-              actionLabel={
-                filters.search || hasActiveFilters
-                  ? undefined
-                  : 'Add Transaction'
-              }
-              onAction={
-                filters.search || hasActiveFilters
-                  ? undefined
-                  : () => setFormOpen(true)
-              }
+              actionLabel={filters.search || hasActiveFilters ? undefined : 'Add Transaction'}
+              onAction={filters.search || hasActiveFilters ? undefined : () => setFormOpen(true)}
             />
           ) : (
             <div className="space-y-4">
@@ -131,10 +113,7 @@ export default function Transactions() {
         </CardContent>
       </Card>
 
-      <TransactionForm
-        open={formOpen}
-        onOpenChange={setFormOpen}
-      />
+      <TransactionForm open={formOpen} onOpenChange={setFormOpen} />
     </div>
   );
 }

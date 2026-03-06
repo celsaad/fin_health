@@ -2,6 +2,11 @@ import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { generateToken } from '../lib/jwt';
 import { hashPassword, comparePassword } from '../lib/password';
+import {
+  createRefreshToken,
+  consumeRefreshToken,
+  revokeUserRefreshTokens,
+} from '../lib/refreshToken';
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { signupSchema, loginSchema, changePasswordSchema } from '../validators/auth';
@@ -32,12 +37,13 @@ router.post(
       });
 
       const token = generateToken(user.id);
+      const refreshToken = await createRefreshToken(user.id);
 
-      res.status(201).json({ token, user });
+      res.status(201).json({ token, refreshToken, user });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // POST /api/auth/login
@@ -59,9 +65,10 @@ router.post(
       }
 
       const token = generateToken(user.id);
+      const refreshToken = await createRefreshToken(user.id);
 
       const { password: _, ...userWithoutPassword } = user;
-      res.json({ token, user: userWithoutPassword });
+      res.json({ token, refreshToken, user: userWithoutPassword });
 
       // Generate any pending recurring transactions in background (non-blocking)
       generateRecurringTransactions(user.id).catch((err) => {
@@ -70,30 +77,59 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // GET /api/auth/me
-router.get(
-  '/me',
-  authMiddleware,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const user = await prisma.user.findUnique({
-        where: { id: req.userId },
-        select: { id: true, email: true, name: true, currency: true, createdAt: true },
-      });
+router.get('/me', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+      select: { id: true, email: true, name: true, currency: true, createdAt: true },
+    });
 
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
-
-      res.json({ user });
-    } catch (err) {
-      next(err);
+    if (!user) {
+      throw new AppError('User not found', 404);
     }
+
+    res.json({ user });
+  } catch (err) {
+    next(err);
   }
-);
+});
+
+// POST /api/auth/refresh
+router.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken || typeof refreshToken !== 'string') {
+      throw new AppError('Refresh token is required', 400);
+    }
+
+    const record = await consumeRefreshToken(refreshToken);
+    if (!record) {
+      throw new AppError('Invalid or expired refresh token', 401);
+    }
+
+    const token = generateToken(record.userId);
+    const newRefreshToken = await createRefreshToken(record.userId);
+
+    res.json({ token, refreshToken: newRefreshToken });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/auth/logout
+router.post('/logout', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await revokeUserRefreshTokens(req.userId!);
+    res.json({ message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // PUT /api/auth/password
 router.put(
@@ -120,96 +156,100 @@ router.put(
         data: { password: hashedPassword, passwordChangedAt: new Date() },
       });
 
-      // Issue a fresh token so the current session stays valid
-      const newToken = generateToken(user.id);
+      // Revoke all existing refresh tokens (invalidates other sessions)
+      await revokeUserRefreshTokens(user.id);
 
-      res.json({ message: 'Password updated successfully', token: newToken });
+      // Issue fresh tokens so the current session stays valid
+      const newToken = generateToken(user.id);
+      const newRefreshToken = await createRefreshToken(user.id);
+
+      res.json({
+        message: 'Password updated successfully',
+        token: newToken,
+        refreshToken: newRefreshToken,
+      });
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // GET /api/auth/export — GDPR data export
-router.get(
-  '/export',
-  authMiddleware,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userId = req.userId!;
+router.get('/export', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
 
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          currency: true,
-          createdAt: true,
-          updatedAt: true,
-          categories: {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              icon: true,
-              color: true,
-              subcategories: { select: { id: true, name: true } },
-            },
-          },
-          transactions: {
-            select: {
-              id: true,
-              amount: true,
-              type: true,
-              description: true,
-              date: true,
-              notes: true,
-              categoryId: true,
-              subcategoryId: true,
-              deletedAt: true,
-              createdAt: true,
-            },
-          },
-          budgets: {
-            select: {
-              id: true,
-              amount: true,
-              month: true,
-              year: true,
-              isRecurring: true,
-              categoryId: true,
-            },
-          },
-          recurringTransactions: {
-            select: {
-              id: true,
-              amount: true,
-              type: true,
-              description: true,
-              frequency: true,
-              startDate: true,
-              endDate: true,
-              isActive: true,
-              notes: true,
-              categoryId: true,
-              subcategoryId: true,
-            },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        currency: true,
+        createdAt: true,
+        updatedAt: true,
+        categories: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            icon: true,
+            color: true,
+            subcategories: { select: { id: true, name: true } },
           },
         },
-      });
+        transactions: {
+          select: {
+            id: true,
+            amount: true,
+            type: true,
+            description: true,
+            date: true,
+            notes: true,
+            categoryId: true,
+            subcategoryId: true,
+            deletedAt: true,
+            createdAt: true,
+          },
+        },
+        budgets: {
+          select: {
+            id: true,
+            amount: true,
+            month: true,
+            year: true,
+            isRecurring: true,
+            categoryId: true,
+          },
+        },
+        recurringTransactions: {
+          select: {
+            id: true,
+            amount: true,
+            type: true,
+            description: true,
+            frequency: true,
+            startDate: true,
+            endDate: true,
+            isActive: true,
+            notes: true,
+            categoryId: true,
+            subcategoryId: true,
+          },
+        },
+      },
+    });
 
-      if (!user) {
-        throw new AppError('User not found', 404);
-      }
-
-      res.setHeader('Content-Disposition', 'attachment; filename="user-data-export.json"');
-      res.json({ exportedAt: new Date().toISOString(), data: user });
-    } catch (err) {
-      next(err);
+    if (!user) {
+      throw new AppError('User not found', 404);
     }
+
+    res.setHeader('Content-Disposition', 'attachment; filename="user-data-export.json"');
+    res.json({ exportedAt: new Date().toISOString(), data: user });
+  } catch (err) {
+    next(err);
   }
-);
+});
 
 // DELETE /api/auth/account — GDPR account deletion
 router.delete(
@@ -241,7 +281,7 @@ router.delete(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 export default router;

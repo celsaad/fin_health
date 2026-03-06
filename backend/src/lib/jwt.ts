@@ -1,17 +1,7 @@
 import jwt from 'jsonwebtoken';
+import { env } from './env';
 
-function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET environment variable is required in production');
-    }
-    return 'dev-jwt-secret-unsafe';
-  }
-  return secret;
-}
-
-const JWT_SECRET = getJwtSecret();
+const JWT_SECRET = env.JWT_SECRET;
 const TOKEN_TTL = '24h';
 
 export function generateToken(userId: string): string {

@@ -83,10 +83,7 @@ describe('Budget routes', () => {
     });
 
     it('rejects non-recurring budget without month/year', async () => {
-      const res = await api()
-        .post('/api/budgets')
-        .set(auth())
-        .send({ amount: 500 });
+      const res = await api().post('/api/budgets').set(auth()).send({ amount: 500 });
 
       expect(res.status).toBe(400);
     });
@@ -103,9 +100,7 @@ describe('Budget routes', () => {
 
   describe('GET /api/budgets', () => {
     it('returns budgets with spent calculation', async () => {
-      const res = await api()
-        .get('/api/budgets?month=3&year=2025')
-        .set(auth());
+      const res = await api().get('/api/budgets?month=3&year=2025').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.budgets).toBeInstanceOf(Array);
@@ -119,9 +114,7 @@ describe('Budget routes', () => {
 
     it('includes recurring budgets in results', async () => {
       // Query for a month that only has recurring budgets
-      const res = await api()
-        .get('/api/budgets?month=1&year=2025')
-        .set(auth());
+      const res = await api().get('/api/budgets?month=1&year=2025').set(auth());
 
       expect(res.status).toBe(200);
       const recurring = res.body.budgets.filter((b: { isRecurring: boolean }) => b.isRecurring);
@@ -129,17 +122,13 @@ describe('Budget routes', () => {
     });
 
     it('rejects missing month/year', async () => {
-      const res = await api()
-        .get('/api/budgets')
-        .set(auth());
+      const res = await api().get('/api/budgets').set(auth());
 
       expect(res.status).toBe(400);
     });
 
     it('rejects invalid month', async () => {
-      const res = await api()
-        .get('/api/budgets?month=13&year=2025')
-        .set(auth());
+      const res = await api().get('/api/budgets?month=13&year=2025').set(auth());
 
       expect(res.status).toBe(400);
     });
@@ -154,23 +143,19 @@ describe('Budget routes', () => {
 
       const budgetId = createRes.body.budget.id;
 
-      const res = await api()
-        .delete(`/api/budgets/${budgetId}`)
-        .set(auth());
+      const res = await api().delete(`/api/budgets/${budgetId}`).set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.message).toBe('Budget deleted');
     });
 
     it('returns 404 for non-existent budget', async () => {
-      const res = await api()
-        .delete('/api/budgets/nonexistent-id')
-        .set(auth());
+      const res = await api().delete('/api/budgets/nonexistent-id').set(auth());
 
       expect(res.status).toBe(404);
     });
 
-    it('cannot delete another user\'s budget', async () => {
+    it("cannot delete another user's budget", async () => {
       const other = await createTestUser();
       const createRes = await api()
         .post('/api/budgets')
@@ -218,12 +203,10 @@ describe('Budget routes', () => {
       expect(res.body.budgets).toBeInstanceOf(Array);
 
       // Verify no duplicates in the target month
-      const budgets = await api()
-        .get('/api/budgets?month=5&year=2025')
-        .set(auth());
+      const budgets = await api().get('/api/budgets?month=5&year=2025').set(auth());
 
       const catBudgets = budgets.body.budgets.filter(
-        (b: { categoryId: string | null }) => b.categoryId === categoryId
+        (b: { categoryId: string | null }) => b.categoryId === categoryId,
       );
       expect(catBudgets.length).toBe(1);
     });

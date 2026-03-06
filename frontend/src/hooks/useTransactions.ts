@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api';
+import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Transaction, TransactionFilters, PaginatedResponse } from '@fin-health/shared/types';
 
@@ -33,9 +33,7 @@ export function useTransactions(filters: TransactionFilters = {}) {
       if (filters.sortBy) params.set('sortBy', filters.sortBy);
       if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
 
-      const { data } = await api.get<TransactionsResponse>(
-        `/transactions?${params.toString()}`
-      );
+      const { data } = await api.get<TransactionsResponse>(`/transactions?${params.toString()}`);
       return data;
     },
   });
@@ -46,10 +44,7 @@ export function useCreateTransaction() {
 
   return useMutation({
     mutationFn: async (input: CreateTransactionInput) => {
-      const { data } = await api.post<{ transaction: Transaction }>(
-        '/transactions',
-        input
-      );
+      const { data } = await api.post<{ transaction: Transaction }>('/transactions', input);
       return data.transaction;
     },
     onSuccess: () => {
@@ -57,8 +52,8 @@ export function useCreateTransaction() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Transaction created successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -67,14 +62,8 @@ export function useUpdateTransaction() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...input
-    }: Partial<CreateTransactionInput> & { id: string }) => {
-      const { data } = await api.put<{ transaction: Transaction }>(
-        `/transactions/${id}`,
-        input
-      );
+    mutationFn: async ({ id, ...input }: Partial<CreateTransactionInput> & { id: string }) => {
+      const { data } = await api.put<{ transaction: Transaction }>(`/transactions/${id}`, input);
       return data.transaction;
     },
     onSuccess: () => {
@@ -82,8 +71,8 @@ export function useUpdateTransaction() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Transaction updated successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -100,8 +89,8 @@ export function useDeleteTransaction() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Transaction deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -118,15 +107,13 @@ export function useBulkDeleteTransactions() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Transactions deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete transactions');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
 
-export async function exportTransactions(
-  filters: TransactionFilters = {}
-): Promise<void> {
+export async function exportTransactions(filters: TransactionFilters = {}): Promise<void> {
   try {
     const params = new URLSearchParams();
     if (filters.type) params.set('type', filters.type);
@@ -149,7 +136,7 @@ export async function exportTransactions(
     window.URL.revokeObjectURL(url);
 
     toast.success('Transactions exported successfully');
-  } catch {
-    toast.error('Failed to export transactions');
+  } catch (error) {
+    toast.error(parseError(error).message);
   }
 }

@@ -22,12 +22,8 @@ export function EmptyState({
         <Icon className="size-8 text-muted-foreground" />
       </div>
       <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-      <p className="mb-6 max-w-sm text-sm text-muted-foreground">
-        {description}
-      </p>
-      {actionLabel && onAction && (
-        <Button onClick={onAction}>{actionLabel}</Button>
-      )}
+      <p className="mb-6 max-w-sm text-sm text-muted-foreground">{description}</p>
+      {actionLabel && onAction && <Button onClick={onAction}>{actionLabel}</Button>}
     </div>
   );
 }

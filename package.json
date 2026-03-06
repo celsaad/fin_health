@@ -13,6 +13,8 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format:check": "turbo run format:check",
     "db:migrate": "npm run db:migrate -w @fin-health/backend",
     "db:migrate:dev": "npm run db:migrate:dev -w @fin-health/backend",
     "db:push": "npm run db:push -w @fin-health/backend",

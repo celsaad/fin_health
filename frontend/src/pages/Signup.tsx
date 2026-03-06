@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { parseError } from '@/lib/api';
 import { Heart, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -45,9 +46,7 @@ export default function Signup() {
       await signup(data.email, data.password, data.name);
       navigate('/');
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to create account';
-      toast.error(message);
+      toast.error(parseError(error).message);
     } finally {
       setIsSubmitting(false);
     }
@@ -64,9 +63,7 @@ export default function Signup() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">FinHealth</h1>
-            <p className="text-sm text-muted-foreground">
-              Create your financial health account
-            </p>
+            <p className="text-sm text-muted-foreground">Create your financial health account</p>
           </div>
         </div>
 
@@ -81,9 +78,7 @@ export default function Signup() {
               className="bg-muted/50 rounded-xl"
               {...register('name')}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -94,9 +89,7 @@ export default function Signup() {
               className="bg-muted/50 rounded-xl"
               {...register('email')}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -114,17 +107,11 @@ export default function Signup() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
               >
-                {showPassword ? (
-                  <EyeOff className="size-4" />
-                ) : (
-                  <Eye className="size-4" />
-                )}
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
+              <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
           <div className="space-y-2">
@@ -137,18 +124,11 @@ export default function Signup() {
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p className="text-sm text-destructive">
-                {errors.confirmPassword.message}
-              </p>
+              <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
             )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full rounded-full"
-            size="lg"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" className="w-full rounded-full" size="lg" disabled={isSubmitting}>
             {isSubmitting ? 'Creating account...' : 'Create Account'}
           </Button>
         </form>
@@ -174,10 +154,7 @@ export default function Signup() {
         {/* Footer link */}
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link
-            to="/login"
-            className="text-primary font-medium underline-offset-4 hover:underline"
-          >
+          <Link to="/login" className="text-primary font-medium underline-offset-4 hover:underline">
             Sign In
           </Link>
         </p>

@@ -1,14 +1,20 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreakdownItem } from '@/hooks/useDashboard';
+import { formatCurrency } from '@fin-health/shared/format';
 
 const COLORS = [
-  '#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444',
-  '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#84cc16',
+  '#6366f1',
+  '#10b981',
+  '#f59e0b',
+  '#8b5cf6',
+  '#ef4444',
+  '#06b6d4',
+  '#ec4899',
+  '#f97316',
+  '#14b8a6',
+  '#84cc16',
 ];
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
 
 interface TooltipPayloadItem {
   name: string;
@@ -16,13 +22,7 @@ interface TooltipPayloadItem {
   payload: BreakdownItem & { fill: string };
 }
 
-function CustomTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: TooltipPayloadItem[];
-}) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayloadItem[] }) {
   if (active && payload && payload.length > 0) {
     const data = payload[0].payload;
     return (
@@ -102,9 +102,7 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
                 className="size-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: COLORS[i % COLORS.length] }}
               />
-              <span className="truncate text-muted-foreground">
-                {item.categoryName}
-              </span>
+              <span className="truncate text-muted-foreground">{item.categoryName}</span>
               <span className="ml-auto font-medium">{item.percentage.toFixed(0)}%</span>
             </div>
           ))}

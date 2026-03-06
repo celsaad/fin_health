@@ -11,27 +11,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, Bell, ChevronDown } from 'lucide-react-native';
+import { Search, Bell } from 'lucide-react-native';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTransactions, deleteTransaction } from '../services/transactions';
 import { getCategories } from '../services/categories';
-import { formatAmount, formatDateGroupHeader } from '../utils/format';
+import { formatAmount, formatDateGroupHeader } from '@fin-health/shared/format';
 import CategoryIcon from '../components/CategoryIcon';
 import Badge from '../components/Badge';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import AddTransactionSheet from '../components/AddTransactionSheet';
 import { CardSkeleton } from '../components/LoadingSkeleton';
+import QueryError from '../components/QueryError';
 import { FontSize, Spacing, BorderRadius } from '../constants/theme';
-import type { Transaction, Category, CategoryType } from '@fin-health/shared/types';
+import type { Transaction, CategoryType } from '@fin-health/shared/types';
 
 export default function TransactionsScreen() {
   const { colors } = useTheme();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<CategoryType | ''>('');
-  const [filterCategoryId, setFilterCategoryId] = useState('');
+  const [filterCategoryId, _setFilterCategoryId] = useState('');
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [showSheet, setShowSheet] = useState(false);
 
@@ -41,6 +42,7 @@ export default function TransactionsScreen() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
     refetch,
     isFetching,
   } = useInfiniteQuery({
@@ -62,7 +64,7 @@ export default function TransactionsScreen() {
     initialPageParam: 1,
   });
 
-  const { data: categoriesData } = useQuery({
+  const { data: _categoriesData } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
   });
@@ -92,49 +94,48 @@ export default function TransactionsScreen() {
     ]);
   }
 
-  function renderTransaction({ item }: { item: Transaction }) {
-    return (
-      <TouchableOpacity
-        onPress={() => {
-          setEditingTx(item);
-          setShowSheet(true);
-        }}
-        onLongPress={() => confirmDelete(item.id)}
-        activeOpacity={0.7}
-      >
-        <Card style={styles.txCard}>
-          <CategoryIcon
-            icon={item.category.icon}
-            color={item.category.color}
-            size={40}
-          />
-          <View style={styles.txInfo}>
-            <Text style={[styles.txDesc, { color: colors.text }]} numberOfLines={1}>
-              {item.description}
-            </Text>
-            <View style={styles.txMeta}>
-              <Badge
-                label={item.type}
-                color={item.type === 'income' ? '#16a34a' : '#dc2626'}
-                bgColor={item.type === 'income' ? colors.incomeBg : colors.expenseBg}
-              />
-              <Text style={[styles.txCategory, { color: colors.textSecondary }]}>
-                {item.category.name}
+  const renderTransaction = useCallback(
+    ({ item }: { item: Transaction }) => {
+      return (
+        <TouchableOpacity
+          onPress={() => {
+            setEditingTx(item);
+            setShowSheet(true);
+          }}
+          onLongPress={() => confirmDelete(item.id)}
+          activeOpacity={0.7}
+        >
+          <Card style={styles.txCard}>
+            <CategoryIcon icon={item.category.icon} color={item.category.color} size={40} />
+            <View style={styles.txInfo}>
+              <Text style={[styles.txDesc, { color: colors.text }]} numberOfLines={1}>
+                {item.description}
               </Text>
+              <View style={styles.txMeta}>
+                <Badge
+                  label={item.type}
+                  color={item.type === 'income' ? '#16a34a' : '#dc2626'}
+                  bgColor={item.type === 'income' ? colors.incomeBg : colors.expenseBg}
+                />
+                <Text style={[styles.txCategory, { color: colors.textSecondary }]}>
+                  {item.category.name}
+                </Text>
+              </View>
             </View>
-          </View>
-          <Text
-            style={[
-              styles.txAmount,
-              { color: item.type === 'income' ? colors.income : colors.expense },
-            ]}
-          >
-            {formatAmount(item.amount, item.type)}
-          </Text>
-        </Card>
-      </TouchableOpacity>
-    );
-  }
+            <Text
+              style={[
+                styles.txAmount,
+                { color: item.type === 'income' ? colors.income : colors.expense },
+              ]}
+            >
+              {formatAmount(item.amount, item.type)}
+            </Text>
+          </Card>
+        </TouchableOpacity>
+      );
+    },
+    [colors],
+  );
 
   const typeOptions = ['All', 'Income', 'Expense'];
 
@@ -194,6 +195,8 @@ export default function TransactionsScreen() {
             <CardSkeleton key={i} />
           ))}
         </View>
+      ) : isError ? (
+        <QueryError onRetry={() => refetch()} />
       ) : allTransactions.length === 0 ? (
         <EmptyState
           title="No transactions yet"
@@ -202,9 +205,7 @@ export default function TransactionsScreen() {
       ) : (
         <FlatList
           data={grouped}
-          keyExtractor={(item) =>
-            item.type === 'header' ? `header-${item.date}` : item.id
-          }
+          keyExtractor={(item) => (item.type === 'header' ? `header-${item.date}` : item.id)}
           renderItem={({ item }) => {
             if (item.type === 'header') {
               return (
@@ -219,7 +220,10 @@ export default function TransactionsScreen() {
           onEndReached={() => hasNextPage && fetchNextPage()}
           onEndReachedThreshold={0.5}
           refreshControl={
-            <RefreshControl refreshing={isFetching && !isFetchingNextPage} onRefresh={() => refetch()} />
+            <RefreshControl
+              refreshing={isFetching && !isFetchingNextPage}
+              onRefresh={() => refetch()}
+            />
           }
           showsVerticalScrollIndicator={false}
         />

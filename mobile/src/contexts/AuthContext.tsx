@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import api, { setToken, getToken, removeToken } from '../services/api';
+import api, {
+  setToken,
+  getToken,
+  removeToken,
+  setRefreshToken,
+  removeRefreshToken,
+  setOnAuthFailure,
+} from '../services/api';
 
 interface User {
   id: string;
@@ -22,6 +29,14 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Wire up the auth failure callback so the API layer can force logout
+  useEffect(() => {
+    setOnAuthFailure(() => {
+      setUser(null);
+    });
+    return () => setOnAuthFailure(null);
+  }, []);
 
   useEffect(() => {
     checkAuth();
@@ -46,12 +61,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post('/auth/login', { email, password });
     await setToken(data.token);
+    if (data.refreshToken) await setRefreshToken(data.refreshToken);
     setUser(data.user);
   }, []);
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
     const { data } = await api.post('/auth/signup', { name, email, password });
     await setToken(data.token);
+    if (data.refreshToken) await setRefreshToken(data.refreshToken);
     setUser(data.user);
   }, []);
 
@@ -62,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ignore
     }
     await removeToken();
+    await removeRefreshToken();
     setUser(null);
   }, []);
 

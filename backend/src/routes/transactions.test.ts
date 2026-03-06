@@ -65,10 +65,7 @@ describe('Transaction routes', () => {
     });
 
     it('rejects missing required fields', async () => {
-      const res = await api()
-        .post('/api/transactions')
-        .set(auth())
-        .send({ amount: 10 });
+      const res = await api().post('/api/transactions').set(auth()).send({ amount: 10 });
 
       expect(res.status).toBe(400);
     });
@@ -79,9 +76,13 @@ describe('Transaction routes', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      const res = await api()
-        .post('/api/transactions')
-        .send({ amount: 50, type: 'expense', description: 'Test', date: '2025-01-01', categoryName: 'Food' });
+      const res = await api().post('/api/transactions').send({
+        amount: 50,
+        type: 'expense',
+        description: 'Test',
+        date: '2025-01-01',
+        categoryName: 'Food',
+      });
 
       expect(res.status).toBe(401);
     });
@@ -89,9 +90,7 @@ describe('Transaction routes', () => {
 
   describe('GET /api/transactions', () => {
     it('lists transactions with pagination', async () => {
-      const res = await api()
-        .get('/api/transactions')
-        .set(auth());
+      const res = await api().get('/api/transactions').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.transactions).toBeInstanceOf(Array);
@@ -101,9 +100,7 @@ describe('Transaction routes', () => {
     });
 
     it('filters by type', async () => {
-      const res = await api()
-        .get('/api/transactions?type=income')
-        .set(auth());
+      const res = await api().get('/api/transactions?type=income').set(auth());
 
       expect(res.status).toBe(200);
       for (const tx of res.body.transactions) {
@@ -124,9 +121,7 @@ describe('Transaction routes', () => {
     });
 
     it('filters by search term', async () => {
-      const res = await api()
-        .get('/api/transactions?search=Groceries')
-        .set(auth());
+      const res = await api().get('/api/transactions?search=Groceries').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.transactions.length).toBeGreaterThan(0);
@@ -136,9 +131,7 @@ describe('Transaction routes', () => {
     });
 
     it('paginates correctly', async () => {
-      const res = await api()
-        .get('/api/transactions?page=1&limit=1')
-        .set(auth());
+      const res = await api().get('/api/transactions?page=1&limit=1').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.transactions.length).toBeLessThanOrEqual(1);
@@ -157,9 +150,7 @@ describe('Transaction routes', () => {
       const created = await createTx({ description: 'Single fetch test' });
       const id = created.body.transaction.id;
 
-      const res = await api()
-        .get(`/api/transactions/${id}`)
-        .set(auth());
+      const res = await api().get(`/api/transactions/${id}`).set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.transaction.id).toBe(id);
@@ -167,14 +158,12 @@ describe('Transaction routes', () => {
     });
 
     it('returns 404 for non-existent id', async () => {
-      const res = await api()
-        .get('/api/transactions/nonexistent-id')
-        .set(auth());
+      const res = await api().get('/api/transactions/nonexistent-id').set(auth());
 
       expect(res.status).toBe(404);
     });
 
-    it('cannot access another user\'s transaction', async () => {
+    it("cannot access another user's transaction", async () => {
       const other = await createTestUser();
       const created = await createTx({ description: 'Owner only' });
       const id = created.body.transaction.id;
@@ -231,17 +220,13 @@ describe('Transaction routes', () => {
       const created = await createTx({ description: 'To be deleted' });
       const id = created.body.transaction.id;
 
-      const delRes = await api()
-        .delete(`/api/transactions/${id}`)
-        .set(auth());
+      const delRes = await api().delete(`/api/transactions/${id}`).set(auth());
 
       expect(delRes.status).toBe(200);
       expect(delRes.body.message).toBe('Transaction deleted');
 
       // Verify it's gone from normal listing
-      const getRes = await api()
-        .get(`/api/transactions/${id}`)
-        .set(auth());
+      const getRes = await api().get(`/api/transactions/${id}`).set(auth());
 
       expect(getRes.status).toBe(404);
     });
@@ -252,17 +237,13 @@ describe('Transaction routes', () => {
 
       await api().delete(`/api/transactions/${id}`).set(auth());
 
-      const res = await api()
-        .delete(`/api/transactions/${id}`)
-        .set(auth());
+      const res = await api().delete(`/api/transactions/${id}`).set(auth());
 
       expect(res.status).toBe(404);
     });
 
     it('returns 404 for non-existent id', async () => {
-      const res = await api()
-        .delete('/api/transactions/nonexistent-id')
-        .set(auth());
+      const res = await api().delete('/api/transactions/nonexistent-id').set(auth());
 
       expect(res.status).toBe(404);
     });
@@ -277,19 +258,14 @@ describe('Transaction routes', () => {
 
       const ids = [r1.body.transaction.id, r2.body.transaction.id];
 
-      const res = await api()
-        .post('/api/transactions/bulk-delete')
-        .set(auth())
-        .send({ ids });
+      const res = await api().post('/api/transactions/bulk-delete').set(auth()).send({ ids });
 
       expect(res.status).toBe(200);
       expect(res.body.deleted).toBe(2);
 
       // Verify they're gone
       for (const id of ids) {
-        const getRes = await api()
-          .get(`/api/transactions/${id}`)
-          .set(auth());
+        const getRes = await api().get(`/api/transactions/${id}`).set(auth());
         expect(getRes.status).toBe(404);
       }
     });
@@ -299,7 +275,13 @@ describe('Transaction routes', () => {
       const otherRes = await api()
         .post('/api/transactions')
         .set({ Authorization: `Bearer ${other.token}` })
-        .send({ amount: 10, type: 'expense', description: 'Other user tx', date: '2025-01-01', categoryName: 'Misc' });
+        .send({
+          amount: 10,
+          type: 'expense',
+          description: 'Other user tx',
+          date: '2025-01-01',
+          categoryName: 'Misc',
+        });
 
       const res = await api()
         .post('/api/transactions/bulk-delete')
@@ -313,10 +295,7 @@ describe('Transaction routes', () => {
     });
 
     it('rejects empty ids array', async () => {
-      const res = await api()
-        .post('/api/transactions/bulk-delete')
-        .set(auth())
-        .send({ ids: [] });
+      const res = await api().post('/api/transactions/bulk-delete').set(auth()).send({ ids: [] });
 
       expect(res.status).toBe(400);
     });
@@ -324,9 +303,7 @@ describe('Transaction routes', () => {
 
   describe('GET /api/transactions/export/csv', () => {
     it('exports transactions as CSV', async () => {
-      const res = await api()
-        .get('/api/transactions/export/csv')
-        .set(auth());
+      const res = await api().get('/api/transactions/export/csv').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toContain('text/csv');
@@ -341,9 +318,7 @@ describe('Transaction routes', () => {
     });
 
     it('filters CSV export by type', async () => {
-      const res = await api()
-        .get('/api/transactions/export/csv?type=income')
-        .set(auth());
+      const res = await api().get('/api/transactions/export/csv?type=income').set(auth());
 
       expect(res.status).toBe(200);
       const lines = res.text.trim().split('\n');

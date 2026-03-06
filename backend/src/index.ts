@@ -1,9 +1,12 @@
-import 'dotenv/config';
+import { initSentry } from './lib/sentry';
 import app from './app';
 import prisma from './lib/prisma';
 import { logger } from './lib/logger';
+import { env } from './lib/env';
 
-const PORT = process.env.PORT || 3001;
+initSentry();
+
+const PORT = env.PORT;
 
 const server = app.listen(PORT, () => {
   logger.info({ port: PORT }, 'Server started');

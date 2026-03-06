@@ -88,7 +88,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // POST /api/budgets — upsert
@@ -138,7 +138,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/budgets/:id — delete

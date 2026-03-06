@@ -10,7 +10,7 @@ export async function resolveCategory(
   userId: string,
   categoryName: string,
   type: CategoryType,
-  subcategoryName?: string
+  subcategoryName?: string,
 ): Promise<ResolvedCategory> {
   return prisma.$transaction(async (tx) => {
     // Find or create the category

@@ -54,7 +54,7 @@ router.post(
         userId,
         categoryName,
         type,
-        subcategoryName
+        subcategoryName,
       );
 
       const template = await prisma.recurringTransaction.create({
@@ -80,7 +80,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // GET /api/recurring/:id — single
@@ -152,7 +152,7 @@ router.put(
           userId,
           categoryName,
           effectiveType,
-          subcategoryName || undefined
+          subcategoryName || undefined,
         );
         updateData.categoryId = resolved.categoryId;
         updateData.subcategoryId = resolved.subcategoryId || null;
@@ -173,7 +173,7 @@ router.put(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/recurring/:id — delete

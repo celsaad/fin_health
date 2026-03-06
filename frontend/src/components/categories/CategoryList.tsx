@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-  Pencil,
-  Trash2,
-  Merge,
-  Plus,
-  Check,
-  X,
-  Tag,
-} from 'lucide-react';
+import { Pencil, Trash2, Merge, Plus, Check, X, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,13 +23,9 @@ interface CategoryListProps {
 export function CategoryList({ categories }: CategoryListProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
-  const [deletingCategory, setDeletingCategory] = useState<Category | null>(
-    null
-  );
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [mergingCategory, setMergingCategory] = useState<Category | null>(null);
-  const [addingSubcategoryFor, setAddingSubcategoryFor] = useState<
-    string | null
-  >(null);
+  const [addingSubcategoryFor, setAddingSubcategoryFor] = useState<string | null>(null);
   const [newSubcategoryName, setNewSubcategoryName] = useState('');
   const [renamingSubcategory, setRenamingSubcategory] = useState<{
     categoryId: string;
@@ -84,11 +72,7 @@ export function CategoryList({ categories }: CategoryListProps) {
     setNewSubcategoryName('');
   };
 
-  const startRenameSub = (
-    categoryId: string,
-    subcategoryId: string,
-    currentName: string
-  ) => {
+  const startRenameSub = (categoryId: string, subcategoryId: string, currentName: string) => {
     setRenamingSubcategory({ categoryId, subcategoryId });
     setRenameSubValue(currentName);
   };
@@ -109,10 +93,7 @@ export function CategoryList({ categories }: CategoryListProps) {
     setRenameSubValue('');
   };
 
-  const handleDeleteSub = async (
-    categoryId: string,
-    subcategoryId: string
-  ) => {
+  const handleDeleteSub = async (categoryId: string, subcategoryId: string) => {
     await deleteSubMutation.mutateAsync({ categoryId, subcategoryId });
   };
 
@@ -144,11 +125,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                       >
                         <Check className="size-3.5" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        onClick={cancelRename}
-                      >
+                      <Button variant="ghost" size="icon-xs" onClick={cancelRename}>
                         <X className="size-3.5" />
                       </Button>
                     </div>
@@ -164,9 +141,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                     </div>
                   )}
                   <Badge
-                    variant={
-                      category.type === 'income' ? 'default' : 'secondary'
-                    }
+                    variant={category.type === 'income' ? 'default' : 'secondary'}
                     className="text-xs shrink-0"
                   >
                     {category.type}
@@ -187,9 +162,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 {/* Subcategories */}
                 {category.subcategories.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Subcategories
-                    </p>
+                    <p className="text-xs font-medium text-muted-foreground">Subcategories</p>
                     <div className="space-y-1">
                       {category.subcategories.map((sub) => (
                         <div
@@ -200,9 +173,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                             <div className="flex flex-1 items-center gap-1">
                               <Input
                                 value={renameSubValue}
-                                onChange={(e) =>
-                                  setRenameSubValue(e.target.value)
-                                }
+                                onChange={(e) => setRenameSubValue(e.target.value)}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') confirmRenameSub();
                                   if (e.key === 'Escape') cancelRenameSub();
@@ -218,11 +189,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                               >
                                 <Check className="size-3" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={cancelRenameSub}
-                              >
+                              <Button variant="ghost" size="icon-xs" onClick={cancelRenameSub}>
                                 <X className="size-3" />
                               </Button>
                             </div>
@@ -236,13 +203,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                                 <Button
                                   variant="ghost"
                                   size="icon-xs"
-                                  onClick={() =>
-                                    startRenameSub(
-                                      category.id,
-                                      sub.id,
-                                      sub.name
-                                    )
-                                  }
+                                  onClick={() => startRenameSub(category.id, sub.id, sub.name)}
                                   aria-label={`Rename ${sub.name}`}
                                 >
                                   <Pencil className="size-3" />
@@ -250,9 +211,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                                 <Button
                                   variant="ghost"
                                   size="icon-xs"
-                                  onClick={() =>
-                                    handleDeleteSub(category.id, sub.id)
-                                  }
+                                  onClick={() => handleDeleteSub(category.id, sub.id)}
                                   aria-label={`Delete ${sub.name}`}
                                 >
                                   <Trash2 className="size-3 text-destructive" />
@@ -273,8 +232,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                       value={newSubcategoryName}
                       onChange={(e) => setNewSubcategoryName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter')
-                          handleAddSubcategory(category.id);
+                        if (e.key === 'Enter') handleAddSubcategory(category.id);
                         if (e.key === 'Escape') {
                           setAddingSubcategoryFor(null);
                           setNewSubcategoryName('');
@@ -317,19 +275,11 @@ export function CategoryList({ categories }: CategoryListProps) {
 
                 {/* Category actions */}
                 <div className="flex items-center gap-1 border-t pt-3">
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => startRename(category)}
-                  >
+                  <Button variant="ghost" size="xs" onClick={() => startRename(category)}>
                     <Pencil className="size-3" />
                     Rename
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => setMergingCategory(category)}
-                  >
+                  <Button variant="ghost" size="xs" onClick={() => setMergingCategory(category)}>
                     <Merge className="size-3" />
                     Merge
                   </Button>

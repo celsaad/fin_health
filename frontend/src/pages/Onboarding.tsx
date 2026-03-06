@@ -37,9 +37,7 @@ export default function Onboarding() {
             <span
               key={i}
               className={`block rounded-full transition-all ${
-                i === step
-                  ? 'h-2.5 w-6 bg-primary'
-                  : 'size-2.5 bg-muted-foreground/30'
+                i === step ? 'h-2.5 w-6 bg-primary' : 'size-2.5 bg-muted-foreground/30'
               }`}
             />
           ))}
@@ -49,11 +47,7 @@ export default function Onboarding() {
         <div className="space-y-3">
           {isLast ? (
             <>
-              <Button
-                className="w-full rounded-full"
-                size="lg"
-                onClick={() => complete('/signup')}
-              >
+              <Button className="w-full rounded-full" size="lg" onClick={() => complete('/signup')}>
                 Get Started
                 <ArrowRight className="size-4" />
               </Button>
@@ -66,11 +60,7 @@ export default function Onboarding() {
             </>
           ) : (
             <>
-              <Button
-                className="w-full rounded-full"
-                size="lg"
-                onClick={() => setStep(step + 1)}
-              >
+              <Button className="w-full rounded-full" size="lg" onClick={() => setStep(step + 1)}>
                 Next
                 <ArrowRight className="size-4" />
               </Button>

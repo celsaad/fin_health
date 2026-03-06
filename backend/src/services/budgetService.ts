@@ -17,7 +17,7 @@ interface BudgetWithSpent {
 export async function getBudgetsWithSpent(
   userId: string,
   month: number,
-  year: number
+  year: number,
 ): Promise<BudgetWithSpent[]> {
   // Get budgets matching the requested month/year OR recurring budgets (month=0, year=0)
   const budgets = await prisma.budget.findMany({

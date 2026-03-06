@@ -1,15 +1,11 @@
+import { memo } from 'react';
 import { format } from 'date-fns';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { Transaction } from '@/hooks/useTransactions';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount);
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -17,8 +13,16 @@ interface TransactionCardProps {
   onDelete: (id: string) => void;
 }
 
-export function TransactionCard({ transaction, onEdit, onDelete }: TransactionCardProps) {
-  const config = getCategoryIcon(transaction.category.name, transaction.category.icon, transaction.category.color);
+export const TransactionCard = memo(function TransactionCard({
+  transaction,
+  onEdit,
+  onDelete,
+}: TransactionCardProps) {
+  const config = getCategoryIcon(
+    transaction.category.name,
+    transaction.category.icon,
+    transaction.category.color,
+  );
   const Icon = config.icon;
   const isIncome = transaction.type === 'income';
 
@@ -50,12 +54,11 @@ export function TransactionCard({ transaction, onEdit, onDelete }: TransactionCa
       <div className="flex items-center gap-2 shrink-0">
         <span
           className={`text-sm font-semibold ${
-            isIncome
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
+            isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}
         >
-          {isIncome ? '+' : '-'}{formatCurrency(transaction.amount)}
+          {isIncome ? '+' : '-'}
+          {formatCurrency(transaction.amount)}
         </span>
         <div className="flex items-center gap-0.5">
           <Button
@@ -78,9 +81,9 @@ export function TransactionCard({ transaction, onEdit, onDelete }: TransactionCa
       </div>
     </div>
   );
-}
+});
 
-export function DateGroupHeader({ date }: { date: string }) {
+export const DateGroupHeader = memo(function DateGroupHeader({ date }: { date: string }) {
   const d = new Date(date);
   const today = new Date();
   const yesterday = new Date();
@@ -100,4 +103,4 @@ export function DateGroupHeader({ date }: { date: string }) {
       {label}
     </p>
   );
-}
+});

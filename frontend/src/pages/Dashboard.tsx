@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CardSkeleton, TableSkeleton } from '@/components/shared/LoadingSkeleton';
+import { QueryError } from '@/components/shared/QueryError';
 import { DateRangeSelector } from '@/components/dashboard/DateRangeSelector';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ExpensePieChart } from '@/components/dashboard/ExpensePieChart';
@@ -14,19 +15,19 @@ export default function Dashboard() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
 
-  const { data: summary, isLoading: summaryLoading } = useSummary(month, year);
-  const { data: breakdown, isLoading: breakdownLoading } = useBreakdown(month, year);
-  const { data: trend, isLoading: trendLoading } = useTrend(6);
+  const summary$ = useSummary(month, year);
+  const breakdown$ = useBreakdown(month, year);
+  const trend$ = useTrend(6);
   const { data: budgets } = useBudgets(month, year);
+
+  const hasError = summary$.isError || breakdown$.isError || trend$.isError;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">
-            Your financial overview at a glance
-          </p>
+          <p className="text-sm text-muted-foreground">Your financial overview at a glance</p>
         </div>
         <DateRangeSelector
           month={month}
@@ -38,43 +39,55 @@ export default function Dashboard() {
         />
       </div>
 
-      {summaryLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <CardSkeleton key={i} />
-          ))}
-        </div>
-      ) : summary ? (
-        <SummaryCards summary={summary} />
-      ) : null}
+      {hasError ? (
+        <QueryError
+          onRetry={() => {
+            summary$.refetch();
+            breakdown$.refetch();
+            trend$.refetch();
+          }}
+        />
+      ) : (
+        <>
+          {summary$.isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
+          ) : summary$.data ? (
+            <SummaryCards summary={summary$.data} />
+          ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {breakdownLoading ? (
-          <CardSkeleton />
-        ) : breakdown ? (
-          <ExpensePieChart breakdown={breakdown} />
-        ) : null}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {breakdown$.isLoading ? (
+              <CardSkeleton />
+            ) : breakdown$.data ? (
+              <ExpensePieChart breakdown={breakdown$.data} />
+            ) : null}
 
-        {trendLoading ? (
-          <CardSkeleton />
-        ) : trend ? (
-          <TrendChart trend={trend} />
-        ) : null}
-      </div>
+            {trend$.isLoading ? (
+              <CardSkeleton />
+            ) : trend$.data ? (
+              <TrendChart trend={trend$.data} />
+            ) : null}
+          </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {breakdownLoading ? (
-          <CardSkeleton />
-        ) : breakdown ? (
-          <TopCategories breakdown={breakdown} budgets={budgets} />
-        ) : null}
+          <div className="grid gap-6 lg:grid-cols-2">
+            {breakdown$.isLoading ? (
+              <CardSkeleton />
+            ) : breakdown$.data ? (
+              <TopCategories breakdown={breakdown$.data} budgets={budgets} />
+            ) : null}
 
-        {breakdownLoading ? (
-          <TableSkeleton rows={5} columns={3} />
-        ) : breakdown ? (
-          <MonthlyTable breakdown={breakdown} />
-        ) : null}
-      </div>
+            {breakdown$.isLoading ? (
+              <TableSkeleton rows={5} columns={3} />
+            ) : breakdown$.data ? (
+              <MonthlyTable breakdown={breakdown$.data} />
+            ) : null}
+          </div>
+        </>
+      )}
     </div>
   );
 }

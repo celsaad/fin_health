@@ -1,9 +1,7 @@
 import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardSummary } from '@/hooks/useDashboard';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface SummaryCardsProps {
   summary: DashboardSummary;

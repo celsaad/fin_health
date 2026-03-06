@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,15 +7,13 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { BudgetProgressBar } from '@/components/budgets/BudgetProgressBar';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import { useDeleteBudget, type Budget } from '@/hooks/useBudgets';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface BudgetCardProps {
   budget: Budget;
 }
 
-export function BudgetCard({ budget }: BudgetCardProps) {
+export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteBudget = useDeleteBudget();
 
@@ -59,10 +57,12 @@ export function BudgetCard({ budget }: BudgetCardProps) {
         <CardContent className="space-y-4">
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-muted-foreground">
-              Spent: <span className="font-medium text-foreground">{formatCurrency(budget.spent)}</span>
+              Spent:{' '}
+              <span className="font-medium text-foreground">{formatCurrency(budget.spent)}</span>
             </span>
             <span className="text-muted-foreground">
-              Limit: <span className="font-medium text-foreground">{formatCurrency(budget.amount)}</span>
+              Limit:{' '}
+              <span className="font-medium text-foreground">{formatCurrency(budget.amount)}</span>
             </span>
           </div>
           <BudgetProgressBar spent={budget.spent} budget={budget.amount} />
@@ -91,4 +91,4 @@ export function BudgetCard({ budget }: BudgetCardProps) {
       />
     </>
   );
-}
+});

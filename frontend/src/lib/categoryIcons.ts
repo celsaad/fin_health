@@ -58,29 +58,58 @@ export const COLOR_OPTIONS: {
   bgColor: string;
   darkBgColor: string;
 }[] = [
-  { name: 'orange', color: 'text-orange-600', bgColor: 'bg-orange-100', darkBgColor: 'dark:bg-orange-950' },
+  {
+    name: 'orange',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
+    darkBgColor: 'dark:bg-orange-950',
+  },
   { name: 'blue', color: 'text-blue-600', bgColor: 'bg-blue-100', darkBgColor: 'dark:bg-blue-950' },
-  { name: 'purple', color: 'text-purple-600', bgColor: 'bg-purple-100', darkBgColor: 'dark:bg-purple-950' },
+  {
+    name: 'purple',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+    darkBgColor: 'dark:bg-purple-950',
+  },
   { name: 'pink', color: 'text-pink-600', bgColor: 'bg-pink-100', darkBgColor: 'dark:bg-pink-950' },
-  { name: 'emerald', color: 'text-emerald-600', bgColor: 'bg-emerald-100', darkBgColor: 'dark:bg-emerald-950' },
-  { name: 'amber', color: 'text-amber-600', bgColor: 'bg-amber-100', darkBgColor: 'dark:bg-amber-950' },
+  {
+    name: 'emerald',
+    color: 'text-emerald-600',
+    bgColor: 'bg-emerald-100',
+    darkBgColor: 'dark:bg-emerald-950',
+  },
+  {
+    name: 'amber',
+    color: 'text-amber-600',
+    bgColor: 'bg-amber-100',
+    darkBgColor: 'dark:bg-amber-950',
+  },
   { name: 'red', color: 'text-red-600', bgColor: 'bg-red-100', darkBgColor: 'dark:bg-red-950' },
   { name: 'cyan', color: 'text-cyan-600', bgColor: 'bg-cyan-100', darkBgColor: 'dark:bg-cyan-950' },
   { name: 'teal', color: 'text-teal-600', bgColor: 'bg-teal-100', darkBgColor: 'dark:bg-teal-950' },
-  { name: 'indigo', color: 'text-indigo-600', bgColor: 'bg-indigo-100', darkBgColor: 'dark:bg-indigo-950' },
+  {
+    name: 'indigo',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100',
+    darkBgColor: 'dark:bg-indigo-950',
+  },
 ];
 
 const iconByName: Record<string, LucideIcon> = Object.fromEntries(
-  ICON_OPTIONS.map((opt) => [opt.name, opt.icon])
+  ICON_OPTIONS.map((opt) => [opt.name, opt.icon]),
 );
 
 export function getIconByName(name: string): LucideIcon {
   return iconByName[name] ?? Wallet;
 }
 
-const colorByName: Record<string, { color: string; bgColor: string; darkBgColor: string }> = Object.fromEntries(
-  COLOR_OPTIONS.map((opt) => [opt.name, { color: opt.color, bgColor: opt.bgColor, darkBgColor: opt.darkBgColor }])
-);
+const colorByName: Record<string, { color: string; bgColor: string; darkBgColor: string }> =
+  Object.fromEntries(
+    COLOR_OPTIONS.map((opt) => [
+      opt.name,
+      { color: opt.color, bgColor: opt.bgColor, darkBgColor: opt.darkBgColor },
+    ]),
+  );
 
 const categoryIconMap: Record<string, CategoryIconConfig> = {
   food: {
@@ -257,15 +286,16 @@ const defaultConfig: CategoryIconConfig = {
 export function getCategoryIcon(
   categoryName: string,
   dbIcon?: string | null,
-  dbColor?: string | null
+  dbColor?: string | null,
 ): CategoryIconConfig {
   // If user has set icon/color in the database, use those
   if (dbIcon || dbColor) {
     const fallback = categoryIconMap[categoryName.toLowerCase().trim()] ?? defaultConfig;
     const resolvedIcon = dbIcon ? getIconByName(dbIcon) : fallback.icon;
-    const resolvedColor = dbColor && colorByName[dbColor]
-      ? colorByName[dbColor]
-      : { color: fallback.color, bgColor: fallback.bgColor, darkBgColor: fallback.darkBgColor };
+    const resolvedColor =
+      dbColor && colorByName[dbColor]
+        ? colorByName[dbColor]
+        : { color: fallback.color, bgColor: fallback.bgColor, darkBgColor: fallback.darkBgColor };
 
     return {
       icon: resolvedIcon,

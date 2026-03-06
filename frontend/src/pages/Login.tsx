@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { parseError } from '@/lib/api';
 import { Heart, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
@@ -38,9 +39,7 @@ export default function Login() {
       await login(data.email, data.password);
       navigate('/');
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'Invalid email or password';
-      toast.error(message);
+      toast.error(parseError(error).message);
     } finally {
       setIsSubmitting(false);
     }
@@ -57,9 +56,7 @@ export default function Login() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold">FinHealth</h1>
-            <p className="text-sm text-muted-foreground">
-              Welcome back to your financial health
-            </p>
+            <p className="text-sm text-muted-foreground">Welcome back to your financial health</p>
           </div>
         </div>
 
@@ -74,9 +71,7 @@ export default function Login() {
               className="bg-muted/50 rounded-xl"
               {...register('email')}
             />
-            {errors.email && (
-              <p className="text-sm text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -99,26 +94,15 @@ export default function Login() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 tabIndex={-1}
               >
-                {showPassword ? (
-                  <EyeOff className="size-4" />
-                ) : (
-                  <Eye className="size-4" />
-                )}
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-destructive">
-                {errors.password.message}
-              </p>
+              <p className="text-sm text-destructive">{errors.password.message}</p>
             )}
           </div>
 
-          <Button
-            type="submit"
-            className="w-full rounded-full"
-            size="lg"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" className="w-full rounded-full" size="lg" disabled={isSubmitting}>
             {isSubmitting ? 'Signing in...' : 'Login'}
           </Button>
         </form>

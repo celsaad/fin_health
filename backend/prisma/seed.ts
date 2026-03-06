@@ -165,7 +165,8 @@ async function main() {
     // Random expenses throughout the month
     const numExpenses = 8 + Math.floor(Math.random() * 6);
     for (let i = 0; i < numExpenses; i++) {
-      const template = expenseTemplates[1 + Math.floor(Math.random() * (expenseTemplates.length - 1))];
+      const template =
+        expenseTemplates[1 + Math.floor(Math.random() * (expenseTemplates.length - 1))];
       const day = 1 + Math.floor(Math.random() * 28);
       const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
       if (date <= now) {
@@ -184,7 +185,8 @@ async function main() {
 
     // Occasional freelance income
     if (Math.random() > 0.4) {
-      const template = incomeTemplates[1 + Math.floor(Math.random() * (incomeTemplates.length - 1))];
+      const template =
+        incomeTemplates[1 + Math.floor(Math.random() * (incomeTemplates.length - 1))];
       const day = 5 + Math.floor(Math.random() * 20);
       const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
       if (date <= now) {

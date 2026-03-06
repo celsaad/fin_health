@@ -8,13 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
-import api from '@/lib/api';
+import api, { parseError } from '@/lib/api';
 
 export default function Settings() {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [currency, setCurrency] = useState(() =>
-    localStorage.getItem('preferredCurrency') || 'USD'
+  const [currency, setCurrency] = useState(
+    () => localStorage.getItem('preferredCurrency') || 'USD',
   );
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -32,13 +32,15 @@ export default function Settings() {
     }
     setChangingPassword(true);
     try {
-      await api.put('/auth/password', { currentPassword, newPassword });
+      const { data } = await api.put('/auth/password', { currentPassword, newPassword });
+      if (data.token) localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       toast.success('Password updated successfully');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update password');
+    } catch (err: unknown) {
+      toast.error(parseError(err).message);
     } finally {
       setChangingPassword(false);
     }
@@ -55,9 +57,7 @@ export default function Settings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your account and preferences
-        </p>
+        <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
       </div>
 
       {/* Profile header */}
@@ -152,19 +152,17 @@ export default function Settings() {
       <Card>
         <CardHeader>
           <CardTitle>Display Preferences</CardTitle>
-          <CardDescription>
-            Customize how data is displayed in the app
-          </CardDescription>
+          <CardDescription>Customize how data is displayed in the app</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Appearance</Label>
             <div className="inline-flex rounded-lg border border-border p-1 gap-1">
-              {([
+              {[
                 { value: 'light' as const, icon: Sun, label: 'Light' },
                 { value: 'dark' as const, icon: Moon, label: 'Dark' },
                 { value: 'system' as const, icon: Monitor, label: 'System' },
-              ]).map(({ value, icon: Icon, label }) => (
+              ].map(({ value, icon: Icon, label }) => (
                 <button
                   key={value}
                   onClick={() => setTheme(value)}

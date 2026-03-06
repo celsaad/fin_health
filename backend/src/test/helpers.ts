@@ -16,7 +16,7 @@ export interface TestUser {
 }
 
 export async function createTestUser(
-  overrides: { email?: string; password?: string; name?: string } = {}
+  overrides: { email?: string; password?: string; name?: string } = {},
 ): Promise<TestUser> {
   const email = overrides.email || uniqueEmail();
   const password = await hashPassword(overrides.password || 'Test1234!');

@@ -35,7 +35,7 @@ export async function updateRecurring(
     categoryName: string;
     subcategoryName?: string | null;
     notes?: string | null;
-  }>
+  }>,
 ) {
   const { data } = await api.put(`/recurring/${id}`, body);
   return data.recurringTransaction;

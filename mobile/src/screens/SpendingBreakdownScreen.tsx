@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, ChevronUp, TrendingDown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { getCategoryBreakdown } from '../services/dashboard';
-import { formatCurrency, formatDate } from '../utils/format';
+import { formatCurrency, formatDate } from '@fin-health/shared/format';
 import Card from '../components/Card';
 import MonthSelector from '../components/MonthSelector';
 import CategoryIcon from '../components/CategoryIcon';
 import ProgressBar from '../components/ProgressBar';
+import QueryError from '../components/QueryError';
 import { FontSize, Spacing, BorderRadius, CategoryColors } from '../constants/theme';
 
 export default function SpendingBreakdownScreen() {
@@ -40,7 +34,10 @@ export default function SpendingBreakdownScreen() {
       <MonthSelector
         selectedMonth={month}
         selectedYear={year}
-        onSelect={(m, y) => { setMonth(m); setYear(y); }}
+        onSelect={(m, y) => {
+          setMonth(m);
+          setYear(y);
+        }}
       />
 
       <ScrollView
@@ -66,62 +63,71 @@ export default function SpendingBreakdownScreen() {
         </LinearGradient>
 
         {/* Categories */}
-        <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Categories</Text>
-        </View>
+        {query.isError ? (
+          <QueryError onRetry={() => query.refetch()} />
+        ) : (
+          <>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Categories</Text>
+            </View>
 
-        {categories.map((cat: any) => {
-          const isExpanded = expandedId === cat.categoryId;
-          const progress = maxAmount > 0 ? cat.total / maxAmount : 0;
-          const colorConfig = cat.color && CategoryColors[cat.color]
-            ? CategoryColors[cat.color]
-            : null;
-          const barColor = colorConfig?.icon ?? colors.primary;
+            {categories.map((cat: any) => {
+              const isExpanded = expandedId === cat.categoryId;
+              const progress = maxAmount > 0 ? cat.total / maxAmount : 0;
+              const colorConfig =
+                cat.color && CategoryColors[cat.color] ? CategoryColors[cat.color] : null;
+              const barColor = colorConfig?.icon ?? colors.primary;
 
-          return (
-            <Card key={cat.categoryId} style={styles.catCard}>
-              <TouchableOpacity
-                style={styles.catHeader}
-                onPress={() => setExpandedId(isExpanded ? null : cat.categoryId)}
-                activeOpacity={0.7}
-              >
-                <CategoryIcon icon={cat.icon} color={cat.color} size={40} />
-                <View style={styles.catInfo}>
-                  <View style={styles.catNameRow}>
-                    <Text style={[styles.catName, { color: colors.text }]}>{cat.categoryName}</Text>
-                    <Text style={[styles.catAmount, { color: colors.text }]}>
-                      {formatCurrency(cat.total)}
-                    </Text>
-                  </View>
-                  <ProgressBar progress={progress} color={barColor} />
-                </View>
-                {isExpanded ? (
-                  <ChevronUp size={20} color={colors.textSecondary} />
-                ) : (
-                  <ChevronDown size={20} color={colors.textSecondary} />
-                )}
-              </TouchableOpacity>
-
-              {isExpanded && cat.transactions && (
-                <View style={styles.txList}>
-                  {cat.transactions.map((tx: any) => (
-                    <View key={tx.id} style={styles.txRow}>
-                      <View>
-                        <Text style={[styles.txDesc, { color: colors.text }]}>{tx.description}</Text>
-                        <Text style={[styles.txDate, { color: colors.textSecondary }]}>
-                          {formatDate(tx.date)}
+              return (
+                <Card key={cat.categoryId} style={styles.catCard}>
+                  <TouchableOpacity
+                    style={styles.catHeader}
+                    onPress={() => setExpandedId(isExpanded ? null : cat.categoryId)}
+                    activeOpacity={0.7}
+                  >
+                    <CategoryIcon icon={cat.icon} color={cat.color} size={40} />
+                    <View style={styles.catInfo}>
+                      <View style={styles.catNameRow}>
+                        <Text style={[styles.catName, { color: colors.text }]}>
+                          {cat.categoryName}
+                        </Text>
+                        <Text style={[styles.catAmount, { color: colors.text }]}>
+                          {formatCurrency(cat.total)}
                         </Text>
                       </View>
-                      <Text style={[styles.txAmount, { color: colors.expense }]}>
-                        -{formatCurrency(tx.amount)}
-                      </Text>
+                      <ProgressBar progress={progress} color={barColor} />
                     </View>
-                  ))}
-                </View>
-              )}
-            </Card>
-          );
-        })}
+                    {isExpanded ? (
+                      <ChevronUp size={20} color={colors.textSecondary} />
+                    ) : (
+                      <ChevronDown size={20} color={colors.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+
+                  {isExpanded && cat.transactions && (
+                    <View style={styles.txList}>
+                      {cat.transactions.map((tx: any) => (
+                        <View key={tx.id} style={styles.txRow}>
+                          <View>
+                            <Text style={[styles.txDesc, { color: colors.text }]}>
+                              {tx.description}
+                            </Text>
+                            <Text style={[styles.txDate, { color: colors.textSecondary }]}>
+                              {formatDate(tx.date)}
+                            </Text>
+                          </View>
+                          <Text style={[styles.txAmount, { color: colors.expense }]}>
+                            -{formatCurrency(tx.amount)}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </Card>
+              );
+            })}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -136,7 +142,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: Spacing.md,
   },
-  bannerLabel: { color: 'rgba(255,255,255,0.8)', fontSize: FontSize.caption, fontWeight: '600', letterSpacing: 1 },
+  bannerLabel: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: FontSize.caption,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
   bannerAmount: { color: '#fff', fontSize: 32, fontWeight: '700', marginTop: 4 },
   trendPill: {
     flexDirection: 'row',

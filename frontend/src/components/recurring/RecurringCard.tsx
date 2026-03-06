@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { format } from 'date-fns';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -6,9 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { FrequencyBadge } from '@/components/recurring/FrequencyBadge';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import { useToggleRecurring, type RecurringTransaction } from '@/hooks/useRecurring';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface RecurringCardProps {
   transaction: RecurringTransaction;
@@ -16,10 +15,18 @@ interface RecurringCardProps {
   onDelete: (id: string) => void;
 }
 
-export function RecurringCard({ transaction, onEdit, onDelete }: RecurringCardProps) {
+export const RecurringCard = memo(function RecurringCard({
+  transaction,
+  onEdit,
+  onDelete,
+}: RecurringCardProps) {
   const toggleRecurring = useToggleRecurring();
   const categoryName = transaction.category?.name ?? '';
-  const config = getCategoryIcon(categoryName, transaction.category?.icon, transaction.category?.color);
+  const config = getCategoryIcon(
+    categoryName,
+    transaction.category?.icon,
+    transaction.category?.color,
+  );
   const Icon = config.icon;
   const isIncome = transaction.type === 'income';
 
@@ -51,9 +58,7 @@ export function RecurringCard({ transaction, onEdit, onDelete }: RecurringCardPr
       <div className="flex items-center gap-3 shrink-0">
         <span
           className={`text-sm font-semibold ${
-            isIncome
-              ? 'text-green-600 dark:text-green-400'
-              : 'text-red-600 dark:text-red-400'
+            isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}
         >
           {formatCurrency(transaction.amount)}
@@ -83,4 +88,4 @@ export function RecurringCard({ transaction, onEdit, onDelete }: RecurringCardPr
       </div>
     </div>
   );
-}
+});

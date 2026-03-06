@@ -102,7 +102,7 @@ export function BudgetForm({
           reset();
           onOpenChange(false);
         },
-      }
+      },
     );
   };
 
@@ -125,18 +125,14 @@ export function BudgetForm({
               placeholder="0.00"
               {...register('amount')}
             />
-            {errors.amount && (
-              <p className="text-sm text-destructive">{errors.amount.message}</p>
-            )}
+            {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
           </div>
 
           <div className="flex items-center gap-2">
             <Checkbox
               id="isRecurring"
               checked={isRecurring}
-              onCheckedChange={(checked) =>
-                setValue('isRecurring', checked === true)
-              }
+              onCheckedChange={(checked) => setValue('isRecurring', checked === true)}
             />
             <Label htmlFor="isRecurring" className="cursor-pointer">
               Recurring monthly
@@ -166,14 +162,8 @@ export function BudgetForm({
 
               <div className="space-y-2">
                 <Label htmlFor="year">Year</Label>
-                <Input
-                  id="year"
-                  type="number"
-                  {...register('year')}
-                />
-                {errors.year && (
-                  <p className="text-sm text-destructive">{errors.year.message}</p>
-                )}
+                <Input id="year" type="number" {...register('year')} />
+                {errors.year && <p className="text-sm text-destructive">{errors.year.message}</p>}
               </div>
             </div>
           )}
@@ -200,7 +190,8 @@ export function BudgetForm({
             {errors.categoryId && (
               <p className="text-sm text-destructive">{errors.categoryId.message}</p>
             )}
-            {categories?.filter((c) => c.type === 'expense' && !existingCategoryIds.includes(c.id)).length === 0 && (
+            {categories?.filter((c) => c.type === 'expense' && !existingCategoryIds.includes(c.id))
+              .length === 0 && (
               <p className="text-xs text-muted-foreground">
                 {categories?.filter((c) => c.type === 'expense').length === 0
                   ? 'Add transactions to create expense categories for per-category budgets.'
@@ -210,11 +201,7 @@ export function BudgetForm({
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={upsertBudget.isPending}>

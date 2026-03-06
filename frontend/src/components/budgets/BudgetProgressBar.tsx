@@ -26,16 +26,14 @@ export function BudgetProgressBar({ spent, budget }: BudgetProgressBarProps) {
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">
-          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(spent))} spent
+          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+            Number(spent),
+          )}{' '}
+          spent
         </span>
-        <span className={cn('font-medium', getColorClass())}>
-          {percentage}%
-        </span>
+        <span className={cn('font-medium', getColorClass())}>{percentage}%</span>
       </div>
-      <Progress
-        value={clampedPercentage}
-        className={cn('h-2', getIndicatorColor())}
-      />
+      <Progress value={clampedPercentage} className={cn('h-2', getIndicatorColor())} />
     </div>
   );
 }

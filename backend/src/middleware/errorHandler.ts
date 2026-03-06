@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
+import { Sentry } from '../lib/sentry';
 import { logger } from '../lib/logger';
 
 export class AppError extends Error {
@@ -13,12 +14,7 @@ export class AppError extends Error {
   }
 }
 
-export function errorHandler(
-  err: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-): void {
+export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
   logger.error({ err: err.message }, 'Request error');
 
   if (err instanceof AppError) {
@@ -61,5 +57,6 @@ export function errorHandler(
     return;
   }
 
+  Sentry.captureException(err);
   res.status(500).json({ error: 'Internal server error' });
 }

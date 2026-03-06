@@ -33,7 +33,7 @@ interface TrendPoint {
 export async function getSummary(
   userId: string,
   month: number,
-  year: number
+  year: number,
 ): Promise<MonthlySummary> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -71,7 +71,7 @@ export async function getSummary(
 export async function getMonthlyBreakdown(
   userId: string,
   month: number,
-  year: number
+  year: number,
 ): Promise<CategoryBreakdown[]> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -99,14 +99,12 @@ export async function getMonthlyBreakdown(
   // Calculate total for percentages
   const total = expenses.reduce(
     (sum, e) => sum.add(e._sum.amount || new Decimal(0)),
-    new Decimal(0)
+    new Decimal(0),
   );
 
   return expenses.map((e) => {
     const amount = e._sum.amount || new Decimal(0);
-    const percentage = total.isZero()
-      ? 0
-      : parseFloat(amount.div(total).mul(100).toFixed(1));
+    const percentage = total.isZero() ? 0 : parseFloat(amount.div(total).mul(100).toFixed(1));
 
     return {
       categoryId: e.categoryId,
@@ -117,16 +115,11 @@ export async function getMonthlyBreakdown(
   });
 }
 
-export async function getYearlyOverview(
-  userId: string,
-  year: number
-): Promise<MonthlyTotal[]> {
+export async function getYearlyOverview(userId: string, year: number): Promise<MonthlyTotal[]> {
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
 
-  const rows = await prisma.$queryRaw<
-    Array<{ month: number; type: string; total: Decimal }>
-  >`
+  const rows = await prisma.$queryRaw<Array<{ month: number; type: string; total: Decimal }>>`
     SELECT
       EXTRACT(MONTH FROM "date")::int AS "month",
       "type"::text AS "type",
@@ -188,7 +181,7 @@ interface CategorySpending {
 export async function getCategoryBreakdown(
   userId: string,
   month: number,
-  year: number
+  year: number,
 ): Promise<CategorySpending[]> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -232,7 +225,7 @@ export async function getCategoryBreakdown(
   // Overall total
   const overallTotal = expenses.reduce(
     (sum, e) => sum.add(e._sum.amount || new Decimal(0)),
-    new Decimal(0)
+    new Decimal(0),
   );
 
   // Group by category
@@ -285,10 +278,7 @@ export async function getCategoryBreakdown(
   return result;
 }
 
-export async function getTrend(
-  userId: string,
-  months: number
-): Promise<TrendPoint[]> {
+export async function getTrend(userId: string, months: number): Promise<TrendPoint[]> {
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
   const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -325,8 +315,18 @@ export async function getTrend(
   }
 
   const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   const points: TrendPoint[] = [];

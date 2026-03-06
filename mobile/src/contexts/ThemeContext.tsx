@@ -11,6 +11,7 @@ interface ThemeContextValue {
   preference: ThemePreference;
   colors: ThemeColors;
   isDark: boolean;
+  isReady: boolean;
   setPreference: (pref: ThemePreference) => void;
 }
 
@@ -21,14 +22,14 @@ const THEME_KEY = 'theme';
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const deviceScheme = useDeviceColorScheme();
   const [preference, setPreferenceState] = useState<ThemePreference>('system');
-  const [loaded, setLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then((val) => {
       if (val === 'light' || val === 'dark' || val === 'system') {
         setPreferenceState(val);
       }
-      setLoaded(true);
+      setIsReady(true);
     });
   }, []);
 
@@ -38,15 +39,20 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const resolved: ResolvedTheme =
-    preference === 'system' ? (deviceScheme ?? 'light') : preference;
+    preference === 'system' ? (deviceScheme === 'dark' ? 'dark' : 'light') : preference;
 
   const colors = Colors[resolved];
 
-  if (!loaded) return null;
-
   return (
     <ThemeContext.Provider
-      value={{ theme: resolved, preference, colors, isDark: resolved === 'dark', setPreference }}
+      value={{
+        theme: resolved,
+        preference,
+        colors,
+        isDark: resolved === 'dark',
+        isReady,
+        setPreference,
+      }}
     >
       {children}
     </ThemeContext.Provider>

@@ -1,11 +1,9 @@
 import { z } from 'zod';
 
 export const createRecurringSchema = z.object({
-  amount: z
-    .string()
-    .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-      message: 'Amount must be a positive number',
-    }),
+  amount: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
+    message: 'Amount must be a positive number',
+  }),
   type: z.enum(['expense', 'income']),
   description: z.string().min(1, 'Description is required').max(255),
   frequency: z.enum(['weekly', 'biweekly', 'monthly', 'yearly']),

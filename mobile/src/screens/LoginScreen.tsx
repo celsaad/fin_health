@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,9 +7,10 @@ import { loginSchema } from '@fin-health/shared/validators';
 import { BarChart3, Heart } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { parseError } from '../services/api';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { FontSize, Spacing, BorderRadius } from '../constants/theme';
+import { FontSize, Spacing } from '../constants/theme';
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
@@ -36,8 +30,9 @@ export default function LoginScreen({ navigation }: any) {
     setLoading(true);
     try {
       await login(data.email, data.password);
-    } catch (err: any) {
-      Alert.alert('Login Failed', err.response?.data?.error ?? 'Invalid credentials');
+    } catch (err) {
+      const appError = parseError(err);
+      Alert.alert('Login Failed', appError.message);
     } finally {
       setLoading(false);
     }
@@ -45,10 +40,7 @@ export default function LoginScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logoContainer}>
           <View style={[styles.logoBox, { backgroundColor: colors.primary }]}>
             <BarChart3 size={32} color="#ffffff" />
@@ -89,7 +81,14 @@ export default function LoginScreen({ navigation }: any) {
               value={value}
               onChangeText={onChange}
               error={errors.password?.message}
-              rightLabel={{ text: 'Forgot?', onPress: () => {} }}
+              rightLabel={{
+                text: 'Forgot?',
+                onPress: () =>
+                  Alert.alert(
+                    'Reset Password',
+                    'Please use the web app to reset your password at finhealth.app/forgot-password',
+                  ),
+              }}
             />
           )}
         />
@@ -100,27 +99,6 @@ export default function LoginScreen({ navigation }: any) {
           loading={loading}
           style={{ marginTop: Spacing.sm }}
         />
-
-        <View style={styles.divider}>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerText, { color: colors.textSecondary }]}>
-            OR CONTINUE WITH
-          </Text>
-          <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-        </View>
-
-        <View style={styles.socialRow}>
-          <TouchableOpacity
-            style={[styles.socialBtn, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.socialText, { color: colors.text }]}>Google</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.socialBtn, { borderColor: colors.border }]}
-          >
-            <Text style={[styles.socialText, { color: colors.text }]}>Apple</Text>
-          </TouchableOpacity>
-        </View>
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.textSecondary }]}>
@@ -172,33 +150,6 @@ const styles = StyleSheet.create({
   tagline: {
     fontSize: FontSize.body,
     marginTop: 4,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: Spacing.xl,
-  },
-  dividerLine: { flex: 1, height: 1 },
-  dividerText: {
-    marginHorizontal: Spacing.md,
-    fontSize: FontSize.caption,
-    fontWeight: '500',
-  },
-  socialRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  socialBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  socialText: {
-    fontSize: FontSize.body,
-    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',

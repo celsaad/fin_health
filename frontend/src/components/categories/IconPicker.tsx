@@ -1,15 +1,7 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  ICON_OPTIONS,
-  COLOR_OPTIONS,
-  getCategoryIcon,
-} from '@/lib/categoryIcons';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ICON_OPTIONS, COLOR_OPTIONS, getCategoryIcon } from '@/lib/categoryIcons';
 import { useUpdateCategoryAppearance } from '@/hooks/useCategories';
 
 interface IconPickerProps {
@@ -32,9 +24,7 @@ export function IconPicker({
   const Icon = config.icon;
 
   const activeIconName =
-    currentIcon ??
-    ICON_OPTIONS.find((opt) => opt.icon === config.icon)?.name ??
-    null;
+    currentIcon ?? ICON_OPTIONS.find((opt) => opt.icon === config.icon)?.name ?? null;
   const activeColorName = currentColor ?? null;
 
   const handleSelectIcon = (iconName: string) => {
@@ -75,9 +65,7 @@ export function IconPicker({
                 type="button"
                 onClick={() => handleSelectIcon(opt.name)}
                 className={`flex size-9 items-center justify-center rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 ring-2 ring-primary'
-                    : 'hover:bg-muted'
+                  isActive ? 'bg-primary/10 ring-2 ring-primary' : 'hover:bg-muted'
                 }`}
                 aria-label={opt.name}
               >
@@ -100,9 +88,7 @@ export function IconPicker({
                 }`}
                 aria-label={opt.name}
               >
-                {isActive && (
-                  <Check className={`size-3.5 ${opt.color}`} />
-                )}
+                {isActive && <Check className={`size-3.5 ${opt.color}`} />}
               </button>
             );
           })}

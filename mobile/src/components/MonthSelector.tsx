@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
-import { getShortMonthName } from '../utils/format';
-import { BorderRadius, FontSize, Spacing } from '../constants/theme';
+import { getShortMonthName } from '@fin-health/shared/format';
+import { FontSize, Spacing } from '../constants/theme';
 
 interface MonthSelectorProps {
   selectedMonth: number;
@@ -10,7 +10,11 @@ interface MonthSelectorProps {
   onSelect: (month: number, year: number) => void;
 }
 
-export default function MonthSelector({ selectedMonth, selectedYear, onSelect }: MonthSelectorProps) {
+export default function MonthSelector({
+  selectedMonth,
+  selectedYear,
+  onSelect,
+}: MonthSelectorProps) {
   const { colors } = useTheme();
   const scrollRef = useRef<ScrollView>(null);
   const now = new Date();
@@ -22,15 +26,19 @@ export default function MonthSelector({ selectedMonth, selectedYear, onSelect }:
   for (let i = -6; i <= 2; i++) {
     let m = currentMonth + i;
     let y = currentYear;
-    if (m <= 0) { m += 12; y--; }
-    if (m > 12) { m -= 12; y++; }
+    if (m <= 0) {
+      m += 12;
+      y--;
+    }
+    if (m > 12) {
+      m -= 12;
+      y++;
+    }
     months.push({ month: m, year: y });
   }
 
   useEffect(() => {
-    const index = months.findIndex(
-      (m) => m.month === selectedMonth && m.year === selectedYear
-    );
+    const index = months.findIndex((m) => m.month === selectedMonth && m.year === selectedYear);
     if (index >= 0 && scrollRef.current) {
       setTimeout(() => scrollRef.current?.scrollTo({ x: index * 110 - 100, animated: false }), 100);
     }
@@ -57,12 +65,7 @@ export default function MonthSelector({ selectedMonth, selectedYear, onSelect }:
             ]}
             onPress={() => onSelect(month, year)}
           >
-            <Text
-              style={[
-                styles.text,
-                { color: isActive ? '#ffffff' : colors.textSecondary },
-              ]}
-            >
+            <Text style={[styles.text, { color: isActive ? '#ffffff' : colors.textSecondary }]}>
               {getShortMonthName(month)} {year !== currentYear ? year : ''}
             </Text>
           </TouchableOpacity>

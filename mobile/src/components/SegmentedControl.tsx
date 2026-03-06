@@ -9,7 +9,11 @@ interface SegmentedControlProps {
   onSelect: (index: number) => void;
 }
 
-export default function SegmentedControl({ options, selectedIndex, onSelect }: SegmentedControlProps) {
+export default function SegmentedControl({
+  options,
+  selectedIndex,
+  onSelect,
+}: SegmentedControlProps) {
   const { colors } = useTheme();
 
   return (
@@ -19,18 +23,10 @@ export default function SegmentedControl({ options, selectedIndex, onSelect }: S
         return (
           <TouchableOpacity
             key={option}
-            style={[
-              styles.option,
-              isActive && { backgroundColor: colors.primary },
-            ]}
+            style={[styles.option, isActive && { backgroundColor: colors.primary }]}
             onPress={() => onSelect(index)}
           >
-            <Text
-              style={[
-                styles.text,
-                { color: isActive ? '#ffffff' : colors.textSecondary },
-              ]}
-            >
+            <Text style={[styles.text, { color: isActive ? '#ffffff' : colors.textSecondary }]}>
               {option}
             </Text>
           </TouchableOpacity>

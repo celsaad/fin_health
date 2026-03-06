@@ -89,7 +89,7 @@ router.put(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/categories/:id — delete only if no transactions
@@ -112,7 +112,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
     if (category._count.transactions > 0) {
       throw new AppError(
         'Cannot delete category with existing transactions. Merge it into another category instead.',
-        400
+        400,
       );
     }
 
@@ -175,7 +175,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // GET /api/categories/:id/subcategories — list subcategories
@@ -229,7 +229,7 @@ router.post(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // PUT /api/categories/:id/subcategories/:subId — rename subcategory
@@ -267,7 +267,7 @@ router.put(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 // DELETE /api/categories/:id/subcategories/:subId — delete subcategory
@@ -307,7 +307,7 @@ router.delete(
     } catch (err) {
       next(err);
     }
-  }
+  },
 );
 
 export default router;

@@ -2,13 +2,7 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import {
-  Home,
-  ArrowLeftRight,
-  PieChart,
-  Settings,
-  Plus,
-} from 'lucide-react-native';
+import { Home, ArrowLeftRight, PieChart, Settings, Plus } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import DashboardScreen from '../screens/DashboardScreen';
 import SpendingBreakdownScreen from '../screens/SpendingBreakdownScreen';
@@ -43,8 +37,16 @@ function HomeStackScreen() {
         headerShadowVisible: false,
       }}
     >
-      <HomeStack.Screen name="Dashboard" component={DashboardScreen} options={{ headerShown: false }} />
-      <HomeStack.Screen name="SpendingBreakdown" component={SpendingBreakdownScreen} options={{ title: 'Spending Breakdown' }} />
+      <HomeStack.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="SpendingBreakdown"
+        component={SpendingBreakdownScreen}
+        options={{ title: 'Spending Breakdown' }}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -59,7 +61,11 @@ function HistoryStackScreen() {
         headerShadowVisible: false,
       }}
     >
-      <HistoryStack.Screen name="Transactions" component={TransactionsScreen} options={{ headerShown: false }} />
+      <HistoryStack.Screen
+        name="Transactions"
+        component={TransactionsScreen}
+        options={{ headerShown: false }}
+      />
     </HistoryStack.Navigator>
   );
 }
@@ -74,8 +80,16 @@ function BudgetStackScreen() {
         headerShadowVisible: false,
       }}
     >
-      <BudgetStack.Screen name="Budgets" component={BudgetsScreen} options={{ headerShown: false }} />
-      <BudgetStack.Screen name="Recurring" component={RecurringScreen} options={{ title: 'Recurring' }} />
+      <BudgetStack.Screen
+        name="Budgets"
+        component={BudgetsScreen}
+        options={{ headerShown: false }}
+      />
+      <BudgetStack.Screen
+        name="Recurring"
+        component={RecurringScreen}
+        options={{ title: 'Recurring' }}
+      />
     </BudgetStack.Navigator>
   );
 }
@@ -90,9 +104,21 @@ function ProfileStackScreen() {
         headerShadowVisible: false,
       }}
     >
-      <ProfileStack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-      <ProfileStack.Screen name="Categories" component={CategoriesScreen} options={{ title: 'Manage Categories' }} />
-      <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
+      <ProfileStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <ProfileStack.Screen
+        name="Categories"
+        component={CategoriesScreen}
+        options={{ title: 'Manage Categories' }}
+      />
+      <ProfileStack.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
+        options={{ title: 'Change Password' }}
+      />
     </ProfileStack.Navigator>
   );
 }
@@ -102,7 +128,7 @@ function EmptyScreen() {
 }
 
 export function MainTabNavigator() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const [showAddSheet, setShowAddSheet] = useState(false);
 
   return (
@@ -144,7 +170,7 @@ export function MainTabNavigator() {
           options={{
             tabBarLabel: '',
             tabBarIcon: () => null,
-            tabBarButton: (props) => (
+            tabBarButton: (_props) => (
               <TouchableOpacity
                 style={styles.fabContainer}
                 onPress={() => setShowAddSheet(true)}
@@ -174,10 +200,7 @@ export function MainTabNavigator() {
           }}
         />
       </Tab.Navigator>
-      <AddTransactionSheet
-        visible={showAddSheet}
-        onClose={() => setShowAddSheet(false)}
-      />
+      <AddTransactionSheet visible={showAddSheet} onClose={() => setShowAddSheet(false)} />
     </>
   );
 }

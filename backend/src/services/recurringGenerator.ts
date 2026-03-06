@@ -91,7 +91,7 @@ export async function generateRecurringTransactions(userId: string): Promise<num
       prisma.recurringTransaction.update({
         where: { id: u.id },
         data: { lastGenerated: u.lastGenerated },
-      })
+      }),
     ),
   ]);
 

@@ -3,9 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { BreakdownItem } from '@/hooks/useDashboard';
 import type { Budget } from '@/hooks/useBudgets';
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
+import { formatCurrency } from '@fin-health/shared/format';
 
 interface TopCategoriesProps {
   breakdown: BreakdownItem[];
@@ -20,9 +18,7 @@ export function TopCategories({ breakdown, budgets }: TopCategoriesProps) {
   }
 
   const budgetMap = new Map(
-    budgets
-      ?.filter((b) => b.categoryId)
-      .map((b) => [b.categoryId!, b]) ?? []
+    budgets?.filter((b) => b.categoryId).map((b) => [b.categoryId!, b]) ?? [],
   );
 
   return (

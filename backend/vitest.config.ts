@@ -10,5 +10,9 @@ export default defineConfig({
     testTimeout: 15000,
     hookTimeout: 30000,
     sequence: { concurrent: false },
+    env: {
+      NODE_ENV: 'test',
+      JWT_SECRET: 'test-secret-key-for-vitest-only-do-not-use-in-prod',
+    },
   },
 });

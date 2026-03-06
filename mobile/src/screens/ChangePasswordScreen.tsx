@@ -6,6 +6,7 @@ import { changePasswordSchema } from '@fin-health/shared/validators';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../contexts/ThemeContext';
 import { changePassword } from '../services/auth';
+import { parseError, setToken, setRefreshToken } from '../services/api';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { Spacing } from '../constants/theme';
@@ -26,11 +27,13 @@ export default function ChangePasswordScreen({ navigation }: any) {
   async function onSubmit(data: { currentPassword: string; newPassword: string }) {
     setLoading(true);
     try {
-      await changePassword(data.currentPassword, data.newPassword);
+      const result = await changePassword(data.currentPassword, data.newPassword);
+      if (result.token) await setToken(result.token);
+      if (result.refreshToken) await setRefreshToken(result.refreshToken);
       Toast.show({ type: 'success', text1: 'Password updated' });
       navigation.goBack();
-    } catch (err: any) {
-      Alert.alert('Error', err.response?.data?.error ?? 'Failed to update password');
+    } catch (err) {
+      Alert.alert('Error', parseError(err).message);
     } finally {
       setLoading(false);
     }
@@ -66,11 +69,7 @@ export default function ChangePasswordScreen({ navigation }: any) {
           />
         )}
       />
-      <Button
-        title="Update Password"
-        onPress={handleSubmit(onSubmit)}
-        loading={loading}
-      />
+      <Button title="Update Password" onPress={handleSubmit(onSubmit)} loading={loading} />
     </View>
   );
 }

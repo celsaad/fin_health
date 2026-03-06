@@ -11,25 +11,42 @@ describe('Dashboard routes', () => {
 
     // Seed transactions sequentially (shared categories cause race conditions in parallel)
     await api().post('/api/transactions').set(auth).send({
-      amount: 3000, type: 'income', description: 'Salary',
-      date: '2025-03-01', categoryName: 'Employment',
+      amount: 3000,
+      type: 'income',
+      description: 'Salary',
+      date: '2025-03-01',
+      categoryName: 'Employment',
     });
     await api().post('/api/transactions').set(auth).send({
-      amount: 200, type: 'expense', description: 'Groceries',
-      date: '2025-03-05', categoryName: 'Food', subcategoryName: 'Groceries',
+      amount: 200,
+      type: 'expense',
+      description: 'Groceries',
+      date: '2025-03-05',
+      categoryName: 'Food',
+      subcategoryName: 'Groceries',
     });
     await api().post('/api/transactions').set(auth).send({
-      amount: 80, type: 'expense', description: 'Gas',
-      date: '2025-03-10', categoryName: 'Transport',
+      amount: 80,
+      type: 'expense',
+      description: 'Gas',
+      date: '2025-03-10',
+      categoryName: 'Transport',
     });
     await api().post('/api/transactions').set(auth).send({
-      amount: 50, type: 'expense', description: 'Dining',
-      date: '2025-03-15', categoryName: 'Food', subcategoryName: 'Dining',
+      amount: 50,
+      type: 'expense',
+      description: 'Dining',
+      date: '2025-03-15',
+      categoryName: 'Food',
+      subcategoryName: 'Dining',
     });
     // Feb 2025 for trend tests
     await api().post('/api/transactions').set(auth).send({
-      amount: 1500, type: 'income', description: 'Feb income',
-      date: '2025-02-15', categoryName: 'Employment',
+      amount: 1500,
+      type: 'income',
+      description: 'Feb income',
+      date: '2025-02-15',
+      categoryName: 'Employment',
     });
   });
 
@@ -43,9 +60,7 @@ describe('Dashboard routes', () => {
 
   describe('GET /api/dashboard/summary', () => {
     it('returns monthly summary with totals', async () => {
-      const res = await api()
-        .get('/api/dashboard/summary?month=3&year=2025')
-        .set(auth());
+      const res = await api().get('/api/dashboard/summary?month=3&year=2025').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.totalIncome).toBe('3000');
@@ -55,9 +70,7 @@ describe('Dashboard routes', () => {
     });
 
     it('returns zeros for month with no transactions', async () => {
-      const res = await api()
-        .get('/api/dashboard/summary?month=12&year=2024')
-        .set(auth());
+      const res = await api().get('/api/dashboard/summary?month=12&year=2024').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.totalIncome).toBe('0');
@@ -67,18 +80,14 @@ describe('Dashboard routes', () => {
     });
 
     it('rejects missing params', async () => {
-      const res = await api()
-        .get('/api/dashboard/summary')
-        .set(auth());
+      const res = await api().get('/api/dashboard/summary').set(auth());
       expect(res.status).toBe(400);
     });
   });
 
   describe('GET /api/dashboard/breakdown', () => {
     it('returns expense breakdown by category', async () => {
-      const res = await api()
-        .get('/api/dashboard/breakdown?month=3&year=2025')
-        .set(auth());
+      const res = await api().get('/api/dashboard/breakdown?month=3&year=2025').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.breakdown).toBeInstanceOf(Array);
@@ -90,15 +99,14 @@ describe('Dashboard routes', () => {
 
       // Percentages should add up to ~100
       const totalPct = res.body.breakdown.reduce(
-        (sum: number, b: { percentage: number }) => sum + b.percentage, 0
+        (sum: number, b: { percentage: number }) => sum + b.percentage,
+        0,
       );
       expect(totalPct).toBeCloseTo(100, 0);
     });
 
     it('returns empty array for month with no expenses', async () => {
-      const res = await api()
-        .get('/api/dashboard/breakdown?month=12&year=2024')
-        .set(auth());
+      const res = await api().get('/api/dashboard/breakdown?month=12&year=2024').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.breakdown).toEqual([]);
@@ -116,7 +124,7 @@ describe('Dashboard routes', () => {
 
       // Food should have subcategories
       const food = res.body.categories.find(
-        (c: { categoryName: string }) => c.categoryName === 'Food'
+        (c: { categoryName: string }) => c.categoryName === 'Food',
       );
       expect(food).toBeDefined();
       expect(food.total).toBe(250); // 200 + 50
@@ -126,9 +134,7 @@ describe('Dashboard routes', () => {
 
   describe('GET /api/dashboard/yearly', () => {
     it('returns 12 months of data', async () => {
-      const res = await api()
-        .get('/api/dashboard/yearly?year=2025')
-        .set(auth());
+      const res = await api().get('/api/dashboard/yearly?year=2025').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.months).toHaveLength(12);
@@ -145,18 +151,14 @@ describe('Dashboard routes', () => {
     });
 
     it('rejects missing year', async () => {
-      const res = await api()
-        .get('/api/dashboard/yearly')
-        .set(auth());
+      const res = await api().get('/api/dashboard/yearly').set(auth());
       expect(res.status).toBe(400);
     });
   });
 
   describe('GET /api/dashboard/trend', () => {
     it('returns trend data for requested months', async () => {
-      const res = await api()
-        .get('/api/dashboard/trend?months=6')
-        .set(auth());
+      const res = await api().get('/api/dashboard/trend?months=6').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.trend).toHaveLength(6);
@@ -171,18 +173,14 @@ describe('Dashboard routes', () => {
     });
 
     it('defaults to 6 months when not specified', async () => {
-      const res = await api()
-        .get('/api/dashboard/trend')
-        .set(auth());
+      const res = await api().get('/api/dashboard/trend').set(auth());
 
       expect(res.status).toBe(200);
       expect(res.body.trend).toHaveLength(6);
     });
 
     it('rejects out-of-range months', async () => {
-      const res = await api()
-        .get('/api/dashboard/trend?months=25')
-        .set(auth());
+      const res = await api().get('/api/dashboard/trend?months=25').set(auth());
       expect(res.status).toBe(400);
     });
   });

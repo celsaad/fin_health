@@ -19,7 +19,8 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../contexts/ThemeContext';
 import { getBudgets, upsertBudget, deleteBudget, copyPreviousBudgets } from '../services/budgets';
 import { getCategories } from '../services/categories';
-import { formatCurrency } from '../utils/format';
+import { parseError } from '../services/api';
+import { formatCurrency } from '@fin-health/shared/format';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -28,8 +29,9 @@ import CategoryIcon from '../components/CategoryIcon';
 import ProgressBar from '../components/ProgressBar';
 import EmptyState from '../components/EmptyState';
 import LoadingSkeleton from '../components/LoadingSkeleton';
+import QueryError from '../components/QueryError';
 import { FontSize, Spacing, BorderRadius } from '../constants/theme';
-import type { Budget, Category } from '@fin-health/shared/types';
+import type { Category } from '@fin-health/shared/types';
 
 export default function BudgetsScreen({ navigation }: any) {
   const { colors } = useTheme();
@@ -55,7 +57,7 @@ export default function BudgetsScreen({ navigation }: any) {
   // Filter out categories that already have a budget
   const budgetedCategoryIds = new Set(budgets.map((b) => b.categoryId).filter(Boolean));
   const availableCategories = categories.filter(
-    (c: Category) => c.type === 'expense' && !budgetedCategoryIds.has(c.id)
+    (c: Category) => c.type === 'expense' && !budgetedCategoryIds.has(c.id),
   );
 
   const totalBudget = budgets.reduce((sum, b) => sum + Number(b.amount), 0);
@@ -76,8 +78,8 @@ export default function BudgetsScreen({ navigation }: any) {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       Toast.show({ type: 'success', text1: `Copied ${data.copied} budgets` });
     },
-    onError: (err: any) => {
-      Alert.alert('Error', err.response?.data?.error ?? 'Failed to copy budgets');
+    onError: (err: unknown) => {
+      Alert.alert('Error', parseError(err).message);
     },
   });
 
@@ -102,14 +104,20 @@ export default function BudgetsScreen({ navigation }: any) {
       <MonthSelector
         selectedMonth={month}
         selectedYear={year}
-        onSelect={(m, y) => { setMonth(m); setYear(y); }}
+        onSelect={(m, y) => {
+          setMonth(m);
+          setYear(y);
+        }}
       />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={budgetsQuery.isFetching} onRefresh={() => budgetsQuery.refetch()} />
+          <RefreshControl
+            refreshing={budgetsQuery.isFetching}
+            onRefresh={() => budgetsQuery.refetch()}
+          />
         }
       >
         {/* Overall Budget */}
@@ -117,7 +125,9 @@ export default function BudgetsScreen({ navigation }: any) {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Overall Budget</Text>
           <View style={styles.overallRow}>
             <View>
-              <Text style={[styles.overallLabel, { color: colors.textSecondary }]}>Total Spent</Text>
+              <Text style={[styles.overallLabel, { color: colors.textSecondary }]}>
+                Total Spent
+              </Text>
               <Text style={[styles.overallAmount, { color: colors.text }]}>
                 {formatCurrency(totalSpent)}
               </Text>
@@ -155,6 +165,8 @@ export default function BudgetsScreen({ navigation }: any) {
               </Card>
             ))}
           </View>
+        ) : budgetsQuery.isError ? (
+          <QueryError onRetry={() => budgetsQuery.refetch()} />
         ) : budgets.length === 0 ? (
           <EmptyState
             title="No budgets set"
@@ -289,8 +301,8 @@ function AddBudgetModal({
       setSelectedCategoryId(null);
       onClose();
     },
-    onError: (err: any) => {
-      Alert.alert('Error', err.response?.data?.error ?? 'Failed to create budget');
+    onError: (err: unknown) => {
+      Alert.alert('Error', parseError(err).message);
     },
   });
 
@@ -323,14 +335,19 @@ function AddBudgetModal({
             />
 
             <Text style={[styles.label, { color: colors.text, marginBottom: 8 }]}>Category</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={{ marginBottom: 16 }}
+            >
               {availableCategories.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
                   style={[
                     styles.chipOption,
                     {
-                      backgroundColor: selectedCategoryId === cat.id ? colors.primary : colors.inputBg,
+                      backgroundColor:
+                        selectedCategoryId === cat.id ? colors.primary : colors.inputBg,
                       borderColor: selectedCategoryId === cat.id ? colors.primary : colors.border,
                     },
                   ]}
@@ -366,7 +383,13 @@ const modalStyles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '70%', paddingTop: 8 },
   handle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 12 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingBottom: 12 },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
   title: { fontSize: 18, fontWeight: '600' },
   content: { paddingHorizontal: 16 },
 });

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api';
+import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Category, Subcategory } from '@fin-health/shared/types';
 
@@ -23,25 +23,16 @@ export function useCreateSubcategory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      categoryId,
-      name,
-    }: {
-      categoryId: string;
-      name: string;
-    }) => {
-      const { data } = await api.post(
-        `/categories/${categoryId}/subcategories`,
-        { name }
-      );
+    mutationFn: async ({ categoryId, name }: { categoryId: string; name: string }) => {
+      const { data } = await api.post(`/categories/${categoryId}/subcategories`, { name });
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Subcategory created successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create subcategory');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -58,8 +49,8 @@ export function useRenameCategory() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category renamed successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to rename category');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -77,18 +68,17 @@ export function useRenameSubcategory() {
       subcategoryId: string;
       name: string;
     }) => {
-      const { data } = await api.put(
-        `/categories/${categoryId}/subcategories/${subcategoryId}`,
-        { name }
-      );
+      const { data } = await api.put(`/categories/${categoryId}/subcategories/${subcategoryId}`, {
+        name,
+      });
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Subcategory renamed successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to rename subcategory');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -104,8 +94,8 @@ export function useDeleteCategory() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete category');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -121,16 +111,14 @@ export function useDeleteSubcategory() {
       categoryId: string;
       subcategoryId: string;
     }) => {
-      await api.delete(
-        `/categories/${categoryId}/subcategories/${subcategoryId}`
-      );
+      await api.delete(`/categories/${categoryId}/subcategories/${subcategoryId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Subcategory deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete subcategory');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -139,15 +127,7 @@ export function useUpdateCategoryAppearance() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      icon,
-      color,
-    }: {
-      id: string;
-      icon?: string;
-      color?: string;
-    }) => {
+    mutationFn: async ({ id, icon, color }: { id: string; icon?: string; color?: string }) => {
       const { data } = await api.put(`/categories/${id}`, { icon, color });
       return data;
     },
@@ -157,8 +137,8 @@ export function useUpdateCategoryAppearance() {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       queryClient.invalidateQueries({ queryKey: ['recurring'] });
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update category appearance');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -184,8 +164,8 @@ export function useMergeCategory() {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Categories merged successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to merge categories');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }

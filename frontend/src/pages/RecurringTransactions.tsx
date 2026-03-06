@@ -3,6 +3,7 @@ import { PlusCircle, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { QueryError } from '@/components/shared/QueryError';
 import { RecurringForm } from '@/components/recurring/RecurringForm';
 import { RecurringList } from '@/components/recurring/RecurringList';
 import { useRecurringTransactions, type RecurringTransaction } from '@/hooks/useRecurring';
@@ -12,13 +13,11 @@ export default function RecurringTransactions() {
   const [editing, setEditing] = useState<RecurringTransaction | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'paused'>('active');
 
-  const { data: transactions, isLoading } = useRecurringTransactions();
+  const { data: transactions, isLoading, isError, refetch } = useRecurringTransactions();
 
   const filtered = useMemo(() => {
     if (!transactions) return [];
-    return transactions.filter((t) =>
-      activeTab === 'active' ? t.isActive : !t.isActive
-    );
+    return transactions.filter((t) => (activeTab === 'active' ? t.isActive : !t.isActive));
   }, [transactions, activeTab]);
 
   const activeCount = transactions?.filter((t) => t.isActive).length ?? 0;
@@ -77,7 +76,9 @@ export default function RecurringTransactions() {
         </div>
       )}
 
-      {isLoading ? (
+      {isError ? (
+        <QueryError onRetry={refetch} />
+      ) : isLoading ? (
         <TableSkeleton rows={5} columns={8} />
       ) : !transactions || transactions.length === 0 ? (
         <EmptyState
@@ -95,11 +96,7 @@ export default function RecurringTransactions() {
         <RecurringList transactions={filtered} onEdit={handleEdit} />
       )}
 
-      <RecurringForm
-        open={formOpen}
-        onOpenChange={handleFormClose}
-        editingTransaction={editing}
-      />
+      <RecurringForm open={formOpen} onOpenChange={handleFormClose} editingTransaction={editing} />
     </div>
   );
 }

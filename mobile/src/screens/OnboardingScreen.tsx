@@ -1,18 +1,7 @@
 import React, { useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  FlatList,
-} from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  BarChart3,
-  LayoutDashboard,
-  ShieldCheck,
-} from 'lucide-react-native';
+import { BarChart3, LayoutDashboard, ShieldCheck } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import Button from '../components/Button';
 import { FontSize, Spacing, BorderRadius } from '../constants/theme';
@@ -37,8 +26,7 @@ const pages = [
     Icon: LayoutDashboard,
     iconBg: '#6366f1',
     title: 'Smart Insights, Better Habits',
-    subtitle:
-      'Get automated spending breakdowns and alerts when you are close to your limits.',
+    subtitle: 'Get automated spending breakdowns and alerts when you are close to your limits.',
     button: 'Next',
   },
   {
@@ -94,9 +82,7 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
               </View>
             </View>
             <Text style={[styles.title, { color: colors.text }]}>{item.title}</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-              {item.subtitle}
-            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{item.subtitle}</Text>
           </View>
         )}
       />

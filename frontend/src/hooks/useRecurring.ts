@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api';
+import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
 import type { RecurringTransaction } from '@fin-health/shared/types';
 
@@ -47,8 +47,8 @@ export function useCreateRecurring() {
       queryClient.invalidateQueries({ queryKey: ['recurring'] });
       toast.success('Recurring transaction created');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create recurring transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -65,8 +65,8 @@ export function useUpdateRecurring() {
       queryClient.invalidateQueries({ queryKey: ['recurring'] });
       toast.success('Recurring transaction updated');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update recurring transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -82,8 +82,8 @@ export function useDeleteRecurring() {
       queryClient.invalidateQueries({ queryKey: ['recurring'] });
       toast.success('Recurring transaction deleted');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete recurring transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -100,8 +100,8 @@ export function useToggleRecurring() {
       queryClient.invalidateQueries({ queryKey: ['recurring'] });
       toast.success('Recurring transaction toggled');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to toggle recurring transaction');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }

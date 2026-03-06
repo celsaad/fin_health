@@ -10,6 +10,10 @@
       "cache": false
     },
     "typecheck": {},
-    "lint": {}
+    "lint": {},
+    "test": {
+      "cache": false
+    },
+    "format:check": {}
   }
 }

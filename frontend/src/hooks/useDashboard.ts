@@ -44,7 +44,7 @@ export interface CategorySpending {
   subcategories: SubcategoryBreakdown[];
 }
 
-interface SummaryResponse extends DashboardSummary {}
+type SummaryResponse = DashboardSummary;
 
 interface BreakdownResponse {
   breakdown: BreakdownItem[];

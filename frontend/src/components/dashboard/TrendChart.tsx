@@ -10,14 +10,23 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TrendData } from '@/hooks/useDashboard';
+import { formatCurrency } from '@fin-health/shared/format';
 
 const MONTH_LABELS = [
-  '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  '',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
 
 interface TrendChartProps {
   trend: TrendData[];
@@ -59,10 +68,7 @@ function CustomLegend({ payload }: { payload?: Array<{ value: string; color: str
     <div className="flex items-center justify-center gap-6 pt-2">
       {payload.map((entry) => (
         <div key={entry.value} className="flex items-center gap-2 text-sm">
-          <span
-            className="size-2.5 rounded-full"
-            style={{ backgroundColor: entry.color }}
-          />
+          <span className="size-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-muted-foreground">{entry.value}</span>
         </div>
       ))}
@@ -120,13 +126,7 @@ export function TrendChart({ trend }: TrendChartProps) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend content={<CustomLegend />} />
-            <Bar
-              dataKey="income"
-              name="Income"
-              fill="#6366f1"
-              radius={[4, 4, 0, 0]}
-              barSize={20}
-            />
+            <Bar dataKey="income" name="Income" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
             <Bar
               dataKey="expenses"
               name="Expenses"

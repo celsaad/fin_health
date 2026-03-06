@@ -25,17 +25,12 @@ interface MergeDialogProps {
   categories: Category[];
 }
 
-export function MergeDialog({
-  open,
-  onOpenChange,
-  sourceCategory,
-  categories,
-}: MergeDialogProps) {
+export function MergeDialog({ open, onOpenChange, sourceCategory, categories }: MergeDialogProps) {
   const [targetId, setTargetId] = useState('');
   const mergeMutation = useMergeCategory();
 
   const eligibleTargets = categories.filter(
-    (c) => c.id !== sourceCategory.id && c.type === sourceCategory.type
+    (c) => c.id !== sourceCategory.id && c.type === sourceCategory.type,
   );
 
   const handleMerge = async () => {
@@ -58,8 +53,8 @@ export function MergeDialog({
           <DialogDescription>
             Merge "{sourceCategory.name}" into another category. All{' '}
             {sourceCategory._count.transactions} transaction
-            {sourceCategory._count.transactions !== 1 ? 's' : ''} will be
-            reassigned to the target category.
+            {sourceCategory._count.transactions !== 1 ? 's' : ''} will be reassigned to the target
+            category.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,9 +79,9 @@ export function MergeDialog({
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
               <p className="font-medium">Warning</p>
               <p className="mt-1">
-                This will move all transactions from "
-                {sourceCategory.name}" to "{targetCategory?.name}" and delete "
-                {sourceCategory.name}". This action cannot be undone.
+                This will move all transactions from "{sourceCategory.name}" to "
+                {targetCategory?.name}" and delete "{sourceCategory.name}". This action cannot be
+                undone.
               </p>
             </div>
           )}

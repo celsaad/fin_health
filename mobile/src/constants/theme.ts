@@ -57,16 +57,16 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
 };
 
 export const CategoryColors: Record<string, { icon: string; bgLight: string; bgDark: string }> = {
-  orange:  { icon: '#ea580c', bgLight: '#fff7ed', bgDark: '#431407' },
-  blue:    { icon: '#2563eb', bgLight: '#eff6ff', bgDark: '#172554' },
-  purple:  { icon: '#7c3aed', bgLight: '#f5f3ff', bgDark: '#2e1065' },
-  pink:    { icon: '#db2777', bgLight: '#fdf2f8', bgDark: '#500724' },
+  orange: { icon: '#ea580c', bgLight: '#fff7ed', bgDark: '#431407' },
+  blue: { icon: '#2563eb', bgLight: '#eff6ff', bgDark: '#172554' },
+  purple: { icon: '#7c3aed', bgLight: '#f5f3ff', bgDark: '#2e1065' },
+  pink: { icon: '#db2777', bgLight: '#fdf2f8', bgDark: '#500724' },
   emerald: { icon: '#059669', bgLight: '#ecfdf5', bgDark: '#022c22' },
-  amber:   { icon: '#d97706', bgLight: '#fffbeb', bgDark: '#451a03' },
-  red:     { icon: '#dc2626', bgLight: '#fef2f2', bgDark: '#450a0a' },
-  cyan:    { icon: '#0891b2', bgLight: '#ecfeff', bgDark: '#083344' },
-  teal:    { icon: '#0d9488', bgLight: '#f0fdfa', bgDark: '#042f2e' },
-  indigo:  { icon: '#4f46e5', bgLight: '#eef2ff', bgDark: '#1e1b4b' },
+  amber: { icon: '#d97706', bgLight: '#fffbeb', bgDark: '#451a03' },
+  red: { icon: '#dc2626', bgLight: '#fef2f2', bgDark: '#450a0a' },
+  cyan: { icon: '#0891b2', bgLight: '#ecfeff', bgDark: '#083344' },
+  teal: { icon: '#0d9488', bgLight: '#f0fdfa', bgDark: '#042f2e' },
+  indigo: { icon: '#4f46e5', bgLight: '#eef2ff', bgDark: '#1e1b4b' },
 };
 
 export const Spacing = {

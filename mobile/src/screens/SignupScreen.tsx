@@ -1,12 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +7,7 @@ import { signupSchema } from '@fin-health/shared/validators';
 import { BarChart3, Heart } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { parseError } from '../services/api';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { FontSize, Spacing } from '../constants/theme';
@@ -36,8 +30,9 @@ export default function SignupScreen({ navigation }: any) {
     setLoading(true);
     try {
       await signup(data.name, data.email, data.password);
-    } catch (err: any) {
-      Alert.alert('Signup Failed', err.response?.data?.error ?? 'Something went wrong');
+    } catch (err) {
+      const appError = parseError(err);
+      Alert.alert('Signup Failed', appError.message);
     } finally {
       setLoading(false);
     }
@@ -45,10 +40,7 @@ export default function SignupScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logoContainer}>
           <View style={[styles.logoBox, { backgroundColor: colors.primary }]}>
             <BarChart3 size={32} color="#ffffff" />
@@ -57,9 +49,7 @@ export default function SignupScreen({ navigation }: any) {
             </View>
           </View>
           <Text style={[styles.appName, { color: colors.text }]}>FinHealth</Text>
-          <Text style={[styles.tagline, { color: colors.textSecondary }]}>
-            Create your account
-          </Text>
+          <Text style={[styles.tagline, { color: colors.textSecondary }]}>Create your account</Text>
         </View>
 
         <Controller

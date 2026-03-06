@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -58,6 +58,31 @@
   --color-sidebar-ring: hsl(239 84% 67%);
 
   --radius: 0.75rem;
+
+  --animate-slide-left: slide-left 200ms ease-out;
+  --animate-slide-right: slide-right 200ms ease-out;
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    translate: 12px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    translate: -12px 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 @layer base {
@@ -66,7 +91,10 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 
   .dark {

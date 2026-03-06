@@ -18,7 +18,9 @@ const app = express();
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 app.use(helmet());
 
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+import { env } from './lib/env';
+
+const corsOrigin = env.CORS_ORIGIN;
 app.use(cors({ origin: corsOrigin, credentials: true }));
 
 app.use(express.json({ limit: '1mb' }));

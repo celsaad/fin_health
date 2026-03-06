@@ -1,11 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Popover,
-  PopoverContent,
-  PopoverAnchor,
-} from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverAnchor } from '@/components/ui/popover';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
 
@@ -96,7 +92,7 @@ export function Autocomplete({
                 type="button"
                 className={cn(
                   'flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground',
-                  item === value && 'bg-accent text-accent-foreground'
+                  item === value && 'bg-accent text-accent-foreground',
                 )}
                 onMouseDown={(e) => {
                   e.preventDefault();

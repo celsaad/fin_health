@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/lib/api';
+import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
 import type { Budget } from '@fin-health/shared/types';
 
@@ -41,8 +41,8 @@ export function useUpsertBudget() {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       toast.success('Budget saved successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to save budget');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -54,7 +54,7 @@ export function useCopyPreviousMonthBudgets() {
     mutationFn: async (payload: { month: number; year: number }) => {
       const { data } = await api.post<{ budgets: Budget[]; copied: number }>(
         '/budgets/copy-previous',
-        payload
+        payload,
       );
       return data;
     },
@@ -66,8 +66,8 @@ export function useCopyPreviousMonthBudgets() {
         toast.info('No budgets to copy from last month');
       }
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to copy budgets');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
@@ -83,8 +83,8 @@ export function useDeleteBudget() {
       queryClient.invalidateQueries({ queryKey: ['budgets'] });
       toast.success('Budget deleted successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete budget');
+    onError: (error: unknown) => {
+      toast.error(parseError(error).message);
     },
   });
 }
