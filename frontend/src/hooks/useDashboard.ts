@@ -1,0 +1,92 @@
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/api';
+
+export interface DashboardSummary {
+  totalIncome: number;
+  totalExpenses: number;
+  net: number;
+  transactionCount: number;
+}
+
+export interface BreakdownItem {
+  categoryId: string;
+  categoryName: string;
+  total: number;
+  percentage: number;
+}
+
+export interface MonthlyData {
+  month: number;
+  income: number;
+  expenses: number;
+  net: number;
+}
+
+export interface TrendData {
+  month: number;
+  year: number;
+  income: number;
+  expenses: number;
+}
+
+interface SummaryResponse extends DashboardSummary {}
+
+interface BreakdownResponse {
+  breakdown: BreakdownItem[];
+}
+
+interface YearlyResponse {
+  months: MonthlyData[];
+}
+
+interface TrendResponse {
+  trend: TrendData[];
+}
+
+export function useSummary(month: number, year: number) {
+  return useQuery({
+    queryKey: ['dashboard', 'summary', month, year],
+    queryFn: async () => {
+      const { data } = await api.get<SummaryResponse>('/dashboard/summary', {
+        params: { month, year },
+      });
+      return data;
+    },
+  });
+}
+
+export function useBreakdown(month: number, year: number) {
+  return useQuery({
+    queryKey: ['dashboard', 'breakdown', month, year],
+    queryFn: async () => {
+      const { data } = await api.get<BreakdownResponse>('/dashboard/breakdown', {
+        params: { month, year },
+      });
+      return data.breakdown;
+    },
+  });
+}
+
+export function useYearlyOverview(year: number) {
+  return useQuery({
+    queryKey: ['dashboard', 'yearly', year],
+    queryFn: async () => {
+      const { data } = await api.get<YearlyResponse>('/dashboard/yearly', {
+        params: { year },
+      });
+      return data.months;
+    },
+  });
+}
+
+export function useTrend(months: number = 6) {
+  return useQuery({
+    queryKey: ['dashboard', 'trend', months],
+    queryFn: async () => {
+      const { data } = await api.get<TrendResponse>('/dashboard/trend', {
+        params: { months },
+      });
+      return data.trend;
+    },
+  });
+}
