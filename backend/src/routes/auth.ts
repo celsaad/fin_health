@@ -7,6 +7,7 @@ import { validate } from '../middleware/validate';
 import { signupSchema, loginSchema, changePasswordSchema } from '../validators/auth';
 import { AppError } from '../middleware/errorHandler';
 import { generateRecurringTransactions } from '../services/recurringGenerator';
+import { logger } from '../lib/logger';
 
 const router = Router();
 
@@ -59,15 +60,13 @@ router.post(
 
       const token = generateToken(user.id);
 
-      // Generate any pending recurring transactions on login
-      try {
-        await generateRecurringTransactions(user.id);
-      } catch (err) {
-        console.error('Failed to generate recurring transactions:', err);
-      }
-
       const { password: _, ...userWithoutPassword } = user;
       res.json({ token, user: userWithoutPassword });
+
+      // Generate any pending recurring transactions in background (non-blocking)
+      generateRecurringTransactions(user.id).catch((err) => {
+        logger.error({ err, userId: user.id }, 'Failed to generate recurring transactions');
+      });
     } catch (err) {
       next(err);
     }
@@ -118,10 +117,127 @@ router.put(
       const hashedPassword = await hashPassword(newPassword);
       await prisma.user.update({
         where: { id: req.userId },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, passwordChangedAt: new Date() },
       });
 
-      res.json({ message: 'Password updated successfully' });
+      // Issue a fresh token so the current session stays valid
+      const newToken = generateToken(user.id);
+
+      res.json({ message: 'Password updated successfully', token: newToken });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// GET /api/auth/export — GDPR data export
+router.get(
+  '/export',
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          currency: true,
+          createdAt: true,
+          updatedAt: true,
+          categories: {
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              icon: true,
+              color: true,
+              subcategories: { select: { id: true, name: true } },
+            },
+          },
+          transactions: {
+            select: {
+              id: true,
+              amount: true,
+              type: true,
+              description: true,
+              date: true,
+              notes: true,
+              categoryId: true,
+              subcategoryId: true,
+              deletedAt: true,
+              createdAt: true,
+            },
+          },
+          budgets: {
+            select: {
+              id: true,
+              amount: true,
+              month: true,
+              year: true,
+              isRecurring: true,
+              categoryId: true,
+            },
+          },
+          recurringTransactions: {
+            select: {
+              id: true,
+              amount: true,
+              type: true,
+              description: true,
+              frequency: true,
+              startDate: true,
+              endDate: true,
+              isActive: true,
+              notes: true,
+              categoryId: true,
+              subcategoryId: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      res.setHeader('Content-Disposition', 'attachment; filename="user-data-export.json"');
+      res.json({ exportedAt: new Date().toISOString(), data: user });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// DELETE /api/auth/account — GDPR account deletion
+router.delete(
+  '/account',
+  authMiddleware,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+      const { password } = req.body;
+
+      if (!password || typeof password !== 'string') {
+        throw new AppError('Password confirmation is required', 400);
+      }
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      const valid = await comparePassword(password, user.password);
+      if (!valid) {
+        throw new AppError('Incorrect password', 401);
+      }
+
+      // Cascade delete removes all related data (transactions, budgets, categories, etc.)
+      await prisma.user.delete({ where: { id: userId } });
+
+      res.json({ message: 'Account and all associated data permanently deleted' });
     } catch (err) {
       next(err);
     }

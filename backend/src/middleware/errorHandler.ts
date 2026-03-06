@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
+import { logger } from '../lib/logger';
 
 export class AppError extends Error {
   public statusCode: number;
@@ -18,7 +19,7 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  console.error('Error:', err.message);
+  logger.error({ err: err.message }, 'Request error');
 
   if (err instanceof AppError) {
     res.status(err.statusCode).json({ error: err.message });

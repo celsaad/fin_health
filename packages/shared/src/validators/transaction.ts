@@ -50,7 +50,7 @@ export const queryTransactionSchema = z.object({
 });
 
 export const bulkDeleteSchema = z.object({
-  ids: z.array(z.string()).min(1, 'At least one id is required'),
+  ids: z.array(z.string()).min(1, 'At least one id is required').max(200, 'Cannot delete more than 200 at once'),
 });
 
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;

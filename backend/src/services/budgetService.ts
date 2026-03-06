@@ -60,21 +60,12 @@ export async function getBudgetsWithSpent(
     _sum: { amount: true },
   });
 
-  // Also get total expenses for the overall budget
-  const totalExpenses = await prisma.transaction.aggregate({
-    where: {
-      userId,
-      type: 'expense',
-      deletedAt: null,
-      date: { gte: startDate, lte: endDate },
-    },
-    _sum: { amount: true },
-  });
-
   const expensesByCategory = new Map<string, Decimal>();
+  let overallSpent = new Decimal(0);
   for (const e of expenses) {
     if (e._sum.amount) {
       expensesByCategory.set(e.categoryId, e._sum.amount);
+      overallSpent = overallSpent.add(e._sum.amount);
     }
   }
 
@@ -86,7 +77,7 @@ export async function getBudgetsWithSpent(
       spent = expensesByCategory.get(budget.categoryId) || new Decimal(0);
     } else {
       // Overall budget
-      spent = totalExpenses._sum.amount || new Decimal(0);
+      spent = overallSpent;
     }
 
     const remaining = budget.amount.sub(spent);

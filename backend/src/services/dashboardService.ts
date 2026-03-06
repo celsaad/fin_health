@@ -121,37 +121,49 @@ export async function getYearlyOverview(
   userId: string,
   year: number
 ): Promise<MonthlyTotal[]> {
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year + 1, 0, 1);
+
+  const rows = await prisma.$queryRaw<
+    Array<{ month: number; type: string; total: Decimal }>
+  >`
+    SELECT
+      EXTRACT(MONTH FROM "date")::int AS "month",
+      "type"::text AS "type",
+      COALESCE(SUM("amount"), 0) AS "total"
+    FROM "Transaction"
+    WHERE "userId" = ${userId}
+      AND "deletedAt" IS NULL
+      AND "date" >= ${startDate}
+      AND "date" < ${endDate}
+    GROUP BY 1, 2
+  `;
+
+  const monthData = new Map<number, { income: Decimal; expenses: Decimal }>();
+  for (const row of rows) {
+    let data = monthData.get(row.month);
+    if (!data) {
+      data = { income: new Decimal(0), expenses: new Decimal(0) };
+      monthData.set(row.month, data);
+    }
+    if (row.type === 'income') {
+      data.income = new Decimal(row.total);
+    } else {
+      data.expenses = new Decimal(row.total);
+    }
+  }
+
   const months: MonthlyTotal[] = [];
-
   for (let month = 1; month <= 12; month++) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-
-    const baseWhere = {
-      userId,
-      deletedAt: null,
-      date: { gte: startDate, lte: endDate },
+    const data = monthData.get(month) || {
+      income: new Decimal(0),
+      expenses: new Decimal(0),
     };
-
-    const [incomeAgg, expenseAgg] = await Promise.all([
-      prisma.transaction.aggregate({
-        where: { ...baseWhere, type: 'income' },
-        _sum: { amount: true },
-      }),
-      prisma.transaction.aggregate({
-        where: { ...baseWhere, type: 'expense' },
-        _sum: { amount: true },
-      }),
-    ]);
-
-    const income = incomeAgg._sum.amount || new Decimal(0);
-    const expenses = expenseAgg._sum.amount || new Decimal(0);
-
     months.push({
       month,
-      income: income.toString(),
-      expenses: expenses.toString(),
-      net: income.sub(expenses).toString(),
+      income: data.income.toString(),
+      expenses: data.expenses.toString(),
+      net: data.income.sub(data.expenses).toString(),
     });
   }
 
@@ -278,43 +290,62 @@ export async function getTrend(
   months: number
 ): Promise<TrendPoint[]> {
   const now = new Date();
-  const points: TrendPoint[] = [];
+  const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
+  const rows = await prisma.$queryRaw<
+    Array<{ month: number; year: number; type: string; total: Decimal }>
+  >`
+    SELECT
+      EXTRACT(MONTH FROM "date")::int AS "month",
+      EXTRACT(YEAR FROM "date")::int AS "year",
+      "type"::text AS "type",
+      COALESCE(SUM("amount"), 0) AS "total"
+    FROM "Transaction"
+    WHERE "userId" = ${userId}
+      AND "deletedAt" IS NULL
+      AND "date" >= ${startDate}
+      AND "date" < ${endDate}
+    GROUP BY 1, 2, 3
+  `;
+
+  const dataMap = new Map<string, { income: Decimal; expenses: Decimal }>();
+  for (const row of rows) {
+    const key = `${row.year}-${row.month}`;
+    let data = dataMap.get(key);
+    if (!data) {
+      data = { income: new Decimal(0), expenses: new Decimal(0) };
+      dataMap.set(key, data);
+    }
+    if (row.type === 'income') {
+      data.income = new Decimal(row.total);
+    } else {
+      data.expenses = new Decimal(row.total);
+    }
+  }
+
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+
+  const points: TrendPoint[] = [];
   for (let i = months - 1; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const month = date.getMonth() + 1;
     const year = date.getFullYear();
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
-
-    const baseWhere = {
-      userId,
-      deletedAt: null,
-      date: { gte: startDate, lte: endDate },
+    const key = `${year}-${month}`;
+    const data = dataMap.get(key) || {
+      income: new Decimal(0),
+      expenses: new Decimal(0),
     };
-
-    const [incomeAgg, expenseAgg] = await Promise.all([
-      prisma.transaction.aggregate({
-        where: { ...baseWhere, type: 'income' },
-        _sum: { amount: true },
-      }),
-      prisma.transaction.aggregate({
-        where: { ...baseWhere, type: 'expense' },
-        _sum: { amount: true },
-      }),
-    ]);
-
-    const monthNames = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
 
     points.push({
       month,
       year,
       label: `${monthNames[month - 1]} ${year}`,
-      income: (incomeAgg._sum.amount || new Decimal(0)).toString(),
-      expenses: (expenseAgg._sum.amount || new Decimal(0)).toString(),
+      income: data.income.toString(),
+      expenses: data.expenses.toString(),
     });
   }
 

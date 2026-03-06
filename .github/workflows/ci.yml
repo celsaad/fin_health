@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: finhealth
+          POSTGRES_PASSWORD: finhealth_ci_password
+          POSTGRES_DB: finhealth
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U finhealth"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://finhealth:finhealth_ci_password@localhost:5432/finhealth?schema=public
+      JWT_SECRET: ci-test-secret
+      LOG_LEVEL: silent
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+        working-directory: backend
+
+      - name: Push schema to test DB
+        run: npx prisma db push --skip-generate
+        working-directory: backend
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test -w @fin-health/backend

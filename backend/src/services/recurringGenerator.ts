@@ -25,7 +25,19 @@ export async function generateRecurringTransactions(userId: string): Promise<num
   });
 
   const today = startOfDay(new Date());
-  let totalGenerated = 0;
+
+  const allInserts: Array<{
+    amount: (typeof templates)[number]['amount'];
+    type: (typeof templates)[number]['type'];
+    description: string;
+    date: Date;
+    notes: string | null;
+    categoryId: string;
+    subcategoryId: string | null;
+    userId: string;
+    recurringTransactionId: string;
+  }> = [];
+  const templateUpdates: Array<{ id: string; lastGenerated: Date }> = [];
 
   for (const template of templates) {
     // Skip if endDate has passed
@@ -41,17 +53,7 @@ export async function generateRecurringTransactions(userId: string): Promise<num
       nextDate = startOfDay(template.startDate);
     }
 
-    const transactionsToCreate: Array<{
-      amount: typeof template.amount;
-      type: typeof template.type;
-      description: string;
-      date: Date;
-      notes: string | null;
-      categoryId: string;
-      subcategoryId: string | null;
-      userId: string;
-      recurringTransactionId: string;
-    }> = [];
+    let lastDate: Date | null = null;
 
     // Generate all due transactions
     while (!isAfter(nextDate, today)) {
@@ -60,7 +62,7 @@ export async function generateRecurringTransactions(userId: string): Promise<num
         break;
       }
 
-      transactionsToCreate.push({
+      allInserts.push({
         amount: template.amount,
         type: template.type,
         description: template.description,
@@ -72,25 +74,26 @@ export async function generateRecurringTransactions(userId: string): Promise<num
         recurringTransactionId: template.id,
       });
 
+      lastDate = nextDate;
       nextDate = getNextDate(nextDate, template.frequency);
     }
 
-    if (transactionsToCreate.length > 0) {
-      await prisma.$transaction([
-        prisma.transaction.createMany({
-          data: transactionsToCreate,
-        }),
-        prisma.recurringTransaction.update({
-          where: { id: template.id },
-          data: {
-            lastGenerated: transactionsToCreate[transactionsToCreate.length - 1].date,
-          },
-        }),
-      ]);
-
-      totalGenerated += transactionsToCreate.length;
+    if (lastDate) {
+      templateUpdates.push({ id: template.id, lastGenerated: lastDate });
     }
   }
 
-  return totalGenerated;
+  if (allInserts.length === 0) return 0;
+
+  await prisma.$transaction([
+    prisma.transaction.createMany({ data: allInserts }),
+    ...templateUpdates.map((u) =>
+      prisma.recurringTransaction.update({
+        where: { id: u.id },
+        data: { lastGenerated: u.lastGenerated },
+      })
+    ),
+  ]);
+
+  return allInserts.length;
 }
