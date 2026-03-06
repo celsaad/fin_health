@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
 import { Sentry } from '../lib/sentry';
 import { logger } from '../lib/logger';
+import { t } from '../lib/i18n';
 
 export class AppError extends Error {
   public statusCode: number;
@@ -27,7 +28,7 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
       field: e.path.join('.'),
       message: e.message,
     }));
-    res.status(400).json({ error: 'Validation failed', details: formatted });
+    res.status(400).json({ error: t('validationFailed'), details: formatted });
     return;
   }
 
@@ -36,27 +37,27 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
       case 'P2002': {
         const target = (err.meta?.target as string[]) || [];
         res.status(409).json({
-          error: `A record with this ${target.join(', ')} already exists`,
+          error: t('duplicateRecord', { fields: target.join(', ') }),
         });
         return;
       }
       case 'P2025':
-        res.status(404).json({ error: 'Record not found' });
+        res.status(404).json({ error: t('notFound') });
         return;
       case 'P2003':
-        res.status(400).json({ error: 'Related record not found' });
+        res.status(400).json({ error: t('relatedNotFound') });
         return;
       default:
-        res.status(400).json({ error: 'Database error' });
+        res.status(400).json({ error: t('databaseError') });
         return;
     }
   }
 
   if (err instanceof Prisma.PrismaClientValidationError) {
-    res.status(400).json({ error: 'Invalid data provided' });
+    res.status(400).json({ error: t('invalidData') });
     return;
   }
 
   Sentry.captureException(err);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: t('internalError') });
 }

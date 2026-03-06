@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -48,6 +49,7 @@ interface RecurringFormProps {
 }
 
 export function RecurringForm({ open, onOpenChange, editingTransaction }: RecurringFormProps) {
+  const { t } = useTranslation();
   const createRecurring = useCreateRecurring();
   const updateRecurring = useUpdateRecurring();
   const isEditing = !!editingTransaction;
@@ -142,59 +144,71 @@ export function RecurringForm({ open, onOpenChange, editingTransaction }: Recurr
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? 'Edit Recurring Transaction' : 'Add Recurring Transaction'}
+            {isEditing ? t('recurring.editRecurring') : t('recurring.addRecurring')}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Update the recurring transaction details.'
-              : 'Create a new recurring transaction template.'}
+              ? t('recurring.editDesc')
+              : t('recurring.addDesc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('recurring.description')}</Label>
             <Input
               id="description"
-              placeholder="e.g., Netflix subscription"
+              placeholder={t('recurring.descPlaceholder')}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? 'recurring-description-error' : undefined}
+              required
               {...register('description')}
             />
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p id="recurring-description-error" className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">{t('recurring.amount')}</Label>
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
                 placeholder="0.00"
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? 'recurring-amount-error' : undefined}
+                required
                 {...register('amount')}
               />
-              {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+              {errors.amount && (
+                <p id="recurring-amount-error" className="text-sm text-destructive">
+                  {errors.amount.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{t('recurring.type')}</Label>
               <Select
                 value={selectedType}
                 onValueChange={(val) => setValue('type', val as 'expense' | 'income')}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Type" />
+                  <SelectValue placeholder={t('recurring.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">{t('recurring.expense')}</SelectItem>
+                  <SelectItem value="income">{t('recurring.income')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Frequency</Label>
+            <Label>{t('recurring.frequency')}</Label>
             <Select
               value={selectedFrequency}
               onValueChange={(val) =>
@@ -202,66 +216,80 @@ export function RecurringForm({ open, onOpenChange, editingTransaction }: Recurr
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Frequency" />
+                <SelectValue placeholder={t('recurring.frequency')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="biweekly">Biweekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
+                <SelectItem value="weekly">{t('recurring.weekly')}</SelectItem>
+                <SelectItem value="biweekly">{t('recurring.biweekly')}</SelectItem>
+                <SelectItem value="monthly">{t('recurring.monthly')}</SelectItem>
+                <SelectItem value="yearly">{t('recurring.yearly')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input id="startDate" type="date" {...register('startDate')} />
+              <Label htmlFor="startDate">{t('recurring.startDate')}</Label>
+              <Input
+                id="startDate"
+                type="date"
+                aria-invalid={!!errors.startDate}
+                aria-describedby={errors.startDate ? 'startDate-error' : undefined}
+                required
+                {...register('startDate')}
+              />
               {errors.startDate && (
-                <p className="text-sm text-destructive">{errors.startDate.message}</p>
+                <p id="startDate-error" className="text-sm text-destructive">
+                  {errors.startDate.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date (optional)</Label>
+              <Label htmlFor="endDate">{t('recurring.endDate')}</Label>
               <Input id="endDate" type="date" {...register('endDate')} />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="categoryName">Category</Label>
+              <Label htmlFor="categoryName">{t('recurring.category')}</Label>
               <Input
                 id="categoryName"
-                placeholder="e.g., Entertainment"
+                placeholder={t('recurring.categoryPlaceholder')}
+                aria-invalid={!!errors.categoryName}
+                aria-describedby={errors.categoryName ? 'recurring-category-error' : undefined}
+                required
                 {...register('categoryName')}
               />
               {errors.categoryName && (
-                <p className="text-sm text-destructive">{errors.categoryName.message}</p>
+                <p id="recurring-category-error" className="text-sm text-destructive">
+                  {errors.categoryName.message}
+                </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subcategoryName">Subcategory (optional)</Label>
+              <Label htmlFor="subcategoryName">{t('recurring.subcategoryOptional')}</Label>
               <Input
                 id="subcategoryName"
-                placeholder="e.g., Streaming"
+                placeholder={t('recurring.subcategoryPlaceholder')}
                 {...register('subcategoryName')}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Input id="notes" placeholder="Additional notes..." {...register('notes')} />
+            <Label htmlFor="notes">{t('recurring.notesOptional')}</Label>
+            <Input id="notes" placeholder={t('recurring.notesPlaceholder')} {...register('notes')} />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+              {isPending ? t('common.saving') : isEditing ? t('common.update') : t('common.create')}
             </Button>
           </DialogFooter>
         </form>

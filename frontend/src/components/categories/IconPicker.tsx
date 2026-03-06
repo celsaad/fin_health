@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ICON_OPTIONS, COLOR_OPTIONS, getCategoryIcon } from '@/lib/categoryIcons';
@@ -17,6 +18,7 @@ export function IconPicker({
   currentIcon,
   currentColor,
 }: IconPickerProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const updateAppearance = useUpdateCategoryAppearance();
 
@@ -49,13 +51,13 @@ export function IconPicker({
         <button
           type="button"
           className={`flex size-8 shrink-0 items-center justify-center rounded-full ${config.bgColor} ${config.darkBgColor} cursor-pointer transition-shadow hover:ring-2 hover:ring-primary/30`}
-          aria-label="Change category icon"
+          aria-label={t('categories.changeIcon')}
         >
           <Icon className={`size-4 ${config.color}`} />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-3">
-        <p className="text-xs font-medium text-muted-foreground mb-2">Icon</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">{t('categories.icon')}</p>
         <div className="grid grid-cols-5 gap-1.5 mb-3">
           {ICON_OPTIONS.map((opt) => {
             const isActive = activeIconName === opt.name;
@@ -74,7 +76,7 @@ export function IconPicker({
             );
           })}
         </div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Color</p>
+        <p className="text-xs font-medium text-muted-foreground mb-2">{t('categories.color')}</p>
         <div className="flex flex-wrap gap-2">
           {COLOR_OPTIONS.map((opt) => {
             const isActive = activeColorName === opt.name;

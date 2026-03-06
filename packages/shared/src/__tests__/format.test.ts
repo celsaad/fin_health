@@ -4,6 +4,7 @@ import {
   formatAmount,
   formatDate,
   formatDateGroupHeader,
+  formatPercent,
   getMonthName,
   getShortMonthName,
 } from '../format';
@@ -62,28 +63,48 @@ describe('formatDateGroupHeader', () => {
     vi.useRealTimers();
   });
 
-  it('returns TODAY for today', () => {
+  it('returns today key for today', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-06-15T12:00:00'));
     const result = formatDateGroupHeader('2024-06-15');
-    expect(result).toMatch(/^TODAY, JUN 15$/);
+    expect(result).toEqual({ key: 'today', formatted: 'JUN 15' });
     vi.useRealTimers();
   });
 
-  it('returns YESTERDAY for yesterday', () => {
+  it('returns yesterday key for yesterday', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-06-15T12:00:00'));
     const result = formatDateGroupHeader('2024-06-14');
-    expect(result).toMatch(/^YESTERDAY, JUN 14$/);
+    expect(result).toEqual({ key: 'yesterday', formatted: 'JUN 14' });
     vi.useRealTimers();
   });
 
-  it('returns day name for other dates', () => {
+  it('returns null key with day name for other dates', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2024-06-15T12:00:00'));
     const result = formatDateGroupHeader('2024-06-10');
-    expect(result).toBe('MON, JUN 10');
+    expect(result).toEqual({ key: null, formatted: 'MON, JUN 10' });
     vi.useRealTimers();
+  });
+});
+
+describe('formatPercent', () => {
+  it('formats whole percentages', () => {
+    expect(formatPercent(50)).toBe('50%');
+    expect(formatPercent(100)).toBe('100%');
+  });
+
+  it('formats with decimals', () => {
+    expect(formatPercent(33.33, 1)).toBe('33.3%');
+    expect(formatPercent(66.667, 2)).toBe('66.67%');
+  });
+
+  it('rounds by default', () => {
+    expect(formatPercent(33.5)).toBe('34%');
+  });
+
+  it('formats zero', () => {
+    expect(formatPercent(0)).toBe('0%');
   });
 });
 

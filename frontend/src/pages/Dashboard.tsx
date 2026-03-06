@@ -1,32 +1,46 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CardSkeleton, TableSkeleton } from '@/components/shared/LoadingSkeleton';
 import { QueryError } from '@/components/shared/QueryError';
 import { DateRangeSelector } from '@/components/dashboard/DateRangeSelector';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
-import { ExpensePieChart } from '@/components/dashboard/ExpensePieChart';
+import { ExpenseTreemap } from '@/components/dashboard/ExpenseTreemap';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { TopCategories } from '@/components/dashboard/TopCategories';
 import { MonthlyTable } from '@/components/dashboard/MonthlyTable';
-import { useSummary, useBreakdown, useTrend } from '@/hooks/useDashboard';
+import { useSummary, useCategoryBreakdown, useTrend } from '@/hooks/useDashboard';
 import { useBudgets } from '@/hooks/useBudgets';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
 
   const summary$ = useSummary(month, year);
-  const breakdown$ = useBreakdown(month, year);
+  const categoryBreakdown$ = useCategoryBreakdown(month, year);
   const trend$ = useTrend(6);
   const { data: budgets } = useBudgets(month, year);
 
-  const hasError = summary$.isError || breakdown$.isError || trend$.isError;
+  // Derive flat breakdown for TopCategories and MonthlyTable
+  const breakdown = useMemo(
+    () =>
+      categoryBreakdown$.data?.map((cat) => ({
+        categoryId: cat.categoryId,
+        categoryName: cat.categoryName,
+        total: cat.total,
+        percentage: cat.percentage,
+      })),
+    [categoryBreakdown$.data],
+  );
+
+  const hasError = summary$.isError || categoryBreakdown$.isError || trend$.isError;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <h1 className="text-2xl font-bold">{t('dashboard.title')}</h1>
           <p className="text-sm text-muted-foreground">Your financial overview at a glance</p>
         </div>
         <DateRangeSelector
@@ -43,7 +57,7 @@ export default function Dashboard() {
         <QueryError
           onRetry={() => {
             summary$.refetch();
-            breakdown$.refetch();
+            categoryBreakdown$.refetch();
             trend$.refetch();
           }}
         />
@@ -60,10 +74,10 @@ export default function Dashboard() {
           ) : null}
 
           <div className="grid gap-6 lg:grid-cols-2">
-            {breakdown$.isLoading ? (
+            {categoryBreakdown$.isLoading ? (
               <CardSkeleton />
-            ) : breakdown$.data ? (
-              <ExpensePieChart breakdown={breakdown$.data} />
+            ) : categoryBreakdown$.data ? (
+              <ExpenseTreemap categories={categoryBreakdown$.data} />
             ) : null}
 
             {trend$.isLoading ? (
@@ -74,16 +88,16 @@ export default function Dashboard() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            {breakdown$.isLoading ? (
+            {categoryBreakdown$.isLoading ? (
               <CardSkeleton />
-            ) : breakdown$.data ? (
-              <TopCategories breakdown={breakdown$.data} budgets={budgets} />
+            ) : breakdown ? (
+              <TopCategories breakdown={breakdown} budgets={budgets} />
             ) : null}
 
-            {breakdown$.isLoading ? (
+            {categoryBreakdown$.isLoading ? (
               <TableSkeleton rows={5} columns={3} />
-            ) : breakdown$.data ? (
-              <MonthlyTable breakdown={breakdown$.data} />
+            ) : breakdown ? (
+              <MonthlyTable breakdown={breakdown} />
             ) : null}
           </div>
         </>

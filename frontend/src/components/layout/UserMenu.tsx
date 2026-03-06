@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Settings, User } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export function UserMenu() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -37,11 +39,11 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/settings')}>
           <Settings className="mr-2 size-4" />
-          Settings
+          {t('nav.settings')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-2 size-4" />
-          Log out
+          {t('common.logOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

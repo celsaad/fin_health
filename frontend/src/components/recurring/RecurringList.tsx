@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -28,6 +29,7 @@ interface RecurringListProps {
 }
 
 export function RecurringList({ transactions, onEdit }: RecurringListProps) {
+  const { t } = useTranslation();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteRecurring = useDeleteRecurring();
   const toggleRecurring = useToggleRecurring();
@@ -53,14 +55,14 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Frequency</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('recurring.description')}</TableHead>
+              <TableHead>{t('recurring.amount')}</TableHead>
+              <TableHead>{t('recurring.type')}</TableHead>
+              <TableHead>{t('recurring.frequency')}</TableHead>
+              <TableHead>{t('recurring.category')}</TableHead>
+              <TableHead>{t('recurring.startDate')}</TableHead>
+              <TableHead>{t('recurring.status')}</TableHead>
+              <TableHead className="text-right">{t('common.actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -77,7 +79,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                         : 'border-0 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                     }
                   >
-                    {txn.type === 'income' ? 'Income' : 'Expense'}
+                    {txn.type === 'income' ? t('recurring.income') : t('recurring.expense')}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -100,7 +102,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                       onCheckedChange={() => toggleRecurring.mutate(txn.id)}
                     />
                     <span className="text-sm text-muted-foreground">
-                      {txn.isActive ? 'Active' : 'Paused'}
+                      {txn.isActive ? t('recurring.active') : t('recurring.paused')}
                     </span>
                   </div>
                 </TableCell>
@@ -110,7 +112,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => onEdit(txn)}
-                      aria-label="Edit"
+                      aria-label={t('recurring.editAriaLabel')}
                     >
                       <Pencil className="size-4" />
                     </Button>
@@ -118,7 +120,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                       variant="ghost"
                       size="icon-sm"
                       onClick={() => setDeleteId(txn.id)}
-                      aria-label="Delete"
+                      aria-label={t('recurring.deleteAriaLabel')}
                     >
                       <Trash2 className="size-4" />
                     </Button>
@@ -135,11 +137,11 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
         onOpenChange={(open) => {
           if (!open) setDeleteId(null);
         }}
-        title="Delete Recurring Transaction"
-        description="Are you sure you want to delete this recurring transaction? This action cannot be undone."
+        title={t('recurring.deleteRecurring')}
+        description={t('recurring.deleteRecurringConfirm')}
         onConfirm={handleDelete}
         variant="destructive"
-        confirmLabel="Delete"
+        confirmLabel={t('common.delete')}
       />
     </>
   );

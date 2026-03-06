@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -14,16 +15,17 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/spending', label: 'Spending', icon: BarChart3 },
-  { to: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
-  { to: '/categories', label: 'Categories', icon: Tag },
-  { to: '/budgets', label: 'Budgets', icon: PiggyBank },
-  { to: '/recurring', label: 'Recurring', icon: RefreshCw },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/', labelKey: 'nav.dashboard', icon: LayoutDashboard, end: true },
+  { to: '/spending', labelKey: 'nav.spending', icon: BarChart3 },
+  { to: '/transactions', labelKey: 'nav.transactions', icon: ArrowLeftRight },
+  { to: '/categories', labelKey: 'nav.categories', icon: Tag },
+  { to: '/budgets', labelKey: 'nav.budgets', icon: PiggyBank },
+  { to: '/recurring', labelKey: 'nav.recurring', icon: RefreshCw },
+  { to: '/settings', labelKey: 'nav.settings', icon: Settings },
 ];
 
 export function Sidebar() {
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem('sidebarCollapsed') === 'true',
   );
@@ -46,13 +48,13 @@ export function Sidebar() {
       <div className="flex h-16 items-center px-6">
         {!collapsed && <h1 className="text-xl font-bold text-white tracking-tight">FinHealth</h1>}
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav aria-label="Main navigation" className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             end={item.end}
-            title={collapsed ? item.label : undefined}
+            title={collapsed ? t(item.labelKey) : undefined}
             className={({ isActive }) =>
               cn(
                 'flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
@@ -63,15 +65,15 @@ export function Sidebar() {
               )
             }
           >
-            <item.icon className="size-5 shrink-0" />
-            {!collapsed && item.label}
+            <item.icon className="size-5 shrink-0" aria-hidden="true" />
+            {!collapsed && t(item.labelKey)}
           </NavLink>
         ))}
       </nav>
       <div className="border-t border-sidebar-border px-3 py-3">
         <button
           onClick={toggleCollapsed}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? t('common.expandSidebar') : t('common.collapseSidebar')}
           className={cn(
             'flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-white',
             collapsed ? 'justify-center' : 'gap-3',
@@ -82,7 +84,7 @@ export function Sidebar() {
           ) : (
             <>
               <PanelLeftClose className="size-5" />
-              Collapse
+              {t('common.collapse')}
             </>
           )}
         </button>

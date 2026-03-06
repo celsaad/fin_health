@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { ArrowUpDown } from 'lucide-react';
 import {
@@ -12,13 +13,14 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { BreakdownItem } from '@/hooks/useDashboard';
-import { formatCurrency } from '@fin-health/shared/format';
+import { formatCurrency, formatPercent } from '@fin-health/shared/format';
 
 interface MonthlyTableProps {
   breakdown: BreakdownItem[];
 }
 
 export function MonthlyTable({ breakdown }: MonthlyTableProps) {
+  const { t } = useTranslation();
   const [sortAsc, setSortAsc] = useState(false);
 
   const sorted = [...breakdown].sort((a, b) => (sortAsc ? a.total - b.total : b.total - a.total));
@@ -27,10 +29,10 @@ export function MonthlyTable({ breakdown }: MonthlyTableProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Expense Details</CardTitle>
+          <CardTitle>{t('dashboard.expenseDetails')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No expenses for this period</p>
+          <p className="text-muted-foreground">{t('dashboard.noExpensesForPeriod')}</p>
         </CardContent>
       </Card>
     );
@@ -39,13 +41,13 @@ export function MonthlyTable({ breakdown }: MonthlyTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expense Details</CardTitle>
+        <CardTitle>{t('dashboard.expenseDetails')}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Category</TableHead>
+              <TableHead>{t('dashboard.category')}</TableHead>
               <TableHead>
                 <Button
                   variant="ghost"
@@ -53,11 +55,11 @@ export function MonthlyTable({ breakdown }: MonthlyTableProps) {
                   className="-ml-3 h-8"
                   onClick={() => setSortAsc(!sortAsc)}
                 >
-                  Amount
+                  {t('dashboard.amount')}
                   <ArrowUpDown className="ml-1 size-3" />
                 </Button>
               </TableHead>
-              <TableHead>Percentage</TableHead>
+              <TableHead>{t('dashboard.percentage')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -81,7 +83,7 @@ export function MonthlyTable({ breakdown }: MonthlyTableProps) {
                       />
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {item.percentage.toFixed(1)}%
+                      {formatPercent(item.percentage, 1)}
                     </span>
                   </div>
                 </TableCell>

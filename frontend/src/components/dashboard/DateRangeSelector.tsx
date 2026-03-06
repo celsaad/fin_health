@@ -1,38 +1,10 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
-
-const SHORT_MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
+import { getMonthName, getShortMonthName } from '@fin-health/shared/format';
 
 interface DateRangeSelectorProps {
   month: number;
@@ -49,6 +21,7 @@ function getNextMonth(m: number, y: number) {
 }
 
 export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorProps) {
+  const { t } = useTranslation();
   const dirRef = useRef<'left' | 'right'>('right');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);
@@ -71,7 +44,7 @@ export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorPr
     onChange(m, pickerYear);
   };
 
-  const label = `${MONTH_NAMES[month - 1]} ${year}`;
+  const label = `${getMonthName(month)} ${year}`;
   const animClass = dirRef.current === 'right' ? 'animate-slide-left' : 'animate-slide-right';
 
   return (
@@ -121,7 +94,7 @@ export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorPr
 
           {/* Month grid */}
           <div className="grid grid-cols-3 gap-1.5">
-            {SHORT_MONTHS.map((name, i) => {
+            {Array.from({ length: 12 }, (_, i) => getShortMonthName(i + 1)).map((name, i) => {
               const m = i + 1;
               const isActive = m === month && pickerYear === year;
               return (
@@ -150,4 +123,3 @@ export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorPr
   );
 }
 
-export { MONTH_NAMES };

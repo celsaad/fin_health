@@ -1,9 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { BreakdownItem } from '@/hooks/useDashboard';
 import type { Budget } from '@/hooks/useBudgets';
-import { formatCurrency } from '@fin-health/shared/format';
+import { formatCurrency, formatPercent } from '@fin-health/shared/format';
 
 interface TopCategoriesProps {
   breakdown: BreakdownItem[];
@@ -11,6 +12,7 @@ interface TopCategoriesProps {
 }
 
 export function TopCategories({ breakdown, budgets }: TopCategoriesProps) {
+  const { t } = useTranslation();
   const sorted = [...breakdown].sort((a, b) => b.total - a.total).slice(0, 6);
 
   if (sorted.length === 0) {
@@ -24,7 +26,7 @@ export function TopCategories({ breakdown, budgets }: TopCategoriesProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Top Categories</CardTitle>
+        <CardTitle>{t('dashboard.topCategories')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -43,12 +45,12 @@ export function TopCategories({ breakdown, budgets }: TopCategoriesProps) {
                 <div
                   className={`flex size-10 shrink-0 items-center justify-center rounded-full ${config.bgColor} ${config.darkBgColor}`}
                 >
-                  <Icon className={`size-5 ${config.color}`} />
+                  <Icon className={`size-5 ${config.color}`} aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.categoryName}</p>
                   <p className="text-xs text-muted-foreground">
-                    {item.percentage.toFixed(0)}% of expenses
+                    {formatPercent(item.percentage)} {t('dashboard.ofExpenses')}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
@@ -63,7 +65,7 @@ export function TopCategories({ breakdown, budgets }: TopCategoriesProps) {
                             : 'text-green-600 dark:text-green-400'
                       }`}
                     >
-                      {pct}% of budget
+                      {pct}% {t('dashboard.ofBudget')}
                     </p>
                   )}
                 </div>

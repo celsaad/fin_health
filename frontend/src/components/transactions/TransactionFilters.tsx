@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +47,7 @@ function FilterChip({
 }
 
 export function TransactionFilters({ filters, onFilterChange }: TransactionFiltersProps) {
+  const { t } = useTranslation();
   const { data: categories = [] } = useCategories();
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showSubcategoryPicker, setShowSubcategoryPicker] = useState(false);
@@ -106,18 +108,18 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
       {/* Type filter chips */}
       <div className="flex items-center gap-2">
         <FilterChip
-          label="All"
+          label={t('transactions.all')}
           active={!filters.type}
           onClick={() => onFilterChange({ ...filters, type: '', page: 1 })}
         />
         <FilterChip
-          label="Expense"
+          label={t('transactions.expense')}
           active={filters.type === 'expense'}
           onClick={() => handleTypeChange('expense')}
           onClear={() => onFilterChange({ ...filters, type: '', page: 1 })}
         />
         <FilterChip
-          label="Income"
+          label={t('transactions.income')}
           active={filters.type === 'income'}
           onClick={() => handleTypeChange('income')}
           onClear={() => onFilterChange({ ...filters, type: '', page: 1 })}
@@ -127,7 +129,7 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
       {/* Category chip with dropdown */}
       <div className="relative">
         <FilterChip
-          label={selectedCategory ? selectedCategory.name : 'Category'}
+          label={selectedCategory ? selectedCategory.name : t('transactions.categoryLabel')}
           active={!!filters.categoryId}
           onClick={() => setShowCategoryPicker(!showCategoryPicker)}
           onClear={filters.categoryId ? () => handleCategoryChange('all') : undefined}
@@ -140,7 +142,7 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
                 className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
                 onClick={() => handleCategoryChange('all')}
               >
-                All categories
+                {t('transactions.allCategories')}
               </button>
               {categories.map((cat) => (
                 <button
@@ -162,8 +164,8 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
           <FilterChip
             label={
               filters.subcategoryId
-                ? (subcategories.find((s) => s.id === filters.subcategoryId)?.name ?? 'Subcategory')
-                : 'Subcategory'
+                ? (subcategories.find((s) => s.id === filters.subcategoryId)?.name ?? t('transactions.subcategory'))
+                : t('transactions.subcategory')
             }
             active={!!filters.subcategoryId}
             onClick={() => setShowSubcategoryPicker(!showSubcategoryPicker)}
@@ -177,7 +179,7 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
                   className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
                   onClick={() => handleSubcategoryChange('all')}
                 >
-                  All subcategories
+                  {t('transactions.allSubcategories')}
                 </button>
                 {subcategories.map((sub) => (
                   <button
@@ -196,7 +198,7 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
 
       {/* Date filters */}
       <div className="grid gap-1.5">
-        <Label className="text-xs text-muted-foreground">Start date</Label>
+        <Label className="text-xs text-muted-foreground">{t('transactions.startDate')}</Label>
         <Input
           type="date"
           value={filters.startDate || ''}
@@ -206,7 +208,7 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
       </div>
 
       <div className="grid gap-1.5">
-        <Label className="text-xs text-muted-foreground">End date</Label>
+        <Label className="text-xs text-muted-foreground">{t('transactions.endDate')}</Label>
         <Input
           type="date"
           value={filters.endDate || ''}

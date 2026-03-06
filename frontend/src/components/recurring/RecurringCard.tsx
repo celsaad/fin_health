@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,7 @@ export const RecurringCard = memo(function RecurringCard({
   onEdit,
   onDelete,
 }: RecurringCardProps) {
+  const { t } = useTranslation();
   const toggleRecurring = useToggleRecurring();
   const categoryName = transaction.category?.name ?? '';
   const config = getCategoryIcon(
@@ -45,12 +47,12 @@ export const RecurringCard = memo(function RecurringCard({
         <p className="text-sm font-semibold truncate">{transaction.description}</p>
         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
           <span className="text-xs text-muted-foreground">
-            Next: {format(new Date(transaction.startDate), 'MMM dd')}
+            {t('recurring.next')}: {format(new Date(transaction.startDate), 'MMM dd')}
           </span>
           <FrequencyBadge frequency={transaction.frequency} />
           {!transaction.isActive && (
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-              Paused
+              {t('recurring.paused')}
             </Badge>
           )}
         </div>
@@ -72,7 +74,7 @@ export const RecurringCard = memo(function RecurringCard({
             variant="ghost"
             size="icon-xs"
             onClick={() => onEdit(transaction)}
-            aria-label="Edit"
+            aria-label={t('recurring.editAriaLabel')}
           >
             <Pencil className="size-3.5" />
           </Button>
@@ -80,7 +82,7 @@ export const RecurringCard = memo(function RecurringCard({
             variant="ghost"
             size="icon-xs"
             onClick={() => onDelete(transaction.id)}
-            aria-label="Delete"
+            aria-label={t('recurring.deleteAriaLabel')}
           >
             <Trash2 className="size-3.5 text-destructive" />
           </Button>

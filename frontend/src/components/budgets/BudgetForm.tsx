@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,6 +23,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCategories } from '@/hooks/useCategories';
 import { useUpsertBudget } from '@/hooks/useBudgets';
+import { getMonthName } from '@fin-health/shared/format';
 
 const budgetSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
@@ -41,20 +43,10 @@ interface BudgetFormProps {
   existingCategoryIds?: string[];
 }
 
-const MONTHS = [
-  { value: '1', label: 'January' },
-  { value: '2', label: 'February' },
-  { value: '3', label: 'March' },
-  { value: '4', label: 'April' },
-  { value: '5', label: 'May' },
-  { value: '6', label: 'June' },
-  { value: '7', label: 'July' },
-  { value: '8', label: 'August' },
-  { value: '9', label: 'September' },
-  { value: '10', label: 'October' },
-  { value: '11', label: 'November' },
-  { value: '12', label: 'December' },
-];
+const MONTHS = Array.from({ length: 12 }, (_, i) => ({
+  value: String(i + 1),
+  label: getMonthName(i + 1),
+}));
 
 export function BudgetForm({
   open,
@@ -63,6 +55,7 @@ export function BudgetForm({
   defaultYear,
   existingCategoryIds = [],
 }: BudgetFormProps) {
+  const { t } = useTranslation();
   const { data: categories } = useCategories();
   const upsertBudget = useUpsertBudget();
 
@@ -110,22 +103,29 @@ export function BudgetForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Budget</DialogTitle>
+          <DialogTitle>{t('budgets.addBudget')}</DialogTitle>
           <DialogDescription>
-            Set a budget for a specific category or an overall monthly budget.
+            {t('budgets.addBudgetDesc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="amount">{t('budgets.amount')}</Label>
             <Input
               id="amount"
               type="number"
               step="0.01"
               placeholder="0.00"
+              aria-invalid={!!errors.amount}
+              aria-describedby={errors.amount ? 'budget-amount-error' : undefined}
+              required
               {...register('amount')}
             />
-            {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+            {errors.amount && (
+              <p id="budget-amount-error" className="text-sm text-destructive">
+                {errors.amount.message}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -135,20 +135,20 @@ export function BudgetForm({
               onCheckedChange={(checked) => setValue('isRecurring', checked === true)}
             />
             <Label htmlFor="isRecurring" className="cursor-pointer">
-              Recurring monthly
+              {t('budgets.recurringMonthly')}
             </Label>
           </div>
 
           {!isRecurring && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Month</Label>
+                <Label>{t('budgets.month')}</Label>
                 <Select
                   value={String(selectedMonth)}
                   onValueChange={(val) => setValue('month', Number(val))}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Month" />
+                    <SelectValue placeholder={t('budgets.month')} />
                   </SelectTrigger>
                   <SelectContent>
                     {MONTHS.map((m) => (
@@ -161,7 +161,7 @@ export function BudgetForm({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="year">Year</Label>
+                <Label htmlFor="year">{t('budgets.year')}</Label>
                 <Input id="year" type="number" {...register('year')} />
                 {errors.year && <p className="text-sm text-destructive">{errors.year.message}</p>}
               </div>
@@ -169,13 +169,13 @@ export function BudgetForm({
           )}
 
           <div className="space-y-2">
-            <Label>Category</Label>
+            <Label>{t('budgets.category')}</Label>
             <Select
               value={selectedCategoryId || undefined}
               onValueChange={(val) => setValue('categoryId', val, { shouldValidate: true })}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder={t('budgets.selectCategory')} />
               </SelectTrigger>
               <SelectContent>
                 {categories
@@ -188,24 +188,26 @@ export function BudgetForm({
               </SelectContent>
             </Select>
             {errors.categoryId && (
-              <p className="text-sm text-destructive">{errors.categoryId.message}</p>
+              <p id="categoryId-error" className="text-sm text-destructive">
+                {errors.categoryId.message}
+              </p>
             )}
             {categories?.filter((c) => c.type === 'expense' && !existingCategoryIds.includes(c.id))
               .length === 0 && (
               <p className="text-xs text-muted-foreground">
                 {categories?.filter((c) => c.type === 'expense').length === 0
-                  ? 'Add transactions to create expense categories for per-category budgets.'
-                  : 'All expense categories already have budgets for this period.'}
+                  ? t('budgets.noExpenseCategories')
+                  : t('budgets.allCategoriesBudgeted')}
               </p>
             )}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={upsertBudget.isPending}>
-              {upsertBudget.isPending ? 'Saving...' : 'Save Budget'}
+              {upsertBudget.isPending ? t('common.saving') : t('budgets.saveBudget')}
             </Button>
           </DialogFooter>
         </form>

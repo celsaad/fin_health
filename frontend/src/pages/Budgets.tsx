@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Copy, PlusCircle, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -11,6 +12,7 @@ import { DateRangeSelector } from '@/components/dashboard/DateRangeSelector';
 import { useBudgets, useCopyPreviousMonthBudgets } from '@/hooks/useBudgets';
 
 export default function Budgets() {
+  const { t } = useTranslation();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -25,9 +27,9 @@ export default function Budgets() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Budgets</h1>
+          <h1 className="text-2xl font-bold">{t('budgets.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            Set and track your monthly spending budgets
+            {t('budgets.subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -45,11 +47,11 @@ export default function Budgets() {
             disabled={copyBudgets.isPending}
           >
             <Copy className="size-4" />
-            Copy last month
+            {t('budgets.copyLastMonth')}
           </Button>
           <Button onClick={() => setFormOpen(true)}>
             <PlusCircle className="size-4" />
-            Add Budget
+            {t('budgets.addBudget')}
           </Button>
         </div>
       </div>
@@ -69,9 +71,9 @@ export default function Budgets() {
         <>
           <EmptyState
             icon={Wallet}
-            title="No budgets yet"
-            description="Create your first budget to start tracking your spending against your goals."
-            actionLabel="Add Budget"
+            title={t('budgets.noBudgets')}
+            description={t('budgets.noBudgetsDesc')}
+            actionLabel={t('budgets.addBudget')}
             onAction={() => setFormOpen(true)}
           />
           <div className="-mt-4 text-center">
@@ -81,7 +83,7 @@ export default function Budgets() {
               onClick={() => copyBudgets.mutate({ month, year })}
               disabled={copyBudgets.isPending}
             >
-              Or copy budgets from last month
+              {t('budgets.orCopyLastMonth')}
             </button>
           </div>
         </>
@@ -93,7 +95,7 @@ export default function Budgets() {
 
           {categoryBudgets.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold">Category Budgets</h2>
+              <h2 className="mb-4 text-lg font-semibold">{t('budgets.categoryBudgets')}</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {categoryBudgets.map((budget) => (
                   <BudgetCard key={budget.id} budget={budget} />

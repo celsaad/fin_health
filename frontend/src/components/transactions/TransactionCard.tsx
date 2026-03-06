@@ -1,11 +1,11 @@
 import { memo } from 'react';
-import { format } from 'date-fns';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { Transaction } from '@/hooks/useTransactions';
-import { formatCurrency } from '@fin-health/shared/format';
+import { formatCurrency, formatDateGroupHeader } from '@fin-health/shared/format';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionCardProps {
   transaction: Transaction;
@@ -31,7 +31,7 @@ export const TransactionCard = memo(function TransactionCard({
       <div
         className={`flex size-10 shrink-0 items-center justify-center rounded-full ${config.bgColor} ${config.darkBgColor}`}
       >
-        <Icon className={`size-5 ${config.color}`} />
+        <Icon className={`size-5 ${config.color}`} aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate">{transaction.description}</p>
@@ -84,18 +84,16 @@ export const TransactionCard = memo(function TransactionCard({
 });
 
 export const DateGroupHeader = memo(function DateGroupHeader({ date }: { date: string }) {
-  const d = new Date(date);
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
+  const { t } = useTranslation();
+  const { key, formatted } = formatDateGroupHeader(date);
 
   let label: string;
-  if (d.toDateString() === today.toDateString()) {
-    label = `Today, ${format(d, 'MMM dd')}`;
-  } else if (d.toDateString() === yesterday.toDateString()) {
-    label = `Yesterday, ${format(d, 'MMM dd')}`;
+  if (key === 'today') {
+    label = `${t('transactions.today')}, ${formatted}`;
+  } else if (key === 'yesterday') {
+    label = `${t('transactions.yesterday')}, ${formatted}`;
   } else {
-    label = format(d, 'EEE, MMM dd, yyyy');
+    label = formatted;
   }
 
   return (

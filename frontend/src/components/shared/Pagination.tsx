@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,12 +37,14 @@ export function Pagination({
     return pages;
   };
 
+  const { t } = useTranslation();
+
   if (totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Rows per page</span>
+        <span className="text-sm text-muted-foreground">{t('pagination.rowsPerPage')}</span>
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
           <SelectTrigger className="w-18">
             <SelectValue />

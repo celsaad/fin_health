@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -14,10 +15,11 @@ interface SearchInputProps {
 export function SearchInput({
   value: externalValue,
   onChange,
-  placeholder = 'Search...',
+  placeholder,
   delay = 300,
   className,
 }: SearchInputProps) {
+  const { t } = useTranslation();
   const [localValue, setLocalValue] = useState(externalValue ?? '');
   const debouncedValue = useDebounce(localValue, delay);
 
@@ -38,7 +40,7 @@ export function SearchInput({
         type="text"
         value={localValue}
         onChange={(e) => setLocalValue(e.target.value)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('search.defaultPlaceholder')}
         className="pl-9"
       />
     </div>

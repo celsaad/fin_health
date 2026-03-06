@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Receipt } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import { ExportButton } from '@/components/transactions/ExportButton';
 import { useTransactions, type TransactionFilters as Filters } from '@/hooks/useTransactions';
 
 export default function Transactions() {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     page: 1,
@@ -52,27 +54,27 @@ export default function Transactions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">Manage your income and expenses</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t('transactions.title')}</h1>
+          <p className="text-muted-foreground">{t('transactions.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton filters={filters} />
           <Button onClick={() => setFormOpen(true)}>
             <Plus className="size-4" />
-            Add Transaction
+            {t('transactions.addTransaction')}
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="sr-only">Transaction List</CardTitle>
+          <CardTitle className="sr-only">{t('transactions.listTitle')}</CardTitle>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <TransactionFilters filters={filters} onFilterChange={setFilters} />
             <SearchInput
               value={filters.search}
               onChange={handleSearchChange}
-              placeholder="Search transactions..."
+              placeholder={t('transactions.searchPlaceholder')}
               className="sm:w-64"
             />
           </div>
@@ -86,14 +88,14 @@ export default function Transactions() {
             <EmptyState
               icon={Receipt}
               title={
-                filters.search || hasActiveFilters ? 'No transactions found' : 'No transactions yet'
+                filters.search || hasActiveFilters ? t('transactions.noResults') : t('transactions.noTransactions')
               }
               description={
                 filters.search || hasActiveFilters
-                  ? 'Try adjusting your search or filters.'
-                  : 'Get started by adding your first transaction.'
+                  ? t('transactions.noResultsDesc')
+                  : t('transactions.noTransactionsDesc')
               }
-              actionLabel={filters.search || hasActiveFilters ? undefined : 'Add Transaction'}
+              actionLabel={filters.search || hasActiveFilters ? undefined : t('transactions.addTransaction')}
               onAction={filters.search || hasActiveFilters ? undefined : () => setFormOpen(true)}
             />
           ) : (

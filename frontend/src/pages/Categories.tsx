@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FolderOpen } from 'lucide-react';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ListSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -7,6 +8,7 @@ import { CategoryList } from '@/components/categories/CategoryList';
 import { useCategories } from '@/hooks/useCategories';
 
 export default function Categories() {
+  const { t } = useTranslation();
   const { data: categories = [], isLoading, isError, refetch } = useCategories();
   const [activeType, setActiveType] = useState<'expense' | 'income'>('expense');
 
@@ -20,9 +22,9 @@ export default function Categories() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Categories</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('categories.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your transaction categories and subcategories
+            {t('categories.subtitle')}
           </p>
         </div>
 
@@ -38,7 +40,7 @@ export default function Categories() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {type === 'expense' ? 'Expense' : 'Income'}
+              {type === 'expense' ? t('categories.expense') : t('categories.income')}
             </button>
           ))}
         </div>
@@ -51,21 +53,21 @@ export default function Categories() {
       ) : categories.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
-          title="No categories yet"
-          description="Categories are created automatically when you add transactions. Start by creating a transaction with a new category name."
+          title={t('categories.noCategories')}
+          description={t('categories.noCategoriesDesc')}
         />
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">
-              {activeType === 'expense' ? 'Expense' : 'Income'} Categories
+              {activeType === 'expense' ? t('categories.expenseCategories') : t('categories.incomeCategories')}
             </h2>
-            <span className="text-sm text-muted-foreground">{count} Total</span>
+            <span className="text-sm text-muted-foreground">{t('categories.total', { count })}</span>
           </div>
           {count > 0 ? (
             <CategoryList categories={displayedCategories} />
           ) : (
-            <p className="py-8 text-center text-muted-foreground">No {activeType} categories yet</p>
+            <p className="py-8 text-center text-muted-foreground">{t('categories.noTypeCategories', { type: activeType })}</p>
           )}
         </div>
       )}

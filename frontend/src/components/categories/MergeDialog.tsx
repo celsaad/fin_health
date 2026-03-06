@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,7 @@ interface MergeDialogProps {
 }
 
 export function MergeDialog({ open, onOpenChange, sourceCategory, categories }: MergeDialogProps) {
+  const { t } = useTranslation();
   const [targetId, setTargetId] = useState('');
   const mergeMutation = useMergeCategory();
 
@@ -49,21 +51,22 @@ export function MergeDialog({ open, onOpenChange, sourceCategory, categories }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Merge Category</DialogTitle>
+          <DialogTitle>{t('categories.mergeCategory')}</DialogTitle>
           <DialogDescription>
-            Merge "{sourceCategory.name}" into another category. All{' '}
-            {sourceCategory._count.transactions} transaction
-            {sourceCategory._count.transactions !== 1 ? 's' : ''} will be reassigned to the target
-            category.
+            {t('categories.mergeCategoryDesc', {
+              source: sourceCategory.name,
+              count: sourceCategory._count.transactions,
+              plural: sourceCategory._count.transactions !== 1 ? 's' : '',
+            })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
-            <Label>Target Category</Label>
+            <Label>{t('categories.targetCategory')}</Label>
             <Select value={targetId} onValueChange={setTargetId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select target category" />
+                <SelectValue placeholder={t('categories.selectTarget')} />
               </SelectTrigger>
               <SelectContent>
                 {eligibleTargets.map((category) => (
@@ -77,11 +80,12 @@ export function MergeDialog({ open, onOpenChange, sourceCategory, categories }: 
 
           {targetId && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-              <p className="font-medium">Warning</p>
+              <p className="font-medium">{t('common.warning')}</p>
               <p className="mt-1">
-                This will move all transactions from "{sourceCategory.name}" to "
-                {targetCategory?.name}" and delete "{sourceCategory.name}". This action cannot be
-                undone.
+                {t('categories.mergeWarning', {
+                  source: sourceCategory.name,
+                  target: targetCategory?.name,
+                })}
               </p>
             </div>
           )}
@@ -95,14 +99,14 @@ export function MergeDialog({ open, onOpenChange, sourceCategory, categories }: 
               setTargetId('');
             }}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             variant="destructive"
             onClick={handleMerge}
             disabled={!targetId || mergeMutation.isPending}
           >
-            {mergeMutation.isPending ? 'Merging...' : 'Merge'}
+            {mergeMutation.isPending ? t('categories.merging') : t('categories.mergeButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

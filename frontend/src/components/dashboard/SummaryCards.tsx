@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardSummary } from '@/hooks/useDashboard';
@@ -8,30 +9,32 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ summary }: SummaryCardsProps) {
+  const { t } = useTranslation();
+
   const cards = [
     {
-      label: 'Net Balance',
+      label: t('dashboard.netBalance'),
       value: formatCurrency(summary.net),
       icon: DollarSign,
       iconColor: 'text-indigo-600',
       bgColor: 'bg-indigo-100 dark:bg-indigo-950',
     },
     {
-      label: 'Income',
+      label: t('dashboard.income'),
       value: formatCurrency(summary.totalIncome),
       icon: TrendingUp,
       iconColor: 'text-emerald-600',
       bgColor: 'bg-emerald-100 dark:bg-emerald-950',
     },
     {
-      label: 'Expenses',
+      label: t('dashboard.expenses'),
       value: formatCurrency(summary.totalExpenses),
       icon: TrendingDown,
       iconColor: 'text-red-500',
       bgColor: 'bg-red-100 dark:bg-red-950',
     },
     {
-      label: 'Transactions',
+      label: t('dashboard.transactionCount'),
       value: String(summary.transactionCount),
       icon: Activity,
       iconColor: 'text-blue-600',

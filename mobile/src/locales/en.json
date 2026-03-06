@@ -1,0 +1,25 @@
+{
+  "common": {
+    "retry": "Retry",
+    "loading": "Loading..."
+  },
+  "dashboard": {
+    "appName": "FinHealth",
+    "netBalance": "Net Balance",
+    "income": "Income",
+    "expenses": "Expenses",
+    "transactions": "Transactions",
+    "expenseBreakdown": "Expense Breakdown",
+    "noExpenses": "No expenses this month",
+    "spent": "SPENT",
+    "activity": "Activity",
+    "incomeLabel": "INCOME",
+    "expenseLabel": "EXPENSE",
+    "topCategories": "Top Categories",
+    "viewAll": "View All",
+    "transactionsSuffix": "transactions"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data. Please try again."
+  }
+}

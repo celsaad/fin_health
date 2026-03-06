@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import * as Sentry from '@sentry/react';
+import { Translation } from 'react-i18next';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -39,30 +40,33 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center">
-          <div className="mb-4 rounded-full bg-destructive/10 p-4">
-            <AlertTriangle className="size-8 text-destructive" />
-          </div>
-          <h2 className="mb-2 text-xl font-semibold">Something went wrong</h2>
-          <p className="mb-6 max-w-md text-sm text-muted-foreground">
-            An unexpected error occurred. Try refreshing the page or click the button below to
-            recover.
-          </p>
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={this.handleReset}>
-              <RefreshCw className="size-4" />
-              Try Again
-            </Button>
-            <Button onClick={() => window.location.reload()}>Refresh Page</Button>
-          </div>
-          {import.meta.env.DEV && this.state.error && (
-            <pre className="mt-6 max-w-lg overflow-auto rounded-lg bg-muted p-4 text-left text-xs text-muted-foreground">
-              {this.state.error.message}
-              {'\n'}
-              {this.state.error.stack}
-            </pre>
+        <Translation>
+          {(t) => (
+            <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center">
+              <div className="mb-4 rounded-full bg-destructive/10 p-4">
+                <AlertTriangle className="size-8 text-destructive" />
+              </div>
+              <h2 className="mb-2 text-xl font-semibold">{t('errorBoundary.title')}</h2>
+              <p className="mb-6 max-w-md text-sm text-muted-foreground">
+                {t('errorBoundary.description')}
+              </p>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={this.handleReset}>
+                  <RefreshCw className="size-4" />
+                  {t('errorBoundary.tryAgain')}
+                </Button>
+                <Button onClick={() => window.location.reload()}>{t('errorBoundary.refreshPage')}</Button>
+              </div>
+              {import.meta.env.DEV && this.state.error && (
+                <pre className="mt-6 max-w-lg overflow-auto rounded-lg bg-muted p-4 text-left text-xs text-muted-foreground">
+                  {this.state.error.message}
+                  {'\n'}
+                  {this.state.error.stack}
+                </pre>
+              )}
+            </div>
           )}
-        </div>
+        </Translation>
       );
     }
 

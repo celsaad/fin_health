@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
@@ -7,6 +8,7 @@ interface BudgetProgressBarProps {
 }
 
 export function BudgetProgressBar({ spent, budget }: BudgetProgressBarProps) {
+  const { t } = useTranslation();
   const percentage = budget > 0 ? Math.round((spent / budget) * 100) : 0;
   const clampedPercentage = Math.min(percentage, 100);
 
@@ -29,7 +31,7 @@ export function BudgetProgressBar({ spent, budget }: BudgetProgressBarProps) {
           {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
             Number(spent),
           )}{' '}
-          spent
+          {t('budgets.spent')}
         </span>
         <span className={cn('font-medium', getColorClass())}>{percentage}%</span>
       </div>

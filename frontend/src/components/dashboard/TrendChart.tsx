@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import {
   BarChart,
   Bar,
@@ -10,23 +11,7 @@ import {
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TrendData } from '@/hooks/useDashboard';
-import { formatCurrency } from '@fin-health/shared/format';
-
-const MONTH_LABELS = [
-  '',
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
+import { formatCurrency, getShortMonthName } from '@fin-health/shared/format';
 
 interface TrendChartProps {
   trend: TrendData[];
@@ -77,19 +62,21 @@ function CustomLegend({ payload }: { payload?: Array<{ value: string; color: str
 }
 
 export function TrendChart({ trend }: TrendChartProps) {
+  const { t } = useTranslation();
+
   const chartData = trend.map((item) => ({
     ...item,
-    label: `${MONTH_LABELS[item.month]}`,
+    label: getShortMonthName(item.month),
   }));
 
   if (chartData.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Activity</CardTitle>
+          <CardTitle>{t('dashboard.activity')}</CardTitle>
         </CardHeader>
         <CardContent className="flex h-[300px] items-center justify-center">
-          <p className="text-muted-foreground">No trend data available</p>
+          <p className="text-muted-foreground">{t('dashboard.noTrendData')}</p>
         </CardContent>
       </Card>
     );
@@ -98,7 +85,7 @@ export function TrendChart({ trend }: TrendChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Activity</CardTitle>
+        <CardTitle>{t('dashboard.activity')}</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -126,10 +113,10 @@ export function TrendChart({ trend }: TrendChartProps) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend content={<CustomLegend />} />
-            <Bar dataKey="income" name="Income" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
+            <Bar dataKey="income" name={t('dashboard.income')} fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
             <Bar
               dataKey="expenses"
-              name="Expenses"
+              name={t('dashboard.expenses')}
               fill="#f43f5e"
               radius={[4, 4, 0, 0]}
               barSize={20}

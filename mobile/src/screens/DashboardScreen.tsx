@@ -6,7 +6,7 @@ import { Wallet, TrendingUp, TrendingDown, List, Settings } from 'lucide-react-n
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getSummary, getBreakdown, getTrend } from '../services/dashboard';
-import { formatCurrency } from '@fin-health/shared/format';
+import { formatCurrency, getShortMonthName, formatPercent } from '@fin-health/shared/format';
 import Card from '../components/Card';
 import MonthSelector from '../components/MonthSelector';
 import CategoryIcon from '../components/CategoryIcon';
@@ -171,7 +171,7 @@ export default function DashboardScreen({ navigation }: any) {
                       style={[styles.legendText, { color: colors.textSecondary }]}
                       numberOfLines={1}
                     >
-                      {item.categoryName} ({Math.round(item.percentage)}%)
+                      {item.categoryName} ({formatPercent(item.percentage)})
                     </Text>
                   </View>
                 ))}
@@ -215,7 +215,7 @@ export default function DashboardScreen({ navigation }: any) {
                   />
                 </View>
                 <Text style={[styles.barLabel, { color: colors.textSecondary }]}>
-                  {getShortMonth(t.month)}
+                  {getShortMonthName(t.month)}
                 </Text>
               </View>
             ))}
@@ -336,24 +336,6 @@ function DonutChart({
       <G>{segments}</G>
     </Svg>
   );
-}
-
-function getShortMonth(m: number) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  return months[(m - 1) % 12] ?? '';
 }
 
 const summaryStyles = StyleSheet.create({

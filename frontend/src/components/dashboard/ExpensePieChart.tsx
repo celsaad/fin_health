@@ -1,7 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreakdownItem } from '@/hooks/useDashboard';
-import { formatCurrency } from '@fin-health/shared/format';
+import { formatCurrency, formatPercent } from '@fin-health/shared/format';
 
 const COLORS = [
   '#6366f1',
@@ -29,7 +30,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Toolti
       <div className="rounded-lg border bg-background p-3 shadow-md">
         <p className="font-medium">{data.categoryName}</p>
         <p className="text-sm text-muted-foreground">
-          {formatCurrency(data.total)} ({data.percentage.toFixed(1)}%)
+          {formatCurrency(data.total)} ({formatPercent(data.percentage, 1)})
         </p>
       </div>
     );
@@ -42,14 +43,16 @@ interface ExpensePieChartProps {
 }
 
 export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
+  const { t } = useTranslation();
+
   if (breakdown.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Expense Breakdown</CardTitle>
+          <CardTitle>{t('dashboard.expenseBreakdown')}</CardTitle>
         </CardHeader>
         <CardContent className="flex h-[300px] items-center justify-center">
-          <p className="text-muted-foreground">No expense data for this period</p>
+          <p className="text-muted-foreground">{t('dashboard.noExpenseData')}</p>
         </CardContent>
       </Card>
     );
@@ -61,7 +64,7 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Expense Breakdown</CardTitle>
+        <CardTitle>{t('dashboard.expenseBreakdown')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="relative">
@@ -89,7 +92,7 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-2xl font-bold">{formatCurrency(totalSpent)}</span>
             <span className="text-xs font-medium uppercase text-muted-foreground tracking-wider">
-              Spent
+              {t('dashboard.spent')}
             </span>
           </div>
         </div>
@@ -103,7 +106,7 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
                 style={{ backgroundColor: COLORS[i % COLORS.length] }}
               />
               <span className="truncate text-muted-foreground">{item.categoryName}</span>
-              <span className="ml-auto font-medium">{item.percentage.toFixed(0)}%</span>
+              <span className="ml-auto font-medium">{formatPercent(item.percentage)}</span>
             </div>
           ))}
         </div>

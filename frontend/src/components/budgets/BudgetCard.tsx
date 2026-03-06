@@ -1,4 +1,5 @@
 import { memo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ interface BudgetCardProps {
 }
 
 export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) {
+  const { t } = useTranslation();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteBudget = useDeleteBudget();
 
@@ -34,12 +36,12 @@ export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) 
             <div
               className={`flex size-8 shrink-0 items-center justify-center rounded-full ${config.bgColor} ${config.darkBgColor}`}
             >
-              <Icon className={`size-4 ${config.color}`} />
+              <Icon className={`size-4 ${config.color}`} aria-hidden="true" />
             </div>
             <span className="truncate">{categoryName}</span>
             {budget.isRecurring && (
               <Badge variant="secondary" className="text-xs font-normal">
-                Recurring
+                {t('budgets.recurring')}
               </Badge>
             )}
           </CardTitle>
@@ -48,7 +50,7 @@ export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) 
               variant="ghost"
               size="icon-sm"
               onClick={() => setConfirmOpen(true)}
-              aria-label="Delete budget"
+              aria-label={t('budgets.deleteBudgetAriaLabel')}
             >
               <Trash2 className="size-4 text-muted-foreground" />
             </Button>
@@ -57,11 +59,11 @@ export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) 
         <CardContent className="space-y-4">
           <div className="flex items-baseline justify-between text-sm">
             <span className="text-muted-foreground">
-              Spent:{' '}
+              {t('budgets.spent')}:{' '}
               <span className="font-medium text-foreground">{formatCurrency(budget.spent)}</span>
             </span>
             <span className="text-muted-foreground">
-              Limit:{' '}
+              {t('budgets.limit')}:{' '}
               <span className="font-medium text-foreground">{formatCurrency(budget.amount)}</span>
             </span>
           </div>
@@ -69,11 +71,11 @@ export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) 
           <div className="text-sm font-medium">
             {budget.remaining >= 0 ? (
               <span className="text-green-600 dark:text-green-400">
-                {formatCurrency(budget.remaining)} left
+                {formatCurrency(budget.remaining)} {t('budgets.left')}
               </span>
             ) : (
               <span className="text-red-600 dark:text-red-400">
-                {formatCurrency(Math.abs(budget.remaining))} over
+                {formatCurrency(Math.abs(budget.remaining))} {t('budgets.over')}
               </span>
             )}
           </div>
@@ -83,11 +85,11 @@ export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) 
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Delete Budget"
-        description={`Are you sure you want to delete the budget for "${budget.category?.name ?? 'Overall'}"? This action cannot be undone.`}
+        title={t('budgets.deleteBudget')}
+        description={t('budgets.deleteBudgetConfirm', { name: budget.category?.name ?? 'Overall' })}
         onConfirm={handleDelete}
         variant="destructive"
-        confirmLabel="Delete"
+        confirmLabel={t('common.delete')}
       />
     </>
   );

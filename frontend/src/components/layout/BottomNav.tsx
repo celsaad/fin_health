@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -10,17 +11,18 @@ import {
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
-  { to: '/spending', label: 'Spending', icon: BarChart3 },
-  { to: '/transactions', label: 'Txns', icon: ArrowLeftRight },
-  { to: '/categories', label: 'Tags', icon: Tag },
-  { to: '/budgets', label: 'Budgets', icon: PiggyBank },
-  { to: '/recurring', label: 'Recurring', icon: RefreshCw },
+  { to: '/', labelKey: 'nav.home', icon: LayoutDashboard, end: true },
+  { to: '/spending', labelKey: 'nav.spending', icon: BarChart3 },
+  { to: '/transactions', labelKey: 'nav.txns', icon: ArrowLeftRight },
+  { to: '/categories', labelKey: 'nav.tags', icon: Tag },
+  { to: '/budgets', labelKey: 'nav.budgets', icon: PiggyBank },
+  { to: '/recurring', labelKey: 'nav.recurring', icon: RefreshCw },
 ];
 
 export function BottomNav() {
+  const { t } = useTranslation();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-card lg:hidden">
+    <nav aria-label="Main navigation" className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-card lg:hidden">
       <div className="flex items-center justify-around">
         {navItems.map((item) => (
           <NavLink
@@ -34,8 +36,8 @@ export function BottomNav() {
               )
             }
           >
-            <item.icon className="size-5" />
-            <span>{item.label}</span>
+            <item.icon className="size-5" aria-hidden="true" />
+            <span>{t(item.labelKey)}</span>
           </NavLink>
         ))}
       </div>

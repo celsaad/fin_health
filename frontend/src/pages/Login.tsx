@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import { parseError } from '@/lib/api';
 import { Heart, TrendingUp, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -20,6 +21,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,55 +57,65 @@ export default function Login() {
             <Heart className="size-4 -ml-1.5 mt-3" strokeWidth={2.5} />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold">FinHealth</h1>
-            <p className="text-sm text-muted-foreground">Welcome back to your financial health</p>
+            <h1 className="text-2xl font-bold">{t('auth.appName')}</h1>
+            <p className="text-sm text-muted-foreground">{t('auth.welcomeBack')}</p>
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('auth.email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder={t('auth.emailPlaceholder')}
               className="bg-muted/50 rounded-xl"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'email-error' : undefined}
               {...register('email')}
             />
-            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            {errors.email && (
+              <p id="email-error" className="text-sm text-destructive">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <span className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                Forgot?
+                {t('auth.forgot')}
               </span>
             </div>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
+                placeholder={t('auth.passwordPlaceholder')}
                 className="bg-muted/50 rounded-xl pr-10"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
                 {...register('password')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-destructive">{errors.password.message}</p>
+              <p id="password-error" className="text-sm text-destructive">
+                {errors.password.message}
+              </p>
             )}
           </div>
 
           <Button type="submit" className="w-full rounded-full" size="lg" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in...' : 'Login'}
+            {isSubmitting ? t('auth.signingIn') : t('common.login')}
           </Button>
         </form>
 
@@ -111,28 +123,28 @@ export default function Login() {
         <div className="relative">
           <Separator />
           <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground uppercase">
-            Or continue with
+            {t('common.or')}
           </span>
         </div>
 
         {/* Social auth placeholders */}
         <div className="grid grid-cols-2 gap-3">
           <Button variant="outline" className="rounded-full" type="button" disabled>
-            Google
+            {t('common.google')}
           </Button>
           <Button variant="outline" className="rounded-full" type="button" disabled>
-            Apple
+            {t('common.apple')}
           </Button>
         </div>
 
         {/* Footer link */}
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
+          {t('auth.noAccount')}{' '}
           <Link
             to="/signup"
             className="text-primary font-medium underline-offset-4 hover:underline"
           >
-            Sign Up
+            {t('common.signup')}
           </Link>
         </p>
       </div>

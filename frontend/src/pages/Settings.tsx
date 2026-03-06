@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { LogOut, User, KeyRound, Sun, Moon, Monitor } from 'lucide-react';
 import { useTheme } from '@/lib/theme';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { toast } from 'sonner';
 import api, { parseError } from '@/lib/api';
 
 export default function Settings() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [currency, setCurrency] = useState(
@@ -23,11 +25,11 @@ export default function Settings() {
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
-      toast.error('New password must be at least 6 characters');
+      toast.error(t('settings.passwordMinLength'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match');
+      toast.error(t('settings.passwordsNoMatch'));
       return;
     }
     setChangingPassword(true);
@@ -35,7 +37,7 @@ export default function Settings() {
       const { data } = await api.put('/auth/password', { currentPassword, newPassword });
       if (data.token) localStorage.setItem('token', data.token);
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-      toast.success('Password updated successfully');
+      toast.success(t('settings.passwordUpdated'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -48,7 +50,7 @@ export default function Settings() {
 
   const handleSaveCurrency = () => {
     localStorage.setItem('preferredCurrency', currency);
-    toast.success('Currency preference saved');
+    toast.success(t('settings.currencySaved'));
   };
 
   const initial = user?.name?.charAt(0).toUpperCase() ?? '?';
@@ -56,8 +58,8 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your account and preferences</p>
+        <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('settings.subtitle')}</p>
       </div>
 
       {/* Profile header */}
@@ -73,24 +75,24 @@ export default function Settings() {
 
       {/* Section: Account Info */}
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Account Info
+        {t('settings.accountInfoSection')}
       </p>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="size-5" />
-            Account Information
+            {t('settings.accountInfoTitle')}
           </CardTitle>
-          <CardDescription>Your personal account details</CardDescription>
+          <CardDescription>{t('settings.accountInfoDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>{t('settings.name')}</Label>
             <Input value={user?.name ?? ''} disabled />
           </div>
           <div className="space-y-2">
-            <Label>Email</Label>
+            <Label>{t('settings.email')}</Label>
             <Input value={user?.email ?? ''} disabled />
           </div>
         </CardContent>
@@ -100,68 +102,68 @@ export default function Settings() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="size-5" />
-            Change Password
+            {t('settings.changePasswordTitle')}
           </CardTitle>
-          <CardDescription>Update your account password</CardDescription>
+          <CardDescription>{t('settings.changePasswordDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
+            <Label htmlFor="currentPassword">{t('settings.currentPassword')}</Label>
             <Input
               id="currentPassword"
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter current password"
+              placeholder={t('settings.currentPasswordPlaceholder')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
+            <Label htmlFor="newPassword">{t('settings.newPassword')}</Label>
             <Input
               id="newPassword"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password"
+              placeholder={t('settings.newPasswordPlaceholder')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">{t('settings.confirmNewPassword')}</Label>
             <Input
               id="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
+              placeholder={t('settings.confirmNewPasswordPlaceholder')}
             />
           </div>
           <Button
             onClick={handleChangePassword}
             disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
           >
-            {changingPassword ? 'Updating...' : 'Update Password'}
+            {changingPassword ? t('settings.updatingPassword') : t('settings.updatePassword')}
           </Button>
         </CardContent>
       </Card>
 
       {/* Section: Display Preferences */}
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Display Preferences
+        {t('settings.displayPreferencesSection')}
       </p>
 
       <Card>
         <CardHeader>
-          <CardTitle>Display Preferences</CardTitle>
-          <CardDescription>Customize how data is displayed in the app</CardDescription>
+          <CardTitle>{t('settings.displayPreferencesTitle')}</CardTitle>
+          <CardDescription>{t('settings.displayPreferencesDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Appearance</Label>
+            <Label>{t('settings.appearance')}</Label>
             <div className="inline-flex rounded-lg border border-border p-1 gap-1">
               {[
-                { value: 'light' as const, icon: Sun, label: 'Light' },
-                { value: 'dark' as const, icon: Moon, label: 'Dark' },
-                { value: 'system' as const, icon: Monitor, label: 'System' },
+                { value: 'light' as const, icon: Sun, label: t('settings.themeLight') },
+                { value: 'dark' as const, icon: Moon, label: t('settings.themeDark') },
+                { value: 'system' as const, icon: Monitor, label: t('settings.themeSystem') },
               ].map(({ value, icon: Icon, label }) => (
                 <button
                   key={value}
@@ -180,7 +182,7 @@ export default function Settings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency">{t('settings.currency')}</Label>
             <div className="flex gap-2">
               <Input
                 id="currency"
@@ -189,10 +191,10 @@ export default function Settings() {
                 placeholder="USD"
                 className="max-w-[120px]"
               />
-              <Button onClick={handleSaveCurrency}>Save</Button>
+              <Button onClick={handleSaveCurrency}>{t('common.save')}</Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Enter a currency code (e.g., USD, EUR, GBP)
+              {t('settings.currencyHint')}
             </p>
           </div>
         </CardContent>
@@ -200,18 +202,18 @@ export default function Settings() {
 
       {/* Section: Account Actions */}
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Account Actions
+        {t('settings.accountActionsSection')}
       </p>
 
       <Card>
         <CardHeader>
-          <CardTitle>Account Actions</CardTitle>
+          <CardTitle>{t('settings.accountActionsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Separator className="mb-4" />
           <Button variant="destructive" onClick={logout}>
             <LogOut className="size-4" />
-            Log Out
+            {t('common.logOut')}
           </Button>
         </CardContent>
       </Card>

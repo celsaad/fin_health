@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pencil, Trash2, Merge, Plus, Check, X, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ interface CategoryListProps {
 }
 
 export function CategoryList({ categories }: CategoryListProps) {
+  const { t } = useTranslation();
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
@@ -148,8 +150,9 @@ export function CategoryList({ categories }: CategoryListProps) {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground pl-10.5">
-                  {category._count.transactions} transaction
-                  {category._count.transactions !== 1 ? 's' : ''}
+                  {category._count.transactions !== 1
+                    ? t('categories.transactionCountPlural', { count: category._count.transactions })
+                    : t('categories.transactionCount', { count: category._count.transactions })}
                 </p>
                 {/* Subcategory summary */}
                 {category.subcategories.length > 0 && (
@@ -162,7 +165,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 {/* Subcategories */}
                 {category.subcategories.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">Subcategories</p>
+                    <p className="text-xs font-medium text-muted-foreground">{t('categories.subcategories')}</p>
                     <div className="space-y-1">
                       {category.subcategories.map((sub) => (
                         <div
@@ -238,7 +241,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                           setNewSubcategoryName('');
                         }
                       }}
-                      placeholder="Subcategory name"
+                      placeholder={t('categories.subcategoryName')}
                       className="h-7 text-sm"
                       autoFocus
                     />
@@ -269,7 +272,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                     onClick={() => setAddingSubcategoryFor(category.id)}
                   >
                     <Plus className="size-3.5" />
-                    Add subcategory
+                    {t('categories.addSubcategory')}
                   </Button>
                 )}
 
@@ -277,11 +280,11 @@ export function CategoryList({ categories }: CategoryListProps) {
                 <div className="flex items-center gap-1 border-t pt-3">
                   <Button variant="ghost" size="xs" onClick={() => startRename(category)}>
                     <Pencil className="size-3" />
-                    Rename
+                    {t('categories.rename')}
                   </Button>
                   <Button variant="ghost" size="xs" onClick={() => setMergingCategory(category)}>
                     <Merge className="size-3" />
-                    Merge
+                    {t('categories.merge')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -291,7 +294,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                     disabled={category._count.transactions > 0}
                   >
                     <Trash2 className="size-3" />
-                    Delete
+                    {t('common.delete')}
                   </Button>
                 </div>
               </CardContent>
@@ -305,15 +308,15 @@ export function CategoryList({ categories }: CategoryListProps) {
         onOpenChange={(open) => {
           if (!open) setDeletingCategory(null);
         }}
-        title="Delete Category"
+        title={t('categories.deleteCategory')}
         description={
           deletingCategory?._count.transactions
-            ? `Cannot delete "${deletingCategory.name}" because it has ${deletingCategory._count.transactions} transaction(s). Move or delete the transactions first, or merge this category into another.`
-            : `Are you sure you want to delete "${deletingCategory?.name}"? This action cannot be undone.`
+            ? t('categories.deleteCategoryHasTxns', { name: deletingCategory.name, count: deletingCategory._count.transactions })
+            : t('categories.deleteCategoryConfirm', { name: deletingCategory?.name })
         }
         onConfirm={handleDelete}
         variant="destructive"
-        confirmLabel="Delete"
+        confirmLabel={t('common.delete')}
       />
 
       {mergingCategory && (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, X } from 'lucide-react';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import { QueryError } from '@/components/shared/QueryError';
@@ -10,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import { useCategoryBreakdown, useTrend } from '@/hooks/useDashboard';
 import type { CategorySpending } from '@/hooks/useDashboard';
-import { formatCurrency } from '@fin-health/shared/format';
+import { formatCurrency, formatPercent } from '@fin-health/shared/format';
 
 function DetailPanel({
   category,
@@ -21,6 +22,7 @@ function DetailPanel({
   colorIndex: number;
   onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const color = CATEGORY_COLORS[colorIndex % CATEGORY_COLORS.length];
   const config = getCategoryIcon(category.categoryName);
   const Icon = config.icon;
@@ -33,16 +35,16 @@ function DetailPanel({
             <div
               className={`flex size-9 shrink-0 items-center justify-center rounded-full ${config.bgColor} ${config.darkBgColor}`}
             >
-              <Icon className={`size-4.5 ${config.color}`} />
+              <Icon className={`size-4.5 ${config.color}`} aria-hidden="true" />
             </div>
             <div>
               <h3 className="font-semibold">{category.categoryName}</h3>
               <p className="text-sm text-muted-foreground">
-                {formatCurrency(category.total)} &middot; {category.percentage.toFixed(1)}%
+                {formatCurrency(category.total)} &middot; {formatPercent(category.percentage, 1)}
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close detail panel">
+          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label={t('spending.closeDetail')}>
             <X className="size-4" />
           </Button>
         </div>
@@ -66,7 +68,7 @@ function DetailPanel({
                   />
                 </div>
                 <span className="text-xs text-muted-foreground shrink-0 w-12 text-right">
-                  {sub.percentage.toFixed(1)}%
+                  {formatPercent(sub.percentage, 1)}
                 </span>
               </div>
             </div>
@@ -78,6 +80,7 @@ function DetailPanel({
 }
 
 export default function Spending() {
+  const { t } = useTranslation();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -117,8 +120,8 @@ export default function Spending() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Spending Breakdown</h1>
-          <p className="text-sm text-muted-foreground">Expenses by category and subcategory</p>
+          <h1 className="text-2xl font-bold">{t('spending.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('spending.subtitle')}</p>
         </div>
         <DateRangeSelector
           month={month}
@@ -149,14 +152,14 @@ export default function Spending() {
           <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary to-primary/80">
             <CardContent className="p-6 text-primary-foreground">
               <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
-                Total Expenses
+                {t('spending.totalExpenses')}
               </p>
               <p className="mt-1 text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
               {trendPct !== null && (
                 <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
                   <TrendingUp className="size-3" />
                   {trendPct > 0 ? '+' : ''}
-                  {trendPct}% from last month
+                  {trendPct}% {t('spending.fromLastMonth')}
                 </div>
               )}
             </CardContent>
@@ -195,7 +198,7 @@ export default function Spending() {
       ) : (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No expenses for this period</p>
+            <p className="text-muted-foreground">{t('spending.noExpenses')}</p>
           </CardContent>
         </Card>
       )}

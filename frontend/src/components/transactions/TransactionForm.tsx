@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -56,6 +57,7 @@ export function TransactionForm({
   transaction,
   onSuccess,
 }: TransactionFormProps) {
+  const { t } = useTranslation();
   const { data: categories = [] } = useCategories();
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
@@ -139,31 +141,38 @@ export function TransactionForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Transaction' : 'Add Transaction'}</DialogTitle>
+          <DialogTitle>{isEditing ? t('transactions.editTransaction') : t('transactions.addTransaction')}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Update the transaction details below.'
-              : 'Fill in the details to create a new transaction.'}
+              ? t('transactions.editDesc')
+              : t('transactions.addDesc')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="amount">Amount</Label>
+              <Label htmlFor="amount">{t('transactions.amount')}</Label>
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
                 min="0"
                 placeholder="0.00"
+                aria-invalid={!!errors.amount}
+                aria-describedby={errors.amount ? 'amount-error' : undefined}
+                required
                 {...register('amount')}
               />
-              {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
+              {errors.amount && (
+                <p id="amount-error" className="text-xs text-destructive">
+                  {errors.amount.message}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="type">Type</Label>
+              <Label htmlFor="type">{t('transactions.type')}</Label>
               <Select
                 value={selectedType}
                 onValueChange={(value) =>
@@ -173,76 +182,98 @@ export function TransactionForm({
                 }
               >
                 <SelectTrigger id="type" className="w-full">
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={t('transactions.selectType')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expense">Expense</SelectItem>
-                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="expense">{t('transactions.expense')}</SelectItem>
+                  <SelectItem value="income">{t('transactions.income')}</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.type && <p className="text-xs text-destructive">{errors.type.message}</p>}
+              {errors.type && (
+                <p id="type-error" className="text-xs text-destructive">
+                  {errors.type.message}
+                </p>
+              )}
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('transactions.description')}</Label>
             <Input
               id="description"
-              placeholder="e.g., Grocery shopping"
+              placeholder={t('transactions.descPlaceholder')}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? 'description-error' : undefined}
+              required
               {...register('description')}
             />
             {errors.description && (
-              <p className="text-xs text-destructive">{errors.description.message}</p>
+              <p id="description-error" className="text-xs text-destructive">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="date">Date</Label>
-            <Input id="date" type="date" {...register('date')} />
-            {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
+            <Label htmlFor="date">{t('transactions.date')}</Label>
+            <Input
+              id="date"
+              type="date"
+              aria-invalid={!!errors.date}
+              aria-describedby={errors.date ? 'date-error' : undefined}
+              required
+              {...register('date')}
+            />
+            {errors.date && (
+              <p id="date-error" className="text-xs text-destructive">
+                {errors.date.message}
+              </p>
+            )}
           </div>
 
           <Autocomplete
-            label="Category"
+            label={t('transactions.categoryLabel')}
             items={categoryNames}
             value={selectedCategoryName}
             onChange={(value) => {
               setValue('categoryName', value, { shouldValidate: true });
               setValue('subcategoryName', '');
             }}
-            placeholder="Type or select a category"
+            placeholder={t('transactions.categoryPlaceholder')}
           />
           {errors.categoryName && (
-            <p className="-mt-2 text-xs text-destructive">{errors.categoryName.message}</p>
+            <p id="categoryName-error" className="-mt-2 text-xs text-destructive">
+              {errors.categoryName.message}
+            </p>
           )}
 
           <Autocomplete
-            label="Subcategory"
+            label={t('transactions.subcategory')}
             items={subcategoryNames}
             value={watch('subcategoryName') ?? ''}
             onChange={(value) => setValue('subcategoryName', value)}
             placeholder={
-              selectedCategoryName ? 'Type or select a subcategory' : 'Select a category first'
+              selectedCategoryName ? t('transactions.subcategoryPlaceholder') : t('transactions.subcategoryDisabled')
             }
             disabled={!selectedCategoryName}
           />
 
           <div className="grid gap-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t('transactions.notes')}</Label>
             <textarea
               id="notes"
               className="flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Optional notes..."
+              placeholder={t('transactions.notesPlaceholder')}
               {...register('notes')}
             />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : isEditing ? 'Update' : 'Create'}
+              {isSubmitting ? t('common.saving') : isEditing ? t('common.update') : t('common.create')}
             </Button>
           </DialogFooter>
         </form>

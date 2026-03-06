@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ function groupByDate(transactions: Transaction[]) {
 }
 
 export function TransactionList({ transactions }: TransactionListProps) {
+  const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -84,10 +86,10 @@ export function TransactionList({ transactions }: TransactionListProps) {
     <>
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
-          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <span className="text-sm font-medium">{t('transactions.selected', { count: selectedIds.size })}</span>
           <Button variant="destructive" size="sm" onClick={() => setShowBulkDelete(true)}>
             <Trash2 className="size-4" />
-            Delete selected
+            {t('transactions.deleteSelected')}
           </Button>
         </div>
       )}
@@ -122,23 +124,23 @@ export function TransactionList({ transactions }: TransactionListProps) {
                     checked={allSelected}
                     {...(someSelected ? { 'data-state': 'indeterminate' } : {})}
                     onCheckedChange={toggleAll}
-                    aria-label="Select all"
+                    aria-label={t('transactions.selectAll')}
                   />
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Date
+                  {t('transactions.date')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Description
+                  {t('transactions.description')}
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                  Category
+                  {t('transactions.categoryLabel')}
                 </th>
                 <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Amount
+                  {t('transactions.amount')}
                 </th>
                 <th className="w-24 px-4 py-3 text-right text-sm font-medium text-muted-foreground">
-                  Actions
+                  {t('common.actions')}
                 </th>
               </tr>
             </thead>
@@ -193,7 +195,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => setEditingTransaction(transaction)}
-                        aria-label="Edit transaction"
+                        aria-label={t('transactions.editTransactionAriaLabel')}
                       >
                         <Pencil className="size-3.5" />
                       </Button>
@@ -201,7 +203,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                         variant="ghost"
                         size="icon-xs"
                         onClick={() => setDeletingId(transaction.id)}
-                        aria-label="Delete transaction"
+                        aria-label={t('transactions.deleteTransactionAriaLabel')}
                       >
                         <Trash2 className="size-3.5 text-destructive" />
                       </Button>
@@ -227,21 +229,21 @@ export function TransactionList({ transactions }: TransactionListProps) {
         onOpenChange={(open) => {
           if (!open) setDeletingId(null);
         }}
-        title="Delete Transaction"
-        description="Are you sure you want to delete this transaction? This action cannot be undone."
+        title={t('transactions.deleteTransaction')}
+        description={t('transactions.deleteTransactionConfirm')}
         onConfirm={handleDelete}
         variant="destructive"
-        confirmLabel="Delete"
+        confirmLabel={t('common.delete')}
       />
 
       <ConfirmDialog
         open={showBulkDelete}
         onOpenChange={setShowBulkDelete}
-        title="Delete Selected Transactions"
-        description={`Are you sure you want to delete ${selectedIds.size} transaction${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`}
+        title={t('transactions.deleteSelectedTitle')}
+        description={t('transactions.deleteSelectedConfirm', { count: selectedIds.size })}
         onConfirm={handleBulkDelete}
         variant="destructive"
-        confirmLabel="Delete All"
+        confirmLabel={t('transactions.deleteAll')}
       />
     </>
   );

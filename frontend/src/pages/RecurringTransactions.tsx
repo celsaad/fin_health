@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PlusCircle, Repeat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
@@ -9,6 +10,7 @@ import { RecurringList } from '@/components/recurring/RecurringList';
 import { useRecurringTransactions, type RecurringTransaction } from '@/hooks/useRecurring';
 
 export default function RecurringTransactions() {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<RecurringTransaction | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'paused'>('active');
@@ -39,14 +41,14 @@ export default function RecurringTransactions() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Recurring Transactions</h1>
+          <h1 className="text-2xl font-bold">{t('recurring.title')}</h1>
           <p className="text-sm text-muted-foreground">
-            Manage your recurring income and expense templates
+            {t('recurring.subtitle')}
           </p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <PlusCircle className="size-4" />
-          Add Recurring
+          {t('recurring.addButton')}
         </Button>
       </div>
 
@@ -61,7 +63,7 @@ export default function RecurringTransactions() {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Active ({activeCount})
+            {t('recurring.active')} ({activeCount})
           </button>
           <button
             onClick={() => setActiveTab('paused')}
@@ -71,7 +73,7 @@ export default function RecurringTransactions() {
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Paused ({pausedCount})
+            {t('recurring.paused')} ({pausedCount})
           </button>
         </div>
       )}
@@ -83,14 +85,14 @@ export default function RecurringTransactions() {
       ) : !transactions || transactions.length === 0 ? (
         <EmptyState
           icon={Repeat}
-          title="No recurring transactions"
-          description="Add recurring transactions to automatically track regular income or expenses."
-          actionLabel="Add Recurring"
+          title={t('recurring.noRecurring')}
+          description={t('recurring.noRecurringDesc')}
+          actionLabel={t('recurring.addButton')}
           onAction={() => setFormOpen(true)}
         />
       ) : filtered.length === 0 ? (
         <div className="py-12 text-center text-muted-foreground">
-          No {activeTab} recurring transactions
+          {t('recurring.noFilteredRecurring', { tab: activeTab })}
         </div>
       ) : (
         <RecurringList transactions={filtered} onEdit={handleEdit} />

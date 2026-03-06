@@ -1,3 +1,4 @@
+import './src/lib/i18n';
 import React, { useCallback, useEffect } from 'react';
 import * as Sentry from '@sentry/react-native';
 import { env } from './src/lib/env';

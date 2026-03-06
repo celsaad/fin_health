@@ -134,15 +134,14 @@ describe('Login page', () => {
     const passwordInput = screen.getByLabelText('Password');
     expect(passwordInput).toHaveAttribute('type', 'password');
 
-    // Click the eye toggle button (it has tabIndex=-1, find by role)
-    const toggleButtons = screen.getAllByRole('button');
-    const eyeButton = toggleButtons.find((b) => b.getAttribute('tabindex') === '-1');
+    const eyeButton = screen.getByRole('button', { name: 'Show password' });
     expect(eyeButton).toBeDefined();
 
-    await user.click(eyeButton!);
+    await user.click(eyeButton);
     expect(passwordInput).toHaveAttribute('type', 'text');
 
-    await user.click(eyeButton!);
+    const hideButton = screen.getByRole('button', { name: 'Hide password' });
+    await user.click(hideButton);
     expect(passwordInput).toHaveAttribute('type', 'password');
   });
 });

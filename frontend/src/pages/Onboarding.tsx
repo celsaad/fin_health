@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { onboardingSlides } from '@/lib/onboarding';
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
   const slide = onboardingSlides[step];
@@ -27,8 +29,8 @@ export default function Onboarding() {
 
         {/* Text */}
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold tracking-tight">{slide.title}</h1>
-          <p className="text-muted-foreground">{slide.description}</p>
+          <h1 className="text-2xl font-bold tracking-tight">{t(slide.titleKey)}</h1>
+          <p className="text-muted-foreground">{t(slide.descKey)}</p>
         </div>
 
         {/* Dot indicators */}
@@ -48,27 +50,27 @@ export default function Onboarding() {
           {isLast ? (
             <>
               <Button className="w-full rounded-full" size="lg" onClick={() => complete('/signup')}>
-                Get Started
+                {t('onboarding.getStarted')}
                 <ArrowRight className="size-4" />
               </Button>
               <button
                 onClick={() => complete('/login')}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Sign In Instead
+                {t('onboarding.signInInstead')}
               </button>
             </>
           ) : (
             <>
               <Button className="w-full rounded-full" size="lg" onClick={() => setStep(step + 1)}>
-                Next
+                {t('onboarding.next')}
                 <ArrowRight className="size-4" />
               </Button>
               <button
                 onClick={() => complete('/login')}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Skip onboarding
+                {t('onboarding.skipOnboarding')}
               </button>
             </>
           )}

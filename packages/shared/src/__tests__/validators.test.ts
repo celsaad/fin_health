@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { signupSchema, loginSchema, changePasswordSchema } from '../validators/auth';
-import { createTransactionSchema, updateTransactionSchema, bulkDeleteSchema } from '../validators/transaction';
+import {
+  createTransactionSchema,
+  updateTransactionSchema,
+  bulkDeleteSchema,
+} from '../validators/transaction';
 import { upsertBudgetSchema, copyBudgetsSchema } from '../validators/budget';
 import { createRecurringSchema } from '../validators/recurring';
 import {
@@ -129,9 +133,7 @@ describe('createTransactionSchema', () => {
   });
 
   it('rejects notes over 1000 chars', () => {
-    expect(() =>
-      createTransactionSchema.parse({ ...valid, notes: 'x'.repeat(1001) }),
-    ).toThrow();
+    expect(() => createTransactionSchema.parse({ ...valid, notes: 'x'.repeat(1001) })).toThrow();
   });
 });
 
