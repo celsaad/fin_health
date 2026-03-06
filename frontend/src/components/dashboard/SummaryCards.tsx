@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, DollarSign, Activity } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardSummary } from '@/hooks/useDashboard';
 
 const formatCurrency = (amount: number) =>
@@ -10,54 +10,61 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ summary }: SummaryCardsProps) {
-  const cards = [
-    {
-      title: 'Total Income',
-      value: formatCurrency(summary.totalIncome),
-      icon: TrendingUp,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50 dark:bg-green-950',
-    },
-    {
-      title: 'Total Expenses',
-      value: formatCurrency(summary.totalExpenses),
-      icon: TrendingDown,
-      iconColor: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-950',
-    },
-    {
-      title: 'Net',
-      value: formatCurrency(summary.net),
-      icon: DollarSign,
-      iconColor: summary.net >= 0 ? 'text-green-600' : 'text-red-600',
-      bgColor: summary.net >= 0 ? 'bg-green-50 dark:bg-green-950' : 'bg-red-50 dark:bg-red-950',
-    },
-    {
-      title: 'Transactions',
-      value: summary.transactionCount.toString(),
-      icon: Activity,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-950',
-    },
-  ];
+  const isPositive = summary.net >= 0;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card) => (
-        <Card key={card.title}>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {card.title}
-            </CardTitle>
-            <div className={`rounded-md p-2 ${card.bgColor}`}>
-              <card.icon className={`size-4 ${card.iconColor}`} />
+      {/* Net balance */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Net Balance</p>
+            <div className={`rounded-lg p-2 ${isPositive ? 'bg-emerald-50 dark:bg-emerald-950' : 'bg-red-50 dark:bg-red-950'}`}>
+              <DollarSign className={`size-4 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`} />
             </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{card.value}</p>
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+          <p className="mt-1 text-2xl font-bold">{formatCurrency(summary.net)}</p>
+        </CardContent>
+      </Card>
+
+      {/* Income */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Income</p>
+            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-2">
+              <TrendingUp className="size-4 text-emerald-600" />
+            </div>
+          </div>
+          <p className="mt-1 text-2xl font-bold">{formatCurrency(summary.totalIncome)}</p>
+        </CardContent>
+      </Card>
+
+      {/* Expenses */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Expenses</p>
+            <div className="rounded-lg bg-red-50 dark:bg-red-950 p-2">
+              <TrendingDown className="size-4 text-red-500" />
+            </div>
+          </div>
+          <p className="mt-1 text-2xl font-bold">{formatCurrency(summary.totalExpenses)}</p>
+        </CardContent>
+      </Card>
+
+      {/* Transactions */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-medium text-muted-foreground">Transactions</p>
+            <div className="rounded-lg bg-primary/10 p-2">
+              <Activity className="size-4 text-primary" />
+            </div>
+          </div>
+          <p className="mt-1 text-2xl font-bold">{summary.transactionCount}</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

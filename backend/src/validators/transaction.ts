@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 export const createTransactionSchema = z.object({
   amount: z
-    .string()
+    .union([z.string(), z.number()])
+    .transform((val) => String(val))
     .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
       message: 'Amount must be a positive number',
     }),
@@ -18,7 +19,8 @@ export const createTransactionSchema = z.object({
 
 export const updateTransactionSchema = z.object({
   amount: z
-    .string()
+    .union([z.string(), z.number()])
+    .transform((val) => String(val))
     .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
       message: 'Amount must be a positive number',
     })
@@ -39,6 +41,7 @@ export const queryTransactionSchema = z.object({
   limit: z.string().optional(),
   type: z.enum(['expense', 'income']).optional(),
   categoryId: z.string().optional(),
+  subcategoryId: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   search: z.string().optional(),

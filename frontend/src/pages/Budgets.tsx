@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PlusCircle, Wallet } from 'lucide-react';
+import { Copy, PlusCircle, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -7,7 +7,7 @@ import { BudgetCard } from '@/components/budgets/BudgetCard';
 import { BudgetForm } from '@/components/budgets/BudgetForm';
 import { OverallBudget } from '@/components/budgets/OverallBudget';
 import { DateRangeSelector } from '@/components/dashboard/DateRangeSelector';
-import { useBudgets } from '@/hooks/useBudgets';
+import { useBudgets, useCopyPreviousMonthBudgets } from '@/hooks/useBudgets';
 
 export default function Budgets() {
   const now = new Date();
@@ -16,6 +16,7 @@ export default function Budgets() {
   const [formOpen, setFormOpen] = useState(false);
 
   const { data: budgets, isLoading } = useBudgets(month, year);
+  const copyBudgets = useCopyPreviousMonthBudgets();
 
   const categoryBudgets = budgets?.filter((b) => b.categoryId !== null) ?? [];
 
@@ -37,6 +38,14 @@ export default function Budgets() {
               setYear(y);
             }}
           />
+          <Button
+            variant="outline"
+            onClick={() => copyBudgets.mutate({ month, year })}
+            disabled={copyBudgets.isPending}
+          >
+            <Copy className="size-4" />
+            Copy last month
+          </Button>
           <Button onClick={() => setFormOpen(true)}>
             <PlusCircle className="size-4" />
             Add Budget
@@ -54,13 +63,25 @@ export default function Budgets() {
           </div>
         </div>
       ) : !budgets || budgets.length === 0 ? (
-        <EmptyState
-          icon={Wallet}
-          title="No budgets yet"
-          description="Create your first budget to start tracking your spending against your goals."
-          actionLabel="Add Budget"
-          onAction={() => setFormOpen(true)}
-        />
+        <>
+          <EmptyState
+            icon={Wallet}
+            title="No budgets yet"
+            description="Create your first budget to start tracking your spending against your goals."
+            actionLabel="Add Budget"
+            onAction={() => setFormOpen(true)}
+          />
+          <div className="-mt-4 text-center">
+            <button
+              type="button"
+              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+              onClick={() => copyBudgets.mutate({ month, year })}
+              disabled={copyBudgets.isPending}
+            >
+              Or copy budgets from last month
+            </button>
+          </div>
+        </>
       ) : (
         <div className="space-y-6">
           <OverallBudget budgets={budgets} />

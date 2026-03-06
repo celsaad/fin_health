@@ -94,8 +94,8 @@ export function TransactionForm({
         type: transaction.type,
         description: transaction.description,
         date: format(new Date(transaction.date), 'yyyy-MM-dd'),
-        categoryName: transaction.categoryName,
-        subcategoryName: transaction.subcategoryName ?? '',
+        categoryName: transaction.category.name,
+        subcategoryName: transaction.subcategory?.name ?? '',
         notes: transaction.notes ?? '',
       });
     } else if (open && !transaction) {
@@ -226,9 +226,10 @@ export function TransactionForm({
             label="Category"
             items={categoryNames}
             value={selectedCategoryName}
-            onChange={(value) =>
-              setValue('categoryName', value, { shouldValidate: true })
-            }
+            onChange={(value) => {
+              setValue('categoryName', value, { shouldValidate: true });
+              setValue('subcategoryName', '');
+            }}
             placeholder="Type or select a category"
           />
           {errors.categoryName && (
@@ -237,15 +238,14 @@ export function TransactionForm({
             </p>
           )}
 
-          {subcategoryNames.length > 0 && (
-            <Autocomplete
-              label="Subcategory"
-              items={subcategoryNames}
-              value={watch('subcategoryName') ?? ''}
-              onChange={(value) => setValue('subcategoryName', value)}
-              placeholder="Type or select a subcategory"
-            />
-          )}
+          <Autocomplete
+            label="Subcategory"
+            items={subcategoryNames}
+            value={watch('subcategoryName') ?? ''}
+            onChange={(value) => setValue('subcategoryName', value)}
+            placeholder={selectedCategoryName ? 'Type or select a subcategory' : 'Select a category first'}
+            disabled={!selectedCategoryName}
+          />
 
           <div className="grid gap-2">
             <Label htmlFor="notes">Notes</Label>

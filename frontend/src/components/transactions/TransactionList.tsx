@@ -150,11 +150,11 @@ export function TransactionList({ transactions }: TransactionListProps) {
                         variant="secondary"
                         className="text-xs"
                       >
-                        {transaction.categoryName}
+                        {transaction.category.name}
                       </Badge>
-                      {transaction.subcategoryName && (
+                      {transaction.subcategory && (
                         <span className="text-xs text-muted-foreground">
-                          / {transaction.subcategoryName}
+                          / {transaction.subcategory.name}
                         </span>
                       )}
                     </div>

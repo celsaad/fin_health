@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import prisma from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
-import { upsertBudgetSchema } from '../validators/budget';
+import { upsertBudgetSchema, copyBudgetsSchema } from '../validators/budget';
 import { getBudgetsWithSpent } from '../services/budgetService';
 import { AppError } from '../middleware/errorHandler';
 
@@ -30,6 +30,67 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+// POST /api/budgets/copy-previous — copy non-recurring budgets from previous month
+router.post(
+  '/copy-previous',
+  validate(copyBudgetsSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.userId!;
+      const { month, year } = req.body;
+
+      // Compute previous month/year
+      const prevMonth = month === 1 ? 12 : month - 1;
+      const prevYear = month === 1 ? year - 1 : year;
+
+      // Fetch non-recurring budgets from previous month
+      const previousBudgets = await prisma.budget.findMany({
+        where: {
+          userId,
+          month: prevMonth,
+          year: prevYear,
+          isRecurring: false,
+        },
+      });
+
+      let copied = 0;
+      const budgets = [];
+
+      for (const prev of previousBudgets) {
+        const budget = await prisma.budget.upsert({
+          where: {
+            userId_categoryId_month_year: {
+              userId,
+              categoryId: prev.categoryId ?? '',
+              month,
+              year,
+            },
+          },
+          update: {},
+          create: {
+            amount: prev.amount,
+            month,
+            year,
+            isRecurring: false,
+            categoryId: prev.categoryId,
+            userId,
+          },
+        });
+
+        // upsert returns existing record on conflict — only count if newly created
+        if (budget.createdAt.getTime() === budget.updatedAt.getTime()) {
+          copied++;
+        }
+        budgets.push(budget);
+      }
+
+      res.json({ budgets, copied });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
 // POST /api/budgets — upsert
 router.post(
   '/',
@@ -37,9 +98,11 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId!;
-      const { amount, month, year, categoryId } = req.body;
+      const { amount, categoryId, isRecurring } = req.body;
 
       const effectiveCategoryId = categoryId || null;
+      const effectiveMonth = isRecurring ? 0 : req.body.month;
+      const effectiveYear = isRecurring ? 0 : req.body.year;
 
       // If categoryId is provided, verify it belongs to user
       if (effectiveCategoryId) {
@@ -56,15 +119,16 @@ router.post(
           userId_categoryId_month_year: {
             userId,
             categoryId: effectiveCategoryId ?? '',
-            month,
-            year,
+            month: effectiveMonth,
+            year: effectiveYear,
           },
         },
-        update: { amount },
+        update: { amount, isRecurring: !!isRecurring },
         create: {
           amount,
-          month,
-          year,
+          month: effectiveMonth,
+          year: effectiveYear,
+          isRecurring: !!isRecurring,
           categoryId: effectiveCategoryId,
           userId,
         },

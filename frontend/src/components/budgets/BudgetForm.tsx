@@ -19,14 +19,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useCategories } from '@/hooks/useCategories';
 import { useUpsertBudget } from '@/hooks/useBudgets';
 
 const budgetSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
-  month: z.coerce.number().min(1).max(12),
-  year: z.coerce.number().min(2000).max(2100),
-  categoryId: z.string().nullable(),
+  month: z.coerce.number().min(1).max(12).optional(),
+  year: z.coerce.number().min(2000).max(2100).optional(),
+  categoryId: z.string().min(1, 'Please select a category'),
+  isRecurring: z.boolean(),
 });
 
 type BudgetFormValues = z.infer<typeof budgetSchema>;
@@ -75,19 +77,22 @@ export function BudgetForm({
       amount: 0,
       month: defaultMonth,
       year: defaultYear,
-      categoryId: null,
+      categoryId: '',
+      isRecurring: false,
     },
   });
 
   const selectedMonth = watch('month');
   const selectedCategoryId = watch('categoryId');
+  const isRecurring = watch('isRecurring');
 
   const onSubmit = (values: BudgetFormValues) => {
     upsertBudget.mutate(
       {
         amount: values.amount,
-        month: values.month,
-        year: values.year,
+        ...(values.isRecurring
+          ? { isRecurring: true }
+          : { month: values.month, year: values.year }),
         categoryId: values.categoryId,
       },
       {
@@ -123,52 +128,64 @@ export function BudgetForm({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Month</Label>
-              <Select
-                value={String(selectedMonth)}
-                onValueChange={(val) => setValue('month', Number(val))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Month" />
-                </SelectTrigger>
-                <SelectContent>
-                  {MONTHS.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="year">Year</Label>
-              <Input
-                id="year"
-                type="number"
-                {...register('year')}
-              />
-              {errors.year && (
-                <p className="text-sm text-destructive">{errors.year.message}</p>
-              )}
-            </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="isRecurring"
+              checked={isRecurring}
+              onCheckedChange={(checked) =>
+                setValue('isRecurring', checked === true)
+              }
+            />
+            <Label htmlFor="isRecurring" className="cursor-pointer">
+              Recurring monthly
+            </Label>
           </div>
+
+          {!isRecurring && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Month</Label>
+                <Select
+                  value={String(selectedMonth)}
+                  onValueChange={(val) => setValue('month', Number(val))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="year">Year</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  {...register('year')}
+                />
+                {errors.year && (
+                  <p className="text-sm text-destructive">{errors.year.message}</p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>Category</Label>
             <Select
-              value={selectedCategoryId ?? '__overall__'}
-              onValueChange={(val) =>
-                setValue('categoryId', val === '__overall__' ? null : val)
-              }
+              value={selectedCategoryId || undefined}
+              onValueChange={(val) => setValue('categoryId', val, { shouldValidate: true })}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Overall Budget" />
+                <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="__overall__">Overall Budget</SelectItem>
                 {categories
                   ?.filter((c) => c.type === 'expense')
                   .map((cat) => (
@@ -178,6 +195,14 @@ export function BudgetForm({
                   ))}
               </SelectContent>
             </Select>
+            {errors.categoryId && (
+              <p className="text-sm text-destructive">{errors.categoryId.message}</p>
+            )}
+            {categories?.filter((c) => c.type === 'expense').length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Add transactions to create expense categories for per-category budgets.
+              </p>
+            )}
           </div>
 
           <DialogFooter>

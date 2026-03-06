@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { PrismaClient, CategoryType, RecurrenceFrequency } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 

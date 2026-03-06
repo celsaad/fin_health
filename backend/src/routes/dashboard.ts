@@ -4,6 +4,7 @@ import { AppError } from '../middleware/errorHandler';
 import {
   getSummary,
   getMonthlyBreakdown,
+  getCategoryBreakdown,
   getYearlyOverview,
   getTrend,
 } from '../services/dashboardService';
@@ -44,6 +45,24 @@ router.get('/breakdown', async (req: Request, res: Response, next: NextFunction)
 
     const breakdown = await getMonthlyBreakdown(userId, month, year);
     res.json({ breakdown });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/dashboard/category-breakdown?month=&year=
+router.get('/category-breakdown', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+    const month = parseInt(req.query.month as string, 10);
+    const year = parseInt(req.query.year as string, 10);
+
+    if (!month || !year || month < 1 || month > 12) {
+      throw new AppError('Valid month (1-12) and year are required', 400);
+    }
+
+    const categories = await getCategoryBreakdown(userId, month, year);
+    res.json({ categories });
   } catch (err) {
     next(err);
   }

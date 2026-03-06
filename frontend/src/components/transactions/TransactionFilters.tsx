@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useMemo } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import type { TransactionFilters as Filters } from '@/hooks/useTransactions';
 
@@ -33,9 +34,24 @@ export function TransactionFilters({
     onFilterChange({
       ...filters,
       categoryId: value === 'all' ? '' : value,
+      subcategoryId: '',
       page: 1,
     });
   };
+
+  const handleSubcategoryChange = (value: string) => {
+    onFilterChange({
+      ...filters,
+      subcategoryId: value === 'all' ? '' : value,
+      page: 1,
+    });
+  };
+
+  const subcategories = useMemo(() => {
+    if (!filters.categoryId) return [];
+    const category = categories.find((c) => c.id === filters.categoryId);
+    return category?.subcategories ?? [];
+  }, [categories, filters.categoryId]);
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({
@@ -91,6 +107,28 @@ export function TransactionFilters({
           </SelectContent>
         </Select>
       </div>
+
+      {subcategories.length > 0 && (
+        <div className="grid gap-1.5">
+          <Label className="text-xs text-muted-foreground">Subcategory</Label>
+          <Select
+            value={filters.subcategoryId || 'all'}
+            onValueChange={handleSubcategoryChange}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All subcategories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All subcategories</SelectItem>
+              {subcategories.map((sub) => (
+                <SelectItem key={sub.id} value={sub.id}>
+                  {sub.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="grid gap-1.5">
         <Label className="text-xs text-muted-foreground">Start date</Label>

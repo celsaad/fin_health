@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardAction } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { BudgetProgressBar } from '@/components/budgets/BudgetProgressBar';
 import { useDeleteBudget, type Budget } from '@/hooks/useBudgets';
@@ -26,8 +27,13 @@ export function BudgetCard({ budget }: BudgetCardProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-base flex items-center gap-2">
             {budget.category?.name ?? 'Overall Budget'}
+            {budget.isRecurring && (
+              <Badge variant="secondary" className="text-xs font-normal">
+                Recurring
+              </Badge>
+            )}
           </CardTitle>
           <CardAction>
             <Button

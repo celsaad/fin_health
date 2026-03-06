@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  BarChart3,
   ArrowLeftRight,
   Tag,
   PiggyBank,
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
+  { to: '/spending', label: 'Spending', icon: BarChart3 },
   { to: '/transactions', label: 'Txns', icon: ArrowLeftRight },
   { to: '/categories', label: 'Tags', icon: Tag },
   { to: '/budgets', label: 'Budgets', icon: PiggyBank },
@@ -18,7 +20,7 @@ const navItems = [
 
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-card lg:hidden">
       <div className="flex items-center justify-around">
         {navItems.map((item) => (
           <NavLink

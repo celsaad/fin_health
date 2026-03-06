@@ -4,15 +4,18 @@ import './index.css';
 import App from './App';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/lib/auth';
+import { ThemeProvider } from '@/lib/theme';
 import { ToastProvider } from '@/providers/ToastProvider';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryProvider>
-      <AuthProvider>
-        <App />
-        <ToastProvider />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <App />
+          <ToastProvider />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryProvider>
   </StrictMode>
 );

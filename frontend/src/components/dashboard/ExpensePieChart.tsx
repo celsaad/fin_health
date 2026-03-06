@@ -1,42 +1,35 @@
 import {
-  PieChart,
-  Pie,
-  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
-  Legend,
   ResponsiveContainer,
+  Cell,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreakdownItem } from '@/hooks/useDashboard';
 
 const COLORS = [
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#22c55e', // green
+  '#6366f1', // indigo
+  '#10b981', // emerald
   '#f59e0b', // amber
   '#8b5cf6', // violet
+  '#ef4444', // red
+  '#06b6d4', // cyan
   '#ec4899', // pink
-  '#14b8a6', // teal
   '#f97316', // orange
-  '#6366f1', // indigo
+  '#14b8a6', // teal
   '#84cc16', // lime
 ];
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(amount));
 
-interface ExpensePieChartProps {
-  breakdown: BreakdownItem[];
-}
-
 interface TooltipPayloadItem {
   name: string;
   value: number;
-  payload: {
-    categoryName: string;
-    total: number;
-    percentage: number;
-  };
+  payload: BreakdownItem;
 }
 
 function CustomTooltip({
@@ -60,6 +53,10 @@ function CustomTooltip({
   return null;
 }
 
+interface ExpensePieChartProps {
+  breakdown: BreakdownItem[];
+}
+
 export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
   if (breakdown.length === 0) {
     return (
@@ -74,38 +71,43 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
     );
   }
 
+  const sorted = [...breakdown].sort((a, b) => b.total - a.total);
+  const chartHeight = Math.max(300, sorted.length * 48);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Expense Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={breakdown}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={2}
-              dataKey="total"
-              nameKey="categoryName"
-            >
-              {breakdown.map((_entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={COLORS[index % COLORS.length]}
-                />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              formatter={(value: string) => (
-                <span className="text-sm">{value}</span>
-              )}
+        <ResponsiveContainer width="100%" height={chartHeight}>
+          <BarChart data={sorted} layout="vertical" margin={{ left: 8, right: 80 }}>
+            <XAxis type="number" hide />
+            <YAxis
+              type="category"
+              dataKey="categoryName"
+              width={120}
+              tick={{ fontSize: 13 }}
+              axisLine={false}
+              tickLine={false}
             />
-          </PieChart>
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }} />
+            <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={28} label={({ x, y, width, height, value, index }) => (
+              <text
+                x={x + width + 8}
+                y={y + height / 2}
+                textAnchor="start"
+                dominantBaseline="central"
+                className="fill-muted-foreground text-xs"
+              >
+                {formatCurrency(value as number)} ({sorted[index as number].percentage.toFixed(0)}%)
+              </text>
+            )}>
+              {sorted.map((_entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              ))}
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

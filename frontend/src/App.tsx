@@ -8,6 +8,7 @@ import Transactions from '@/pages/Transactions';
 import Categories from '@/pages/Categories';
 import Budgets from '@/pages/Budgets';
 import RecurringTransactions from '@/pages/RecurringTransactions';
+import Spending from '@/pages/Spending';
 import Settings from '@/pages/Settings';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="spending" element={<Spending />} />
             <Route path="transactions" element={<Transactions />} />
             <Route path="categories" element={<Categories />} />
             <Route path="budgets" element={<Budgets />} />

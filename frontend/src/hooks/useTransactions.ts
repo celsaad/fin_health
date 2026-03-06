@@ -8,8 +8,8 @@ export interface Transaction {
   type: 'expense' | 'income';
   description: string;
   date: string;
-  categoryName: string;
-  subcategoryName?: string | null;
+  category: { id: string; name: string; type: string };
+  subcategory?: { id: string; name: string } | null;
   notes?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -20,6 +20,7 @@ export interface TransactionFilters {
   limit?: number;
   type?: 'expense' | 'income' | '';
   categoryId?: string;
+  subcategoryId?: string;
   startDate?: string;
   endDate?: string;
   search?: string;
@@ -56,6 +57,7 @@ export function useTransactions(filters: TransactionFilters = {}) {
       if (filters.limit) params.set('limit', String(filters.limit));
       if (filters.type) params.set('type', filters.type);
       if (filters.categoryId) params.set('categoryId', filters.categoryId);
+      if (filters.subcategoryId) params.set('subcategoryId', filters.subcategoryId);
       if (filters.startDate) params.set('startDate', filters.startDate);
       if (filters.endDate) params.set('endDate', filters.endDate);
       if (filters.search) params.set('search', filters.search);

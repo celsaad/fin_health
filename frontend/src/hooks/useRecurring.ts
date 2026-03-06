@@ -11,8 +11,8 @@ export interface RecurringTransaction {
   startDate: string;
   endDate?: string | null;
   isActive: boolean;
-  category: string;
-  subcategory?: string | null;
+  category: { id: string; name: string; type: string };
+  subcategory?: { id: string; name: string } | null;
   notes?: string | null;
 }
 

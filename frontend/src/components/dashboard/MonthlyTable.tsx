@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowUpDown } from 'lucide-react';
 import {
   Table,
@@ -66,7 +67,14 @@ export function MonthlyTable({ breakdown }: MonthlyTableProps) {
           <TableBody>
             {sorted.map((item) => (
               <TableRow key={item.categoryId}>
-                <TableCell className="font-medium">{item.categoryName}</TableCell>
+                <TableCell className="font-medium">
+                  <Link
+                    to={`/spending?category=${item.categoryId}`}
+                    className="hover:underline hover:text-primary transition-colors"
+                  >
+                    {item.categoryName}
+                  </Link>
+                </TableCell>
                 <TableCell>{formatCurrency(item.total)}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-2">

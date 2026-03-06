@@ -13,6 +13,10 @@ import { resolveCategory } from '../services/categoryResolver';
 import { getPagination } from '../utils/pagination';
 import { AppError } from '../middleware/errorHandler';
 
+function formatTransactionDate<T extends { date: Date }>(t: T): T & { date: string } {
+  return { ...t, date: t.date.toISOString().split('T')[0] };
+}
+
 const router = Router();
 
 // All routes require auth
@@ -24,7 +28,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.userId!;
     const { skip, take, page } = getPagination(req.query as { page?: string; limit?: string });
 
-    const { type, categoryId, startDate, endDate, search, sortBy, sortOrder } = req.query;
+    const { type, categoryId, subcategoryId, startDate, endDate, search, sortBy, sortOrder } = req.query;
 
     const where: Prisma.TransactionWhereInput = {
       userId,
@@ -39,13 +43,17 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       where.categoryId = categoryId;
     }
 
+    if (subcategoryId && typeof subcategoryId === 'string') {
+      where.subcategoryId = subcategoryId;
+    }
+
     if (startDate || endDate) {
       where.date = {};
       if (startDate && typeof startDate === 'string') {
-        where.date.gte = new Date(startDate);
+        where.date.gte = new Date(startDate + 'T00:00:00.000Z');
       }
       if (endDate && typeof endDate === 'string') {
-        where.date.lte = new Date(endDate);
+        where.date.lte = new Date(endDate + 'T23:59:59.999Z');
       }
     }
 
@@ -72,7 +80,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     ]);
 
     res.json({
-      transactions,
+      transactions: transactions.map(formatTransactionDate),
       pagination: {
         page,
         limit: take,
@@ -105,10 +113,10 @@ router.get('/export/csv', async (req: Request, res: Response, next: NextFunction
     if (startDate || endDate) {
       where.date = {};
       if (startDate && typeof startDate === 'string') {
-        where.date.gte = new Date(startDate);
+        where.date.gte = new Date(startDate + 'T00:00:00.000Z');
       }
       if (endDate && typeof endDate === 'string') {
-        where.date.lte = new Date(endDate);
+        where.date.lte = new Date(endDate + 'T23:59:59.999Z');
       }
     }
     if (search && typeof search === 'string') {
@@ -173,7 +181,7 @@ router.post(
           amount,
           type,
           description,
-          date: new Date(date),
+          date: new Date(date + 'T12:00:00.000Z'),
           notes: notes || null,
           categoryId,
           subcategoryId: subcategoryId || null,
@@ -185,7 +193,7 @@ router.post(
         },
       });
 
-      res.status(201).json({ transaction });
+      res.status(201).json({ transaction: formatTransactionDate(transaction) });
     } catch (err) {
       next(err);
     }
@@ -235,7 +243,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       throw new AppError('Transaction not found', 404);
     }
 
-    res.json({ transaction });
+    res.json({ transaction: formatTransactionDate(transaction) });
   } catch (err) {
     next(err);
   }
@@ -265,7 +273,7 @@ router.put(
       if (amount !== undefined) updateData.amount = amount;
       if (type !== undefined) updateData.type = type;
       if (description !== undefined) updateData.description = description;
-      if (date !== undefined) updateData.date = new Date(date);
+      if (date !== undefined) updateData.date = new Date(date + 'T12:00:00.000Z');
       if (notes !== undefined) updateData.notes = notes;
 
       // If categoryName changes, resolve category
@@ -296,7 +304,7 @@ router.put(
         },
       });
 
-      res.json({ transaction });
+      res.json({ transaction: formatTransactionDate(transaction) });
     } catch (err) {
       next(err);
     }

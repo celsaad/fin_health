@@ -76,9 +76,9 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                 <FrequencyBadge frequency={txn.frequency} />
               </TableCell>
               <TableCell>
-                {txn.category}
+                {txn.category?.name ?? txn.category}
                 {txn.subcategory && (
-                  <span className="text-muted-foreground"> / {txn.subcategory}</span>
+                  <span className="text-muted-foreground"> / {txn.subcategory?.name ?? txn.subcategory}</span>
                 )}
               </TableCell>
               <TableCell>{format(new Date(txn.startDate), 'MMM dd, yyyy')}</TableCell>

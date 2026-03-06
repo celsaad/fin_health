@@ -7,6 +7,7 @@ export interface Budget {
   amount: number;
   month: number;
   year: number;
+  isRecurring: boolean;
   categoryId: string | null;
   category?: {
     id: string;
@@ -22,9 +23,10 @@ interface BudgetsResponse {
 
 interface UpsertBudgetPayload {
   amount: number;
-  month: number;
-  year: number;
+  month?: number;
+  year?: number;
   categoryId?: string | null;
+  isRecurring?: boolean;
 }
 
 export function useBudgets(month: number, year: number) {
@@ -53,6 +55,31 @@ export function useUpsertBudget() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to save budget');
+    },
+  });
+}
+
+export function useCopyPreviousMonthBudgets() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { month: number; year: number }) => {
+      const { data } = await api.post<{ budgets: Budget[]; copied: number }>(
+        '/budgets/copy-previous',
+        payload
+      );
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      if (data.copied > 0) {
+        toast.success(`Copied ${data.copied} budget(s) from last month`);
+      } else {
+        toast.info('No budgets to copy from last month');
+      }
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to copy budgets');
     },
   });
 }

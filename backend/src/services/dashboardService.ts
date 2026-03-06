@@ -11,7 +11,7 @@ interface MonthlySummary {
 interface CategoryBreakdown {
   categoryId: string;
   categoryName: string;
-  total: string;
+  total: number;
   percentage: number;
 }
 
@@ -111,7 +111,7 @@ export async function getMonthlyBreakdown(
     return {
       categoryId: e.categoryId,
       categoryName: categoryMap.get(e.categoryId) || 'Unknown',
-      total: amount.toString(),
+      total: parseFloat(amount.toString()),
       percentage,
     };
   });
@@ -156,6 +156,121 @@ export async function getYearlyOverview(
   }
 
   return months;
+}
+
+interface SubcategoryBreakdown {
+  subcategoryId: string | null;
+  subcategoryName: string;
+  total: number;
+  percentage: number;
+}
+
+interface CategorySpending {
+  categoryId: string;
+  categoryName: string;
+  total: number;
+  percentage: number;
+  subcategories: SubcategoryBreakdown[];
+}
+
+export async function getCategoryBreakdown(
+  userId: string,
+  month: number,
+  year: number
+): Promise<CategorySpending[]> {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+  const expenses = await prisma.transaction.groupBy({
+    by: ['categoryId', 'subcategoryId'],
+    where: {
+      userId,
+      type: 'expense',
+      deletedAt: null,
+      date: { gte: startDate, lte: endDate },
+    },
+    _sum: { amount: true },
+  });
+
+  if (expenses.length === 0) return [];
+
+  // Collect unique IDs
+  const categoryIds = [...new Set(expenses.map((e) => e.categoryId))];
+  const subcategoryIds = expenses
+    .map((e) => e.subcategoryId)
+    .filter((id): id is string => id !== null);
+
+  // Fetch names in bulk
+  const [categories, subcategories] = await Promise.all([
+    prisma.category.findMany({
+      where: { id: { in: categoryIds } },
+      select: { id: true, name: true },
+    }),
+    subcategoryIds.length > 0
+      ? prisma.subcategory.findMany({
+          where: { id: { in: subcategoryIds } },
+          select: { id: true, name: true },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+  const subcategoryMap = new Map(subcategories.map((s) => [s.id, s.name]));
+
+  // Overall total
+  const overallTotal = expenses.reduce(
+    (sum, e) => sum.add(e._sum.amount || new Decimal(0)),
+    new Decimal(0)
+  );
+
+  // Group by category
+  const categoryGroups = new Map<
+    string,
+    { total: Decimal; subs: { subcategoryId: string | null; total: Decimal }[] }
+  >();
+
+  for (const e of expenses) {
+    const amount = e._sum.amount || new Decimal(0);
+    let group = categoryGroups.get(e.categoryId);
+    if (!group) {
+      group = { total: new Decimal(0), subs: [] };
+      categoryGroups.set(e.categoryId, group);
+    }
+    group.total = group.total.add(amount);
+    group.subs.push({ subcategoryId: e.subcategoryId, total: amount });
+  }
+
+  // Build result sorted by category total descending
+  const result: CategorySpending[] = [...categoryGroups.entries()]
+    .sort((a, b) => (b[1].total.gt(a[1].total) ? 1 : b[1].total.lt(a[1].total) ? -1 : 0))
+    .map(([categoryId, group]) => {
+      const categoryPercentage = overallTotal.isZero()
+        ? 0
+        : parseFloat(group.total.div(overallTotal).mul(100).toFixed(1));
+
+      const subcats: SubcategoryBreakdown[] = group.subs
+        .sort((a, b) => (b.total.gt(a.total) ? 1 : b.total.lt(a.total) ? -1 : 0))
+        .map((sub) => ({
+          subcategoryId: sub.subcategoryId,
+          subcategoryName: sub.subcategoryId
+            ? subcategoryMap.get(sub.subcategoryId) || 'Unknown'
+            : 'Uncategorized',
+          total: parseFloat(sub.total.toString()),
+          percentage: group.total.isZero()
+            ? 0
+            : parseFloat(sub.total.div(group.total).mul(100).toFixed(1)),
+        }));
+
+      return {
+        categoryId,
+        categoryName: categoryMap.get(categoryId) || 'Unknown',
+        total: parseFloat(group.total.toString()),
+        percentage: categoryPercentage,
+        subcategories: subcats,
+      };
+    });
+
+  return result;
 }
 
 export async function getTrend(

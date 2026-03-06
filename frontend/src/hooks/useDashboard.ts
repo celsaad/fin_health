@@ -29,6 +29,21 @@ export interface TrendData {
   expenses: number;
 }
 
+export interface SubcategoryBreakdown {
+  subcategoryId: string | null;
+  subcategoryName: string;
+  total: number;
+  percentage: number;
+}
+
+export interface CategorySpending {
+  categoryId: string;
+  categoryName: string;
+  total: number;
+  percentage: number;
+  subcategories: SubcategoryBreakdown[];
+}
+
 interface SummaryResponse extends DashboardSummary {}
 
 interface BreakdownResponse {
@@ -41,6 +56,10 @@ interface YearlyResponse {
 
 interface TrendResponse {
   trend: TrendData[];
+}
+
+interface CategoryBreakdownResponse {
+  categories: CategorySpending[];
 }
 
 export function useSummary(month: number, year: number) {
@@ -75,6 +94,18 @@ export function useYearlyOverview(year: number) {
         params: { year },
       });
       return data.months;
+    },
+  });
+}
+
+export function useCategoryBreakdown(month: number, year: number) {
+  return useQuery({
+    queryKey: ['dashboard', 'category-breakdown', month, year],
+    queryFn: async () => {
+      const { data } = await api.get<CategoryBreakdownResponse>('/dashboard/category-breakdown', {
+        params: { month, year },
+      });
+      return data.categories;
     },
   });
 }
