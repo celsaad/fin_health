@@ -278,6 +278,232 @@ export async function getCategoryBreakdown(
   return result;
 }
 
+export type InsightSentiment = 'positive' | 'negative' | 'warning' | 'neutral';
+export type InsightType = 'pace' | 'over-budget' | 'unusual' | 'increase' | 'decrease';
+
+export interface Insight {
+  type: InsightType;
+  title: string;
+  description: string;
+  sentiment: InsightSentiment;
+  metadata?: Record<string, unknown>;
+}
+
+export async function getInsights(
+  userId: string,
+  month: number,
+  year: number,
+): Promise<Insight[]> {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+  // Previous month range
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+  const prevStartDate = new Date(prevYear, prevMonth - 1, 1);
+  const prevEndDate = new Date(prevYear, prevMonth, 0, 23, 59, 59, 999);
+
+  // 3-month rolling window (the 3 months before current)
+  const rolling3Start = new Date(year, month - 4, 1);
+  const rolling3End = new Date(year, month - 1, 0, 23, 59, 59, 999);
+
+  const baseWhere = { userId, type: 'expense' as const, deletedAt: null };
+
+  // 4 parallel queries
+  const [currentExpenses, prevExpenses, rollingExpenses, budgets] = await Promise.all([
+    prisma.transaction.groupBy({
+      by: ['categoryId'],
+      where: { ...baseWhere, date: { gte: startDate, lte: endDate } },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.groupBy({
+      by: ['categoryId'],
+      where: { ...baseWhere, date: { gte: prevStartDate, lte: prevEndDate } },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.groupBy({
+      by: ['categoryId'],
+      where: { ...baseWhere, date: { gte: rolling3Start, lte: rolling3End } },
+      _sum: { amount: true },
+    }),
+    prisma.budget.findMany({
+      where: {
+        userId,
+        OR: [
+          { month, year },
+          { month: 0, year: 0, isRecurring: true },
+        ],
+      },
+    }),
+  ]);
+
+  // Resolve category names
+  const allCategoryIds = [
+    ...new Set([
+      ...currentExpenses.map((e) => e.categoryId),
+      ...prevExpenses.map((e) => e.categoryId),
+      ...rollingExpenses.map((e) => e.categoryId),
+    ]),
+  ];
+  const categories = await prisma.category.findMany({
+    where: { id: { in: allCategoryIds } },
+    select: { id: true, name: true },
+  });
+  const categoryMap = new Map<string, string>(categories.map((c) => [c.id, c.name]));
+
+  // Build lookup maps
+  const toAmount = (d: Decimal | null) => parseFloat((d || new Decimal(0)).toString());
+  const currentMap = new Map<string, number>(
+    currentExpenses.map((e) => [e.categoryId, toAmount(e._sum.amount)]),
+  );
+  const prevMap = new Map<string, number>(
+    prevExpenses.map((e) => [e.categoryId, toAmount(e._sum.amount)]),
+  );
+  const rollingMap = new Map<string, number>(
+    rollingExpenses.map((e) => [e.categoryId, toAmount(e._sum.amount) / 3]),
+  );
+
+  // Budget lookup: categoryId → amount (null categoryId = overall budget)
+  const budgetMap = new Map<string | null, number>(
+    budgets.map((b) => [b.categoryId, parseFloat(b.amount.toString())]),
+  );
+
+  const insights: Insight[] = [];
+
+  // 1. Spending pace
+  const totalCurrentExpenses = [...currentMap.values()].reduce((s, v) => s + v, 0);
+  const now = new Date();
+  const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  if (isCurrentMonth) {
+    const daysElapsed = now.getDate();
+    const projected = (totalCurrentExpenses / daysElapsed) * daysInMonth;
+    const overallBudget = budgetMap.get(null);
+
+    if (overallBudget) {
+      const diff = projected - overallBudget;
+      if (diff > 0) {
+        insights.push({
+          type: 'pace',
+          title: 'Over-budget pace',
+          description: `At this pace, you'll spend $${Math.round(projected).toLocaleString()} — $${Math.round(diff).toLocaleString()} over your $${Math.round(overallBudget).toLocaleString()} budget.`,
+          sentiment: 'negative',
+          metadata: { projected: Math.round(projected), budget: overallBudget, overage: Math.round(diff) },
+        });
+      } else {
+        insights.push({
+          type: 'pace',
+          title: 'On track',
+          description: `Projected spending of $${Math.round(projected).toLocaleString()} is within your $${Math.round(overallBudget).toLocaleString()} budget.`,
+          sentiment: 'positive',
+          metadata: { projected: Math.round(projected), budget: overallBudget },
+        });
+      }
+    } else if (totalCurrentExpenses > 0) {
+      insights.push({
+        type: 'pace',
+        title: 'Spending pace',
+        description: `You've spent $${Math.round(totalCurrentExpenses).toLocaleString()} so far — on pace for $${Math.round(projected).toLocaleString()} this month.`,
+        sentiment: 'neutral',
+        metadata: { spent: Math.round(totalCurrentExpenses), projected: Math.round(projected) },
+      });
+    }
+  } else if (totalCurrentExpenses > 0) {
+    insights.push({
+      type: 'pace',
+      title: 'Total spending',
+      description: `You spent $${Math.round(totalCurrentExpenses).toLocaleString()} this month.`,
+      sentiment: 'neutral',
+      metadata: { total: Math.round(totalCurrentExpenses) },
+    });
+  }
+
+  // 2 & 3. Biggest category increase / decrease vs last month
+  let biggestIncrease: { name: string; delta: number } | null = null;
+  let biggestDecrease: { name: string; delta: number } | null = null;
+
+  for (const [catId, current] of currentMap) {
+    const prev = prevMap.get(catId) || 0;
+    const delta = current - prev;
+    const name = categoryMap.get(catId) || 'Unknown';
+
+    if (delta > 0 && (!biggestIncrease || delta > biggestIncrease.delta)) {
+      biggestIncrease = { name, delta };
+    }
+    if (delta < 0 && (!biggestDecrease || delta < biggestDecrease.delta)) {
+      biggestDecrease = { name, delta };
+    }
+  }
+
+  // 4. Over-budget categories
+  let overBudgetCount = 0;
+  const overBudgetNames: string[] = [];
+  for (const [catId, budgetAmount] of budgetMap) {
+    if (catId === null) continue; // skip overall budget
+    const spent = currentMap.get(catId) || 0;
+    if (spent > budgetAmount) {
+      overBudgetCount++;
+      overBudgetNames.push(categoryMap.get(catId) || 'Unknown');
+    }
+  }
+
+  if (overBudgetCount > 0) {
+    const names = overBudgetNames.slice(0, 3).join(', ');
+    const extra = overBudgetCount > 3 ? ` and ${overBudgetCount - 3} more` : '';
+    insights.push({
+      type: 'over-budget',
+      title: `${overBudgetCount} ${overBudgetCount === 1 ? 'category' : 'categories'} over budget`,
+      description: `${names}${extra} exceeded ${overBudgetCount === 1 ? 'its' : 'their'} budget.`,
+      sentiment: 'warning',
+      metadata: { count: overBudgetCount, categories: overBudgetNames },
+    });
+  }
+
+  // 5. Unusual spending (>50% above 3-month average)
+  let mostUnusual: { name: string; current: number; avg: number; pct: number } | null = null;
+  for (const [catId, current] of currentMap) {
+    const avg = rollingMap.get(catId);
+    if (!avg || avg === 0) continue;
+    const pctAbove = ((current - avg) / avg) * 100;
+    if (pctAbove > 50 && (!mostUnusual || pctAbove > mostUnusual.pct)) {
+      mostUnusual = { name: categoryMap.get(catId) || 'Unknown', current, avg, pct: pctAbove };
+    }
+  }
+
+  if (mostUnusual) {
+    insights.push({
+      type: 'unusual',
+      title: `Unusual spending in ${mostUnusual.name}`,
+      description: `$${Math.round(mostUnusual.current).toLocaleString()} vs $${Math.round(mostUnusual.avg).toLocaleString()} average — ${Math.round(mostUnusual.pct)}% above normal.`,
+      sentiment: 'warning',
+      metadata: { category: mostUnusual.name, current: mostUnusual.current, average: mostUnusual.avg, percentAbove: Math.round(mostUnusual.pct) },
+    });
+  }
+
+  if (biggestIncrease) {
+    insights.push({
+      type: 'increase',
+      title: `${biggestIncrease.name} is up`,
+      description: `Up $${Math.round(biggestIncrease.delta).toLocaleString()} compared to last month.`,
+      sentiment: 'negative',
+      metadata: { category: biggestIncrease.name, delta: Math.round(biggestIncrease.delta) },
+    });
+  }
+
+  if (biggestDecrease) {
+    insights.push({
+      type: 'decrease',
+      title: `${biggestDecrease.name} is down`,
+      description: `Down $${Math.round(Math.abs(biggestDecrease.delta)).toLocaleString()} compared to last month.`,
+      sentiment: 'positive',
+      metadata: { category: biggestDecrease.name, delta: Math.round(biggestDecrease.delta) },
+    });
+  }
+
+  return insights;
+}
+
 export async function getTrend(userId: string, months: number): Promise<TrendPoint[]> {
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);

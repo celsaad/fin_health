@@ -17,7 +17,9 @@
     "expenseLabel": "EXPENSE",
     "topCategories": "Top Categories",
     "viewAll": "View All",
-    "transactionsSuffix": "transactions"
+    "transactionsSuffix": "transactions",
+    "insights": "Insights",
+    "noInsights": "No insights available for this period"
   },
   "errors": {
     "loadFailed": "Failed to load data. Please try again."

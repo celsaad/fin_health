@@ -65,7 +65,9 @@
     "percentage": "Percentage",
     "ofExpenses": "of expenses",
     "ofBudget": "of budget",
-    "reached": "reached"
+    "reached": "reached",
+    "insights": "Insights",
+    "noInsights": "No insights available for this period"
   },
   "spending": {
     "title": "Spending Breakdown",

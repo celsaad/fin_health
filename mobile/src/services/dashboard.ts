@@ -24,3 +24,18 @@ export async function getYearlyOverview(year: number) {
   const { data } = await api.get('/dashboard/yearly', { params: { year } });
   return data;
 }
+
+export interface Insight {
+  type: 'pace' | 'over-budget' | 'unusual' | 'increase' | 'decrease';
+  title: string;
+  description: string;
+  sentiment: 'positive' | 'negative' | 'warning' | 'neutral';
+  metadata?: Record<string, unknown>;
+}
+
+export async function getInsights(month: number, year: number) {
+  const { data } = await api.get<{ insights: Insight[] }>('/dashboard/insights', {
+    params: { month, year },
+  });
+  return data;
+}

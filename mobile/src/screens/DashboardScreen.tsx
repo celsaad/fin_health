@@ -2,10 +2,20 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
-import { Wallet, TrendingUp, TrendingDown, List, Settings } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
+import {
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  List,
+  Settings,
+  AlertTriangle,
+  Info,
+} from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { getSummary, getBreakdown, getTrend } from '../services/dashboard';
+import { getSummary, getBreakdown, getTrend, getInsights } from '../services/dashboard';
+import type { Insight } from '../services/dashboard';
 import { formatCurrency, getShortMonthName, formatPercent } from '@fin-health/shared/format';
 import Card from '../components/Card';
 import MonthSelector from '../components/MonthSelector';
@@ -18,6 +28,7 @@ import Svg, { G, Path } from 'react-native-svg';
 export default function DashboardScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -37,16 +48,23 @@ export default function DashboardScreen({ navigation }: any) {
     queryFn: () => getTrend(6),
   });
 
+  const insightsQuery = useQuery({
+    queryKey: ['dashboard', 'insights', month, year],
+    queryFn: () => getInsights(month, year),
+  });
+
   const isLoading = summaryQuery.isLoading;
   const isError = summaryQuery.isError || breakdownQuery.isError || trendQuery.isError;
   const summary = summaryQuery.data;
   const breakdown = breakdownQuery.data?.breakdown ?? [];
   const trend = trendQuery.data?.trend ?? [];
+  const insights = insightsQuery.data?.insights ?? [];
 
   function onRefresh() {
     summaryQuery.refetch();
     breakdownQuery.refetch();
     trendQuery.refetch();
+    insightsQuery.refetch();
   }
 
   const initials =
@@ -139,6 +157,26 @@ export default function DashboardScreen({ navigation }: any) {
             />
           </View>
         )}
+
+        {/* Insights */}
+        {insightsQuery.isLoading ? (
+          <Card style={styles.sectionCard}>
+            <LoadingSkeleton width="40%" height={18} />
+            <LoadingSkeleton width="100%" height={14} style={{ marginTop: Spacing.lg }} />
+            <LoadingSkeleton width="90%" height={14} style={{ marginTop: Spacing.md }} />
+          </Card>
+        ) : insights.length > 0 ? (
+          <Card style={styles.sectionCard}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t('dashboard.insights')}
+            </Text>
+            <View style={insightStyles.list} accessibilityRole="list">
+              {insights.map((insight) => (
+                <InsightRow key={insight.type} insight={insight} colors={colors} />
+              ))}
+            </View>
+          </Card>
+        ) : null}
 
         {/* Expense Breakdown */}
         <Card style={styles.sectionCard}>
@@ -338,6 +376,42 @@ function DonutChart({
   );
 }
 
+const SENTIMENT_CONFIG = {
+  positive: { Icon: TrendingDown, iconColor: '#059669', bgLight: '#ecfdf5', bgDark: '#022c22' },
+  negative: { Icon: TrendingUp, iconColor: '#dc2626', bgLight: '#fef2f2', bgDark: '#450a0a' },
+  warning: { Icon: AlertTriangle, iconColor: '#d97706', bgLight: '#fffbeb', bgDark: '#451a03' },
+  neutral: { Icon: Info, iconColor: '#3b82f6', bgLight: '#eff6ff', bgDark: '#172554' },
+} as const;
+
+function InsightRow({ insight, colors }: { insight: Insight; colors: any }) {
+  const config = SENTIMENT_CONFIG[insight.sentiment];
+  const isDark = colors.background === '#0f1729';
+  const bg = isDark ? config.bgDark : config.bgLight;
+
+  return (
+    <View
+      style={insightStyles.row}
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={`${insight.title}. ${insight.description}`}
+    >
+      <View
+        style={[insightStyles.iconCircle, { backgroundColor: bg }]}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <config.Icon size={18} color={config.iconColor} />
+      </View>
+      <View style={insightStyles.textContainer}>
+        <Text style={[insightStyles.title, { color: colors.text }]}>{insight.title}</Text>
+        <Text style={[insightStyles.description, { color: colors.textSecondary }]}>
+          {insight.description}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+
 const summaryStyles = StyleSheet.create({
   card: {
     width: '48%',
@@ -458,4 +532,19 @@ const styles = StyleSheet.create({
   categoryName: { fontSize: FontSize.body, fontWeight: '600' },
   categoryCount: { fontSize: FontSize.caption, marginTop: 2 },
   categoryAmount: { fontSize: FontSize.body, fontWeight: '600' },
+});
+
+const insightStyles = StyleSheet.create({
+  list: { marginTop: Spacing.lg, gap: Spacing.md },
+  row: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.md },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContainer: { flex: 1 },
+  title: { fontSize: FontSize.body, fontWeight: '600' },
+  description: { fontSize: FontSize.caption, marginTop: 2, lineHeight: 18 },
 });

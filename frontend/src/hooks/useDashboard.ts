@@ -121,3 +121,30 @@ export function useTrend(months: number = 6) {
     },
   });
 }
+
+export type InsightSentiment = 'positive' | 'negative' | 'warning' | 'neutral';
+export type InsightType = 'pace' | 'over-budget' | 'unusual' | 'increase' | 'decrease';
+
+export interface Insight {
+  type: InsightType;
+  title: string;
+  description: string;
+  sentiment: InsightSentiment;
+  metadata?: Record<string, unknown>;
+}
+
+interface InsightsResponse {
+  insights: Insight[];
+}
+
+export function useInsights(month: number, year: number) {
+  return useQuery({
+    queryKey: ['dashboard', 'insights', month, year],
+    queryFn: async () => {
+      const { data } = await api.get<InsightsResponse>('/dashboard/insights', {
+        params: { month, year },
+      });
+      return data.insights;
+    },
+  });
+}

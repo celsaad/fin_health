@@ -7,6 +7,7 @@ import {
   getCategoryBreakdown,
   getYearlyOverview,
   getTrend,
+  getInsights,
 } from '../services/dashboardService';
 
 const router = Router();
@@ -97,6 +98,24 @@ router.get('/trend', async (req: Request, res: Response, next: NextFunction) => 
 
     const trend = await getTrend(userId, months);
     res.json({ trend });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/dashboard/insights?month=&year=
+router.get('/insights', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+    const month = parseInt(req.query.month as string, 10);
+    const year = parseInt(req.query.year as string, 10);
+
+    if (!month || !year || month < 1 || month > 12) {
+      throw new AppError('Valid month (1-12) and year are required', 400);
+    }
+
+    const insights = await getInsights(userId, month, year);
+    res.json({ insights });
   } catch (err) {
     next(err);
   }

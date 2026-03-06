@@ -8,7 +8,8 @@ import { ExpenseTreemap } from '@/components/dashboard/ExpenseTreemap';
 import { TrendChart } from '@/components/dashboard/TrendChart';
 import { TopCategories } from '@/components/dashboard/TopCategories';
 import { MonthlyTable } from '@/components/dashboard/MonthlyTable';
-import { useSummary, useCategoryBreakdown, useTrend } from '@/hooks/useDashboard';
+import { useSummary, useCategoryBreakdown, useTrend, useInsights } from '@/hooks/useDashboard';
+import { InsightsCard } from '@/components/dashboard/InsightsCard';
 import { useBudgets } from '@/hooks/useBudgets';
 
 export default function Dashboard() {
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const summary$ = useSummary(month, year);
   const categoryBreakdown$ = useCategoryBreakdown(month, year);
   const trend$ = useTrend(6);
+  const insights$ = useInsights(month, year);
   const { data: budgets } = useBudgets(month, year);
 
   // Derive flat breakdown for TopCategories and MonthlyTable
@@ -71,6 +73,12 @@ export default function Dashboard() {
             </div>
           ) : summary$.data ? (
             <SummaryCards summary={summary$.data} />
+          ) : null}
+
+          {insights$.isLoading ? (
+            <CardSkeleton />
+          ) : insights$.data ? (
+            <InsightsCard insights={insights$.data} />
           ) : null}
 
           <div className="grid gap-6 lg:grid-cols-2">
