@@ -1,23 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import type { Category, Subcategory } from '@fin-health/shared/types';
 
-export interface Subcategory {
-  id: string;
-  name: string;
-}
-
-export interface Category {
-  id: string;
-  name: string;
-  type: 'expense' | 'income';
-  icon?: string | null;
-  color?: string | null;
-  subcategories: Subcategory[];
-  _count: {
-    transactions: number;
-  };
-}
+export type { Category, Subcategory };
 
 interface CategoriesResponse {
   categories: Category[];

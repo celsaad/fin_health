@@ -1,23 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import type { Budget } from '@fin-health/shared/types';
 
-export interface Budget {
-  id: string;
-  amount: number;
-  month: number;
-  year: number;
-  isRecurring: boolean;
-  categoryId: string | null;
-  category?: {
-    id: string;
-    name: string;
-    icon?: string | null;
-    color?: string | null;
-  } | null;
-  spent: number;
-  remaining: number;
-}
+export type { Budget };
 
 interface BudgetsResponse {
   budgets: Budget[];

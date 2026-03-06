@@ -1,20 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import type { RecurringTransaction } from '@fin-health/shared/types';
 
-export interface RecurringTransaction {
-  id: string;
-  amount: number;
-  type: string;
-  description: string;
-  frequency: string;
-  startDate: string;
-  endDate?: string | null;
-  isActive: boolean;
-  category: { id: string; name: string; type: string; icon?: string | null; color?: string | null };
-  subcategory?: { id: string; name: string } | null;
-  notes?: string | null;
-}
+export type { RecurringTransaction };
 
 interface RecurringResponse {
   recurringTransactions: RecurringTransaction[];

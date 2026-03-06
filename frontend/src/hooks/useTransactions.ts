@@ -1,42 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import type { Transaction, TransactionFilters, PaginatedResponse } from '@fin-health/shared/types';
 
-export interface Transaction {
-  id: string;
-  amount: number;
-  type: 'expense' | 'income';
-  description: string;
-  date: string;
-  category: { id: string; name: string; type: string; icon?: string | null; color?: string | null };
-  subcategory?: { id: string; name: string } | null;
-  notes?: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { Transaction, TransactionFilters };
 
-export interface TransactionFilters {
-  page?: number;
-  limit?: number;
-  type?: 'expense' | 'income' | '';
-  categoryId?: string;
-  subcategoryId?: string;
-  startDate?: string;
-  endDate?: string;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-interface TransactionsResponse {
-  transactions: Transaction[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
+type TransactionsResponse = PaginatedResponse<Transaction>;
 
 export interface CreateTransactionInput {
   amount: number;
