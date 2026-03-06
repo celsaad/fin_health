@@ -49,6 +49,8 @@ export default function Settings() {
     toast.success('Currency preference saved');
   };
 
+  const initial = user?.name?.charAt(0).toUpperCase() ?? '?';
+
   return (
     <div className="space-y-6">
       <div>
@@ -57,6 +59,22 @@ export default function Settings() {
           Manage your account and preferences
         </p>
       </div>
+
+      {/* Profile header */}
+      <div className="flex flex-col items-center gap-3 py-4">
+        <div className="flex size-20 items-center justify-center rounded-full bg-primary text-primary-foreground text-2xl font-bold">
+          {initial}
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-semibold">{user?.name ?? 'User'}</p>
+          <p className="text-sm text-muted-foreground">{user?.email ?? ''}</p>
+        </div>
+      </div>
+
+      {/* Section: Account Info */}
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Account Info
+      </p>
 
       <Card>
         <CardHeader>
@@ -126,6 +144,11 @@ export default function Settings() {
         </CardContent>
       </Card>
 
+      {/* Section: Display Preferences */}
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Display Preferences
+      </p>
+
       <Card>
         <CardHeader>
           <CardTitle>Display Preferences</CardTitle>
@@ -176,6 +199,11 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Section: Account Actions */}
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        Account Actions
+      </p>
 
       <Card>
         <CardHeader>

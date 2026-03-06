@@ -35,9 +35,11 @@ model User {
 }
 
 model Category {
-  id   String       @id @default(cuid())
-  name String
-  type CategoryType @default(expense)
+  id    String       @id @default(cuid())
+  name  String
+  type  CategoryType @default(expense)
+  icon  String?
+  color String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

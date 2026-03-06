@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { MergeDialog } from '@/components/categories/MergeDialog';
+import { IconPicker } from '@/components/categories/IconPicker';
 import {
   useRenameCategory,
   useDeleteCategory,
@@ -118,221 +119,235 @@ export function CategoryList({ categories }: CategoryListProps) {
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((category) => (
-          <Card key={category.id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-2">
-                {renamingId === category.id ? (
-                  <div className="flex flex-1 items-center gap-1">
+        {categories.map((category) => {
+          return (
+            <Card key={category.id}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  {renamingId === category.id ? (
+                    <div className="flex flex-1 items-center gap-1">
+                      <Input
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') confirmRename();
+                          if (e.key === 'Escape') cancelRename();
+                        }}
+                        className="h-7 text-sm"
+                        autoFocus
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={confirmRename}
+                        disabled={renameMutation.isPending}
+                      >
+                        <Check className="size-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={cancelRename}
+                      >
+                        <X className="size-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2.5">
+                      <IconPicker
+                        categoryId={category.id}
+                        categoryName={category.name}
+                        currentIcon={category.icon}
+                        currentColor={category.color}
+                      />
+                      <CardTitle className="text-base">{category.name}</CardTitle>
+                    </div>
+                  )}
+                  <Badge
+                    variant={
+                      category.type === 'income' ? 'default' : 'secondary'
+                    }
+                    className="text-xs shrink-0"
+                  >
+                    {category.type}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground pl-10.5">
+                  {category._count.transactions} transaction
+                  {category._count.transactions !== 1 ? 's' : ''}
+                </p>
+                {/* Subcategory summary */}
+                {category.subcategories.length > 0 && (
+                  <p className="text-xs text-muted-foreground pl-10.5 truncate">
+                    {category.subcategories.map((s) => s.name).join(', ')}
+                  </p>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Subcategories */}
+                {category.subcategories.length > 0 && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Subcategories
+                    </p>
+                    <div className="space-y-1">
+                      {category.subcategories.map((sub) => (
+                        <div
+                          key={sub.id}
+                          className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted/50"
+                        >
+                          {renamingSubcategory?.subcategoryId === sub.id ? (
+                            <div className="flex flex-1 items-center gap-1">
+                              <Input
+                                value={renameSubValue}
+                                onChange={(e) =>
+                                  setRenameSubValue(e.target.value)
+                                }
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') confirmRenameSub();
+                                  if (e.key === 'Escape') cancelRenameSub();
+                                }}
+                                className="h-6 text-xs"
+                                autoFocus
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={confirmRenameSub}
+                                disabled={renameSubMutation.isPending}
+                              >
+                                <Check className="size-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={cancelRenameSub}
+                              >
+                                <X className="size-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-1.5">
+                                <Tag className="size-3 text-muted-foreground" />
+                                <span>{sub.name}</span>
+                              </div>
+                              <div className="flex items-center gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() =>
+                                    startRenameSub(
+                                      category.id,
+                                      sub.id,
+                                      sub.name
+                                    )
+                                  }
+                                  aria-label={`Rename ${sub.name}`}
+                                >
+                                  <Pencil className="size-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() =>
+                                    handleDeleteSub(category.id, sub.id)
+                                  }
+                                  aria-label={`Delete ${sub.name}`}
+                                >
+                                  <Trash2 className="size-3 text-destructive" />
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add subcategory */}
+                {addingSubcategoryFor === category.id ? (
+                  <div className="flex items-center gap-1">
                     <Input
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
+                      value={newSubcategoryName}
+                      onChange={(e) => setNewSubcategoryName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') confirmRename();
-                        if (e.key === 'Escape') cancelRename();
+                        if (e.key === 'Enter')
+                          handleAddSubcategory(category.id);
+                        if (e.key === 'Escape') {
+                          setAddingSubcategoryFor(null);
+                          setNewSubcategoryName('');
+                        }
                       }}
+                      placeholder="Subcategory name"
                       className="h-7 text-sm"
                       autoFocus
                     />
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      onClick={confirmRename}
-                      disabled={renameMutation.isPending}
+                      onClick={() => handleAddSubcategory(category.id)}
+                      disabled={createSubMutation.isPending}
                     >
                       <Check className="size-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      onClick={cancelRename}
+                      onClick={() => {
+                        setAddingSubcategoryFor(null);
+                        setNewSubcategoryName('');
+                      }}
                     >
                       <X className="size-3.5" />
                     </Button>
                   </div>
                 ) : (
-                  <CardTitle className="text-base">{category.name}</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-muted-foreground"
+                    onClick={() => setAddingSubcategoryFor(category.id)}
+                  >
+                    <Plus className="size-3.5" />
+                    Add subcategory
+                  </Button>
                 )}
-                <div className="flex shrink-0 items-center gap-1">
-                  <Badge
-                    variant={
-                      category.type === 'income' ? 'default' : 'secondary'
-                    }
-                    className="text-xs"
-                  >
-                    {category.type}
-                  </Badge>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {category._count.transactions} transaction
-                {category._count.transactions !== 1 ? 's' : ''}
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {/* Subcategories */}
-              {category.subcategories.length > 0 && (
-                <div className="space-y-1.5">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Subcategories
-                  </p>
-                  <div className="space-y-1">
-                    {category.subcategories.map((sub) => (
-                      <div
-                        key={sub.id}
-                        className="flex items-center justify-between gap-2 rounded-md px-2 py-1 text-sm hover:bg-muted/50"
-                      >
-                        {renamingSubcategory?.subcategoryId === sub.id ? (
-                          <div className="flex flex-1 items-center gap-1">
-                            <Input
-                              value={renameSubValue}
-                              onChange={(e) =>
-                                setRenameSubValue(e.target.value)
-                              }
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') confirmRenameSub();
-                                if (e.key === 'Escape') cancelRenameSub();
-                              }}
-                              className="h-6 text-xs"
-                              autoFocus
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              onClick={confirmRenameSub}
-                              disabled={renameSubMutation.isPending}
-                            >
-                              <Check className="size-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              onClick={cancelRenameSub}
-                            >
-                              <X className="size-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-1.5">
-                              <Tag className="size-3 text-muted-foreground" />
-                              <span>{sub.name}</span>
-                            </div>
-                            <div className="flex items-center gap-0.5">
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() =>
-                                  startRenameSub(
-                                    category.id,
-                                    sub.id,
-                                    sub.name
-                                  )
-                                }
-                                aria-label={`Rename ${sub.name}`}
-                              >
-                                <Pencil className="size-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon-xs"
-                                onClick={() =>
-                                  handleDeleteSub(category.id, sub.id)
-                                }
-                                aria-label={`Delete ${sub.name}`}
-                              >
-                                <Trash2 className="size-3 text-destructive" />
-                              </Button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* Add subcategory */}
-              {addingSubcategoryFor === category.id ? (
-                <div className="flex items-center gap-1">
-                  <Input
-                    value={newSubcategoryName}
-                    onChange={(e) => setNewSubcategoryName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter')
-                        handleAddSubcategory(category.id);
-                      if (e.key === 'Escape') {
-                        setAddingSubcategoryFor(null);
-                        setNewSubcategoryName('');
-                      }
-                    }}
-                    placeholder="Subcategory name"
-                    className="h-7 text-sm"
-                    autoFocus
-                  />
+                {/* Category actions */}
+                <div className="flex items-center gap-1 border-t pt-3">
                   <Button
                     variant="ghost"
-                    size="icon-xs"
-                    onClick={() => handleAddSubcategory(category.id)}
-                    disabled={createSubMutation.isPending}
+                    size="xs"
+                    onClick={() => startRename(category)}
                   >
-                    <Check className="size-3.5" />
+                    <Pencil className="size-3" />
+                    Rename
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon-xs"
-                    onClick={() => {
-                      setAddingSubcategoryFor(null);
-                      setNewSubcategoryName('');
-                    }}
+                    size="xs"
+                    onClick={() => setMergingCategory(category)}
                   >
-                    <X className="size-3.5" />
+                    <Merge className="size-3" />
+                    Merge
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => setDeletingCategory(category)}
+                    disabled={category._count.transactions > 0}
+                  >
+                    <Trash2 className="size-3" />
+                    Delete
                   </Button>
                 </div>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-muted-foreground"
-                  onClick={() => setAddingSubcategoryFor(category.id)}
-                >
-                  <Plus className="size-3.5" />
-                  Add subcategory
-                </Button>
-              )}
-
-              {/* Category actions */}
-              <div className="flex items-center gap-1 border-t pt-3">
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => startRename(category)}
-                >
-                  <Pencil className="size-3" />
-                  Rename
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={() => setMergingCategory(category)}
-                >
-                  <Merge className="size-3" />
-                  Merge
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => setDeletingCategory(category)}
-                  disabled={category._count.transactions > 0}
-                >
-                  <Trash2 className="size-3" />
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <ConfirmDialog

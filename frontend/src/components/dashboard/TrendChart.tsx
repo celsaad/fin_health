@@ -1,11 +1,12 @@
 import {
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { TrendData } from '@/hooks/useDashboard';
@@ -52,17 +53,34 @@ function CustomTooltip({
   return null;
 }
 
+function CustomLegend({ payload }: { payload?: Array<{ value: string; color: string }> }) {
+  if (!payload) return null;
+  return (
+    <div className="flex items-center justify-center gap-6 pt-2">
+      {payload.map((entry) => (
+        <div key={entry.value} className="flex items-center gap-2 text-sm">
+          <span
+            className="size-2.5 rounded-full"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-muted-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function TrendChart({ trend }: TrendChartProps) {
   const chartData = trend.map((item) => ({
     ...item,
-    label: `${MONTH_LABELS[item.month]} ${item.year}`,
+    label: `${MONTH_LABELS[item.month]}`,
   }));
 
   if (chartData.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Income vs Expenses Trend</CardTitle>
+          <CardTitle>Activity</CardTitle>
         </CardHeader>
         <CardContent className="flex h-[300px] items-center justify-center">
           <p className="text-muted-foreground">No trend data available</p>
@@ -74,30 +92,24 @@ export function TrendChart({ trend }: TrendChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Income vs Expenses Trend</CardTitle>
+        <CardTitle>Activity</CardTitle>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <BarChart data={chartData} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" vertical={false} />
             <XAxis
               dataKey="label"
               className="text-xs"
               tick={{ fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis
               className="text-xs"
               tick={{ fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
               tickFormatter={(value) =>
                 new Intl.NumberFormat('en-US', {
                   notation: 'compact',
@@ -107,23 +119,22 @@ export function TrendChart({ trend }: TrendChartProps) {
               }
             />
             <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
+            <Legend content={<CustomLegend />} />
+            <Bar
               dataKey="income"
               name="Income"
-              stroke="#6366f1"
-              fill="url(#incomeGradient)"
-              strokeWidth={2}
+              fill="#6366f1"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
             />
-            <Area
-              type="monotone"
+            <Bar
               dataKey="expenses"
               name="Expenses"
-              stroke="#f43f5e"
-              fill="url(#expenseGradient)"
-              strokeWidth={2}
+              fill="#f43f5e"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
             />
-          </AreaChart>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

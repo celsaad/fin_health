@@ -85,8 +85,8 @@ export function RecurringForm({
         endDate: editingTransaction.endDate
           ? format(new Date(editingTransaction.endDate), 'yyyy-MM-dd')
           : '',
-        categoryName: editingTransaction.category,
-        subcategoryName: editingTransaction.subcategory ?? '',
+        categoryName: editingTransaction.category.name,
+        subcategoryName: editingTransaction.subcategory?.name ?? '',
         notes: editingTransaction.notes ?? '',
       });
     } else {

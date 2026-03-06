@@ -8,7 +8,7 @@ export interface Transaction {
   type: 'expense' | 'income';
   description: string;
   date: string;
-  category: { id: string; name: string; type: string };
+  category: { id: string; name: string; type: string; icon?: string | null; color?: string | null };
   subcategory?: { id: string; name: string } | null;
   notes?: string | null;
   createdAt: string;

@@ -1,0 +1,21 @@
+{
+  "name": "fin-health",
+  "private": true,
+  "packageManager": "npm@11.9.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "db:push": "npm run db:push -w @fin-health/backend",
+    "db:seed": "npm run db:seed -w @fin-health/backend",
+    "db:studio": "npm run db:studio -w @fin-health/backend"
+  },
+  "devDependencies": {
+    "turbo": "^2"
+  }
+}

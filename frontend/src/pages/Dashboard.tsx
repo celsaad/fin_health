@@ -4,8 +4,10 @@ import { DateRangeSelector } from '@/components/dashboard/DateRangeSelector';
 import { SummaryCards } from '@/components/dashboard/SummaryCards';
 import { ExpensePieChart } from '@/components/dashboard/ExpensePieChart';
 import { TrendChart } from '@/components/dashboard/TrendChart';
+import { TopCategories } from '@/components/dashboard/TopCategories';
 import { MonthlyTable } from '@/components/dashboard/MonthlyTable';
 import { useSummary, useBreakdown, useTrend } from '@/hooks/useDashboard';
+import { useBudgets } from '@/hooks/useBudgets';
 
 export default function Dashboard() {
   const now = new Date();
@@ -15,6 +17,7 @@ export default function Dashboard() {
   const { data: summary, isLoading: summaryLoading } = useSummary(month, year);
   const { data: breakdown, isLoading: breakdownLoading } = useBreakdown(month, year);
   const { data: trend, isLoading: trendLoading } = useTrend(6);
+  const { data: budgets } = useBudgets(month, year);
 
   return (
     <div className="space-y-6">
@@ -59,11 +62,19 @@ export default function Dashboard() {
         ) : null}
       </div>
 
-      {breakdownLoading ? (
-        <TableSkeleton rows={5} columns={3} />
-      ) : breakdown ? (
-        <MonthlyTable breakdown={breakdown} />
-      ) : null}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {breakdownLoading ? (
+          <CardSkeleton />
+        ) : breakdown ? (
+          <TopCategories breakdown={breakdown} budgets={budgets} />
+        ) : null}
+
+        {breakdownLoading ? (
+          <TableSkeleton rows={5} columns={3} />
+        ) : breakdown ? (
+          <MonthlyTable breakdown={breakdown} />
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -10,61 +10,52 @@ interface SummaryCardsProps {
 }
 
 export function SummaryCards({ summary }: SummaryCardsProps) {
-  const isPositive = summary.net >= 0;
+  const cards = [
+    {
+      label: 'Net Balance',
+      value: formatCurrency(summary.net),
+      icon: DollarSign,
+      iconColor: 'text-indigo-600',
+      bgColor: 'bg-indigo-100 dark:bg-indigo-950',
+    },
+    {
+      label: 'Income',
+      value: formatCurrency(summary.totalIncome),
+      icon: TrendingUp,
+      iconColor: 'text-emerald-600',
+      bgColor: 'bg-emerald-100 dark:bg-emerald-950',
+    },
+    {
+      label: 'Expenses',
+      value: formatCurrency(summary.totalExpenses),
+      icon: TrendingDown,
+      iconColor: 'text-red-500',
+      bgColor: 'bg-red-100 dark:bg-red-950',
+    },
+    {
+      label: 'Transactions',
+      value: String(summary.transactionCount),
+      icon: Activity,
+      iconColor: 'text-blue-600',
+      bgColor: 'bg-blue-100 dark:bg-blue-950',
+    },
+  ];
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {/* Net balance */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Net Balance</p>
-            <div className={`rounded-lg p-2 ${isPositive ? 'bg-emerald-50 dark:bg-emerald-950' : 'bg-red-50 dark:bg-red-950'}`}>
-              <DollarSign className={`size-4 ${isPositive ? 'text-emerald-600' : 'text-red-500'}`} />
+      {cards.map(({ label, value, icon: Icon, iconColor, bgColor }) => (
+        <Card key={label}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-muted-foreground">{label}</p>
+              <div className={`flex size-10 items-center justify-center rounded-full ${bgColor}`}>
+                <Icon className={`size-5 ${iconColor}`} />
+              </div>
             </div>
-          </div>
-          <p className="mt-1 text-2xl font-bold">{formatCurrency(summary.net)}</p>
-        </CardContent>
-      </Card>
-
-      {/* Income */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Income</p>
-            <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950 p-2">
-              <TrendingUp className="size-4 text-emerald-600" />
-            </div>
-          </div>
-          <p className="mt-1 text-2xl font-bold">{formatCurrency(summary.totalIncome)}</p>
-        </CardContent>
-      </Card>
-
-      {/* Expenses */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Expenses</p>
-            <div className="rounded-lg bg-red-50 dark:bg-red-950 p-2">
-              <TrendingDown className="size-4 text-red-500" />
-            </div>
-          </div>
-          <p className="mt-1 text-2xl font-bold">{formatCurrency(summary.totalExpenses)}</p>
-        </CardContent>
-      </Card>
-
-      {/* Transactions */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-muted-foreground">Transactions</p>
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Activity className="size-4 text-primary" />
-            </div>
-          </div>
-          <p className="mt-1 text-2xl font-bold">{summary.transactionCount}</p>
-        </CardContent>
-      </Card>
+            <p className="mt-1 text-2xl font-bold">{value}</p>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }

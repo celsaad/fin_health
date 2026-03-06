@@ -1,26 +1,10 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreakdownItem } from '@/hooks/useDashboard';
 
 const COLORS = [
-  '#6366f1', // indigo
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#8b5cf6', // violet
-  '#ef4444', // red
-  '#06b6d4', // cyan
-  '#ec4899', // pink
-  '#f97316', // orange
-  '#14b8a6', // teal
-  '#84cc16', // lime
+  '#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444',
+  '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#84cc16',
 ];
 
 const formatCurrency = (amount: number) =>
@@ -29,7 +13,7 @@ const formatCurrency = (amount: number) =>
 interface TooltipPayloadItem {
   name: string;
   value: number;
-  payload: BreakdownItem;
+  payload: BreakdownItem & { fill: string };
 }
 
 function CustomTooltip({
@@ -72,7 +56,7 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
   }
 
   const sorted = [...breakdown].sort((a, b) => b.total - a.total);
-  const chartHeight = Math.max(300, sorted.length * 48);
+  const totalSpent = sorted.reduce((sum, item) => sum + item.total, 0);
 
   return (
     <Card>
@@ -80,35 +64,51 @@ export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
         <CardTitle>Expense Breakdown</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={chartHeight}>
-          <BarChart data={sorted} layout="vertical" margin={{ left: 8, right: 80 }}>
-            <XAxis type="number" hide />
-            <YAxis
-              type="category"
-              dataKey="categoryName"
-              width={120}
-              tick={{ fontSize: 13 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 0, 0, 0.04)' }} />
-            <Bar dataKey="total" radius={[0, 6, 6, 0]} barSize={28} label={({ x, y, width, height, value, index }) => (
-              <text
-                x={x + width + 8}
-                y={y + height / 2}
-                textAnchor="start"
-                dominantBaseline="central"
-                className="fill-muted-foreground text-xs"
+        <div className="relative">
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={sorted}
+                cx="50%"
+                cy="50%"
+                innerRadius="60%"
+                outerRadius="80%"
+                dataKey="total"
+                nameKey="categoryName"
+                paddingAngle={2}
+                strokeWidth={0}
               >
-                {formatCurrency(value as number)} ({sorted[index as number].percentage.toFixed(0)}%)
-              </text>
-            )}>
-              {sorted.map((_entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+                {sorted.map((_entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+          {/* Center label */}
+          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-bold">{formatCurrency(totalSpent)}</span>
+            <span className="text-xs font-medium uppercase text-muted-foreground tracking-wider">
+              Spent
+            </span>
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2">
+          {sorted.map((item, i) => (
+            <div key={item.categoryId} className="flex items-center gap-2 text-sm">
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: COLORS[i % COLORS.length] }}
+              />
+              <span className="truncate text-muted-foreground">
+                {item.categoryName}
+              </span>
+              <span className="ml-auto font-medium">{item.percentage.toFixed(0)}%</span>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

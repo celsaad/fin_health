@@ -11,6 +11,8 @@ export interface Category {
   id: string;
   name: string;
   type: 'expense' | 'income';
+  icon?: string | null;
+  color?: string | null;
   subcategories: Subcategory[];
   _count: {
     transactions: number;
@@ -143,6 +145,34 @@ export function useDeleteSubcategory() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete subcategory');
+    },
+  });
+}
+
+export function useUpdateCategoryAppearance() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      icon,
+      color,
+    }: {
+      id: string;
+      icon?: string;
+      color?: string;
+    }) => {
+      const { data } = await api.put(`/categories/${id}`, { icon, color });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      queryClient.invalidateQueries({ queryKey: ['recurring'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update category appearance');
     },
   });
 }

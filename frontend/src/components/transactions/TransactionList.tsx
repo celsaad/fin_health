@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { TransactionCard, DateGroupHeader } from '@/components/transactions/TransactionCard';
 import {
   useDeleteTransaction,
   useBulkDeleteTransactions,
@@ -22,6 +23,22 @@ interface TransactionListProps {
   transactions: Transaction[];
 }
 
+function groupByDate(transactions: Transaction[]) {
+  const groups: { date: string; transactions: Transaction[] }[] = [];
+  let currentDate = '';
+
+  for (const txn of transactions) {
+    const day = txn.date.slice(0, 10);
+    if (day !== currentDate) {
+      currentDate = day;
+      groups.push({ date: day, transactions: [txn] });
+    } else {
+      groups[groups.length - 1].transactions.push(txn);
+    }
+  }
+  return groups;
+}
+
 export function TransactionList({ transactions }: TransactionListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingTransaction, setEditingTransaction] =
@@ -31,6 +48,8 @@ export function TransactionList({ transactions }: TransactionListProps) {
 
   const deleteMutation = useDeleteTransaction();
   const bulkDeleteMutation = useBulkDeleteTransactions();
+
+  const dateGroups = useMemo(() => groupByDate(transactions), [transactions]);
 
   const allSelected =
     transactions.length > 0 && selectedIds.size === transactions.length;
@@ -86,7 +105,27 @@ export function TransactionList({ transactions }: TransactionListProps) {
         </div>
       )}
 
-      <div className="rounded-lg border">
+      {/* Card layout for mobile */}
+      <div className="lg:hidden space-y-1">
+        {dateGroups.map((group) => (
+          <div key={group.date}>
+            <DateGroupHeader date={group.date} />
+            <div className="space-y-2">
+              {group.transactions.map((transaction) => (
+                <TransactionCard
+                  key={transaction.id}
+                  transaction={transaction}
+                  onEdit={setEditingTransaction}
+                  onDelete={setDeletingId}
+                />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Table layout for desktop */}
+      <div className="hidden lg:block rounded-lg border">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

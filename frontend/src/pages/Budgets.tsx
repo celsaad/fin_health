@@ -104,6 +104,7 @@ export default function Budgets() {
         onOpenChange={setFormOpen}
         defaultMonth={month}
         defaultYear={year}
+        existingCategoryIds={categoryBudgets.map((b) => b.categoryId!)}
       />
     </div>
   );

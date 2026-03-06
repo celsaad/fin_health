@@ -1,3 +1,7 @@
+import { useState, useMemo } from 'react';
+import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -5,9 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useMemo } from 'react';
 import { useCategories } from '@/hooks/useCategories';
 import type { TransactionFilters as Filters } from '@/hooks/useTransactions';
 
@@ -16,16 +17,53 @@ interface TransactionFiltersProps {
   onFilterChange: (filters: Filters) => void;
 }
 
+function FilterChip({
+  label,
+  active,
+  onClick,
+  onClear,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  onClear?: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+        active
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+      }`}
+    >
+      {label}
+      {active && onClear && (
+        <X
+          className="size-3.5"
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+        />
+      )}
+    </button>
+  );
+}
+
 export function TransactionFilters({
   filters,
   onFilterChange,
 }: TransactionFiltersProps) {
   const { data: categories = [] } = useCategories();
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showSubcategoryPicker, setShowSubcategoryPicker] = useState(false);
 
   const handleTypeChange = (value: string) => {
     onFilterChange({
       ...filters,
-      type: value === 'all' ? '' : (value as 'expense' | 'income'),
+      type: value === filters.type ? '' : (value as 'expense' | 'income'),
       page: 1,
     });
   };
@@ -37,6 +75,7 @@ export function TransactionFilters({
       subcategoryId: '',
       page: 1,
     });
+    setShowCategoryPicker(false);
   };
 
   const handleSubcategoryChange = (value: string) => {
@@ -45,6 +84,7 @@ export function TransactionFilters({
       subcategoryId: value === 'all' ? '' : value,
       page: 1,
     });
+    setShowSubcategoryPicker(false);
   };
 
   const subcategories = useMemo(() => {
@@ -52,6 +92,8 @@ export function TransactionFilters({
     const category = categories.find((c) => c.id === filters.categoryId);
     return category?.subcategories ?? [];
   }, [categories, filters.categoryId]);
+
+  const selectedCategory = categories.find((c) => c.id === filters.categoryId);
 
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFilterChange({
@@ -70,66 +112,105 @@ export function TransactionFilters({
   };
 
   return (
-    <div className="flex flex-wrap items-end gap-4">
-      <div className="grid gap-1.5">
-        <Label className="text-xs text-muted-foreground">Type</Label>
-        <Select
-          value={filters.type || 'all'}
-          onValueChange={handleTypeChange}
-        >
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="All types" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="expense">Expense</SelectItem>
-            <SelectItem value="income">Income</SelectItem>
-          </SelectContent>
-        </Select>
+    <div className="flex flex-wrap items-end gap-3">
+      {/* Type filter chips */}
+      <div className="flex items-center gap-2">
+        <FilterChip
+          label="All"
+          active={!filters.type}
+          onClick={() => onFilterChange({ ...filters, type: '', page: 1 })}
+        />
+        <FilterChip
+          label="Expense"
+          active={filters.type === 'expense'}
+          onClick={() => handleTypeChange('expense')}
+          onClear={() => onFilterChange({ ...filters, type: '', page: 1 })}
+        />
+        <FilterChip
+          label="Income"
+          active={filters.type === 'income'}
+          onClick={() => handleTypeChange('income')}
+          onClear={() => onFilterChange({ ...filters, type: '', page: 1 })}
+        />
       </div>
 
-      <div className="grid gap-1.5">
-        <Label className="text-xs text-muted-foreground">Category</Label>
-        <Select
-          value={filters.categoryId || 'all'}
-          onValueChange={handleCategoryChange}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All categories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {subcategories.length > 0 && (
-        <div className="grid gap-1.5">
-          <Label className="text-xs text-muted-foreground">Subcategory</Label>
-          <Select
-            value={filters.subcategoryId || 'all'}
-            onValueChange={handleSubcategoryChange}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All subcategories" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All subcategories</SelectItem>
-              {subcategories.map((sub) => (
-                <SelectItem key={sub.id} value={sub.id}>
-                  {sub.name}
-                </SelectItem>
+      {/* Category chip with dropdown */}
+      <div className="relative">
+        <FilterChip
+          label={selectedCategory ? selectedCategory.name : 'Category'}
+          active={!!filters.categoryId}
+          onClick={() => setShowCategoryPicker(!showCategoryPicker)}
+          onClear={filters.categoryId ? () => handleCategoryChange('all') : undefined}
+        />
+        {showCategoryPicker && (
+          <>
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setShowCategoryPicker(false)}
+            />
+            <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-lg border bg-popover p-1 shadow-md">
+              <button
+                className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
+                onClick={() => handleCategoryChange('all')}
+              >
+                All categories
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => handleCategoryChange(cat.id)}
+                >
+                  {cat.name}
+                </button>
               ))}
-            </SelectContent>
-          </Select>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Subcategory chip with dropdown */}
+      {subcategories.length > 0 && (
+        <div className="relative">
+          <FilterChip
+            label={
+              filters.subcategoryId
+                ? subcategories.find((s) => s.id === filters.subcategoryId)?.name ?? 'Subcategory'
+                : 'Subcategory'
+            }
+            active={!!filters.subcategoryId}
+            onClick={() => setShowSubcategoryPicker(!showSubcategoryPicker)}
+            onClear={filters.subcategoryId ? () => handleSubcategoryChange('all') : undefined}
+          />
+          {showSubcategoryPicker && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowSubcategoryPicker(false)}
+              />
+              <div className="absolute left-0 top-full z-20 mt-1 max-h-60 w-48 overflow-y-auto rounded-lg border bg-popover p-1 shadow-md">
+                <button
+                  className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
+                  onClick={() => handleSubcategoryChange('all')}
+                >
+                  All subcategories
+                </button>
+                {subcategories.map((sub) => (
+                  <button
+                    key={sub.id}
+                    className="w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-muted"
+                    onClick={() => handleSubcategoryChange(sub.id)}
+                  >
+                    {sub.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
+      {/* Date filters */}
       <div className="grid gap-1.5">
         <Label className="text-xs text-muted-foreground">Start date</Label>
         <Input

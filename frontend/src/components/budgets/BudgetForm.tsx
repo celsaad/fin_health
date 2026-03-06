@@ -38,6 +38,7 @@ interface BudgetFormProps {
   onOpenChange: (open: boolean) => void;
   defaultMonth: number;
   defaultYear: number;
+  existingCategoryIds?: string[];
 }
 
 const MONTHS = [
@@ -60,6 +61,7 @@ export function BudgetForm({
   onOpenChange,
   defaultMonth,
   defaultYear,
+  existingCategoryIds = [],
 }: BudgetFormProps) {
   const { data: categories } = useCategories();
   const upsertBudget = useUpsertBudget();
@@ -187,7 +189,7 @@ export function BudgetForm({
               </SelectTrigger>
               <SelectContent>
                 {categories
-                  ?.filter((c) => c.type === 'expense')
+                  ?.filter((c) => c.type === 'expense' && !existingCategoryIds.includes(c.id))
                   .map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
@@ -198,9 +200,11 @@ export function BudgetForm({
             {errors.categoryId && (
               <p className="text-sm text-destructive">{errors.categoryId.message}</p>
             )}
-            {categories?.filter((c) => c.type === 'expense').length === 0 && (
+            {categories?.filter((c) => c.type === 'expense' && !existingCategoryIds.includes(c.id)).length === 0 && (
               <p className="text-xs text-muted-foreground">
-                Add transactions to create expense categories for per-category budgets.
+                {categories?.filter((c) => c.type === 'expense').length === 0
+                  ? 'Add transactions to create expense categories for per-category budgets.'
+                  : 'All expense categories already have budgets for this period.'}
               </p>
             )}
           </div>

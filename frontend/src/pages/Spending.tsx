@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { TrendingUp } from 'lucide-react';
 import { CardSkeleton, ListSkeleton } from '@/components/shared/LoadingSkeleton';
 import { DateRangeSelector } from '@/components/dashboard/DateRangeSelector';
 import { CategoryAccordion } from '@/components/spending/CategoryAccordion';
 import { Card, CardContent } from '@/components/ui/card';
-import { useCategoryBreakdown } from '@/hooks/useDashboard';
+import { useCategoryBreakdown, useTrend } from '@/hooks/useDashboard';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -17,8 +18,21 @@ export default function Spending() {
   const expandedCategoryId = searchParams.get('category');
 
   const { data: categories, isLoading } = useCategoryBreakdown(month, year);
+  const { data: trend } = useTrend(2);
 
   const totalExpenses = categories?.reduce((sum, c) => sum + c.total, 0) ?? 0;
+
+  // Calculate trend percentage
+  let trendPct: number | null = null;
+  if (trend && trend.length >= 2) {
+    const current = trend[trend.length - 1];
+    const previous = trend[trend.length - 2];
+    if (previous.expenses > 0) {
+      trendPct = Math.round(
+        ((current.expenses - previous.expenses) / previous.expenses) * 100
+      );
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -46,10 +60,19 @@ export default function Spending() {
         </>
       ) : categories && categories.length > 0 ? (
         <>
-          <Card>
-            <CardContent className="flex items-center justify-between p-4">
-              <span className="text-sm font-medium text-muted-foreground">Total Expenses</span>
-              <span className="text-2xl font-bold">{formatCurrency(totalExpenses)}</span>
+          {/* Gradient banner */}
+          <Card className="overflow-hidden border-0 bg-gradient-to-r from-primary to-primary/80">
+            <CardContent className="p-6 text-primary-foreground">
+              <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
+                Total Expenses
+              </p>
+              <p className="mt-1 text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
+              {trendPct !== null && (
+                <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium">
+                  <TrendingUp className="size-3" />
+                  {trendPct > 0 ? '+' : ''}{trendPct}% from last month
+                </div>
+              )}
             </CardContent>
           </Card>
 

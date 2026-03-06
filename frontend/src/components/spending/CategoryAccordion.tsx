@@ -11,22 +11,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { CategorySpending } from '@/hooks/useDashboard';
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
 export const CATEGORY_COLORS = [
-  '#6366f1', // indigo
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#8b5cf6', // violet
-  '#ef4444', // red
-  '#06b6d4', // cyan
-  '#ec4899', // pink
-  '#f97316', // orange
-  '#14b8a6', // teal
-  '#84cc16', // lime
+  '#6366f1', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444',
+  '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#84cc16',
 ];
 
 interface CategoryAccordionProps {
@@ -38,6 +31,8 @@ interface CategoryAccordionProps {
 export function CategoryAccordion({ category, colorIndex = 0, defaultOpen = false }: CategoryAccordionProps) {
   const [open, setOpen] = useState(defaultOpen);
   const color = CATEGORY_COLORS[colorIndex % CATEGORY_COLORS.length];
+  const config = getCategoryIcon(category.categoryName);
+  const Icon = config.icon;
 
   return (
     <Collapsible.Root open={open} onOpenChange={setOpen}>
@@ -47,15 +42,16 @@ export function CategoryAccordion({ category, colorIndex = 0, defaultOpen = fals
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-2.5">
-                  <span
-                    className="size-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: color }}
-                  />
+                  <div
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-full ${config.bgColor} ${config.darkBgColor}`}
+                  >
+                    <Icon className={`size-4 ${config.color}`} />
+                  </div>
                   <span className="font-medium truncate">{category.categoryName}</span>
                 </div>
                 <span className="font-semibold shrink-0">{formatCurrency(category.total)}</span>
               </div>
-              <div className="mt-2.5 flex items-center gap-2 pl-5.5">
+              <div className="mt-2.5 flex items-center gap-2 pl-10.5">
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full transition-all"

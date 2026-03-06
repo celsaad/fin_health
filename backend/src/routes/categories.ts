@@ -3,7 +3,7 @@ import prisma from '../lib/prisma';
 import { authMiddleware } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import {
-  renameCategorySchema,
+  updateCategorySchema,
   mergeCategorySchema,
   createSubcategorySchema,
   renameSubcategorySchema,
@@ -44,15 +44,15 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// PUT /api/categories/:id — rename
+// PUT /api/categories/:id — update name, icon, color
 router.put(
   '/:id',
-  validate(renameCategorySchema),
+  validate(updateCategorySchema),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId!;
       const { id } = req.params;
-      const { name } = req.body;
+      const { name, icon, color } = req.body;
 
       const category = await prisma.category.findFirst({
         where: { id, userId },
@@ -62,20 +62,27 @@ router.put(
         throw new AppError('Category not found', 404);
       }
 
-      // Check uniqueness for the new name
-      const duplicate = await prisma.category.findUnique({
-        where: {
-          userId_name_type: { userId, name, type: category.type },
-        },
-      });
+      // Check uniqueness for the new name (only if name is being changed)
+      if (name) {
+        const duplicate = await prisma.category.findUnique({
+          where: {
+            userId_name_type: { userId, name, type: category.type },
+          },
+        });
 
-      if (duplicate && duplicate.id !== id) {
-        throw new AppError('A category with this name already exists', 409);
+        if (duplicate && duplicate.id !== id) {
+          throw new AppError('A category with this name already exists', 409);
+        }
       }
+
+      const data: { name?: string; icon?: string; color?: string } = {};
+      if (name !== undefined) data.name = name;
+      if (icon !== undefined) data.icon = icon;
+      if (color !== undefined) data.color = color;
 
       const updated = await prisma.category.update({
         where: { id },
-        data: { name },
+        data,
       });
 
       res.json({ category: updated });

@@ -12,6 +12,8 @@ export interface Budget {
   category?: {
     id: string;
     name: string;
+    icon?: string | null;
+    color?: string | null;
   } | null;
   spent: number;
   remaining: number;
