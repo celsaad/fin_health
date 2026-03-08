@@ -8,11 +8,14 @@ import api, {
   setOnAuthFailure,
 } from '../services/api';
 
+import type { UserPlan } from '@fin-health/shared/types';
+
 interface User {
   id: string;
   name: string;
   email: string;
   currency?: string;
+  plan: UserPlan;
 }
 
 interface AuthContextValue {

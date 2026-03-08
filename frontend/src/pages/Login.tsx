@@ -11,7 +11,6 @@ import { useAuth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -117,23 +116,6 @@ export default function Login() {
         </form>
 
         {/* Divider */}
-        <div className="relative">
-          <Separator />
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground uppercase">
-            {t('common.or')}
-          </span>
-        </div>
-
-        {/* Social auth placeholders */}
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="rounded-full" type="button" disabled>
-            {t('common.google')}
-          </Button>
-          <Button variant="outline" className="rounded-full" type="button" disabled>
-            {t('common.apple')}
-          </Button>
-        </div>
-
         {/* Footer link */}
         <p className="text-center text-sm text-muted-foreground">
           {t('auth.noAccount')}{' '}

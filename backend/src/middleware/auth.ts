@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import type { Subscription } from '@prisma/client';
 import { verifyToken } from '../lib/jwt';
 import prisma from '../lib/prisma';
 
@@ -6,6 +7,7 @@ declare global {
   namespace Express {
     interface Request {
       userId?: string;
+      subscription?: Subscription | null;
     }
   }
 }
@@ -30,7 +32,7 @@ export async function authMiddleware(
     // Reject tokens issued before the last password change
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      select: { id: true, passwordChangedAt: true },
+      select: { id: true, passwordChangedAt: true, subscription: true },
     });
 
     if (!user) {
@@ -45,6 +47,7 @@ export async function authMiddleware(
     }
 
     req.userId = payload.userId;
+    req.subscription = user.subscription;
     next();
   } catch {
     res.status(401).json({ error: 'Invalid or expired token' });

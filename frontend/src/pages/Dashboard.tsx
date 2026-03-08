@@ -10,10 +10,13 @@ import { TopCategories } from '@/components/dashboard/TopCategories';
 import { MonthlyTable } from '@/components/dashboard/MonthlyTable';
 import { useSummary, useCategoryBreakdown, useTrend, useInsights } from '@/hooks/useDashboard';
 import { InsightsCard } from '@/components/dashboard/InsightsCard';
+import { ProGate } from '@/components/shared/ProGate';
 import { useBudgets } from '@/hooks/useBudgets';
+import { usePlan } from '@/hooks/usePlan';
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const { isPro } = usePlan();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -21,7 +24,7 @@ export default function Dashboard() {
   const summary$ = useSummary(month, year);
   const categoryBreakdown$ = useCategoryBreakdown(month, year);
   const trend$ = useTrend(6);
-  const insights$ = useInsights(month, year);
+  const insights$ = useInsights(month, year, isPro);
   const { data: budgets } = useBudgets(month, year);
 
   // Derive flat breakdown for TopCategories and MonthlyTable
@@ -75,11 +78,13 @@ export default function Dashboard() {
             <SummaryCards summary={summary$.data} />
           ) : null}
 
-          {insights$.isLoading ? (
-            <CardSkeleton />
-          ) : insights$.data ? (
-            <InsightsCard insights={insights$.data} />
-          ) : null}
+          <ProGate>
+            {insights$.isLoading ? (
+              <CardSkeleton />
+            ) : insights$.data ? (
+              <InsightsCard insights={insights$.data} />
+            ) : null}
+          </ProGate>
 
           <div className="grid gap-6 lg:grid-cols-2">
             {categoryBreakdown$.isLoading ? (

@@ -22,6 +22,7 @@
     "db:studio": "npm run db:studio -w @fin-health/backend"
   },
   "devDependencies": {
+    "playwright": "^1.58.2",
     "turbo": "^2"
   }
 }

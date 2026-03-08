@@ -2,6 +2,17 @@
 
 export type CategoryType = 'expense' | 'income';
 export type RecurrenceFrequency = 'weekly' | 'biweekly' | 'monthly' | 'yearly';
+export type PlanType = 'free' | 'pro';
+export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'expired';
+
+// ── Plan ──
+
+export interface UserPlan {
+  plan: PlanType;
+  status: SubscriptionStatus;
+  trialEndsAt: string | null;
+  currentPeriodEnd: string | null;
+}
 
 // ── Category ──
 

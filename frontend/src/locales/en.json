@@ -321,6 +321,11 @@
     "amountPositive": "Amount must be positive",
     "confirmPassword": "Please confirm your password"
   },
+  "plan": {
+    "upgradeTitle": "Upgrade to Pro",
+    "upgradeDescription": "This feature is available on the Pro plan. Upgrade to unlock insights and more.",
+    "upgradeCta": "Upgrade Now"
+  },
   "errors": {
     "loadFailed": "Failed to load data. Please try again."
   }

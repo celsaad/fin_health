@@ -137,7 +137,7 @@ interface InsightsResponse {
   insights: Insight[];
 }
 
-export function useInsights(month: number, year: number) {
+export function useInsights(month: number, year: number, enabled = true) {
   return useQuery({
     queryKey: ['dashboard', 'insights', month, year],
     queryFn: async () => {
@@ -146,5 +146,6 @@ export function useInsights(month: number, year: number) {
       });
       return data.insights;
     },
+    enabled,
   });
 }

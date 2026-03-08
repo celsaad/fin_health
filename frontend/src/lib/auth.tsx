@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { UserPlan } from '@fin-health/shared/types';
 import api, { setAuthErrorHandler } from '@/lib/api';
 
 interface User {
   id: string;
   email: string;
   name: string;
+  plan: UserPlan;
 }
 
 interface AuthContextType {
@@ -43,8 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = useCallback(async () => {
     try {
-      const { data } = await api.get<User>('/auth/me');
-      setUser(data);
+      const { data } = await api.get<{ user: User }>('/auth/me');
+      setUser(data.user);
     } catch {
       setToken(null);
       setUser(null);

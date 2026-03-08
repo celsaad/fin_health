@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { authMiddleware } from '../middleware/auth';
+import { requirePro } from '../middleware/requirePro';
 import { AppError } from '../middleware/errorHandler';
 import {
   getSummary,
@@ -104,7 +105,7 @@ router.get('/trend', async (req: Request, res: Response, next: NextFunction) => 
 });
 
 // GET /api/dashboard/insights?month=&year=
-router.get('/insights', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/insights', requirePro, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
     const month = parseInt(req.query.month as string, 10);

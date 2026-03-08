@@ -19,6 +19,18 @@ enum RecurrenceFrequency {
   yearly
 }
 
+enum PlanType {
+  free
+  pro
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  canceled
+  expired
+}
+
 model User {
   id                String   @id @default(cuid())
   email             String   @unique
@@ -34,6 +46,7 @@ model User {
   budgets               Budget[]
   recurringTransactions RecurringTransaction[]
   refreshTokens         RefreshToken[]
+  subscription          Subscription?
 }
 
 model RefreshToken {
@@ -158,4 +171,18 @@ model RecurringTransaction {
   updatedAt DateTime @updatedAt
 
   @@index([userId, isActive])
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  userId                 String             @unique
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                   PlanType           @default(pro)
+  status                 SubscriptionStatus @default(active)
+  trialEndsAt            DateTime?
+  currentPeriodEnd       DateTime?
+  stripeCustomerId       String?
+  stripeSubscriptionId   String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
 }

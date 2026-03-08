@@ -1,4 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import type { Subscription } from '@prisma/client';
+import type { UserPlan } from '@fin-health/shared/types';
 import prisma from '../lib/prisma';
 import { generateToken } from '../lib/jwt';
 import { hashPassword, comparePassword } from '../lib/password';
@@ -13,6 +15,23 @@ import { signupSchema, loginSchema, changePasswordSchema } from '../validators/a
 import { AppError } from '../middleware/errorHandler';
 import { generateRecurringTransactions } from '../services/recurringGenerator';
 import { logger } from '../lib/logger';
+
+const FREE_PLAN: UserPlan = {
+  plan: 'free',
+  status: 'active',
+  trialEndsAt: null,
+  currentPeriodEnd: null,
+};
+
+function derivePlan(subscription: Subscription | null | undefined): UserPlan {
+  if (!subscription) return FREE_PLAN;
+  return {
+    plan: subscription.plan,
+    status: subscription.status,
+    trialEndsAt: subscription.trialEndsAt?.toISOString() ?? null,
+    currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+  };
+}
 
 const router = Router();
 
@@ -33,13 +52,14 @@ router.post(
 
       const user = await prisma.user.create({
         data: { email, password: hashedPassword, name },
-        select: { id: true, email: true, name: true, currency: true, createdAt: true },
+        select: { id: true, email: true, name: true, currency: true, createdAt: true, subscription: true },
       });
 
       const token = generateToken(user.id);
       const refreshToken = await createRefreshToken(user.id);
+      const { subscription, ...userData } = user;
 
-      res.status(201).json({ token, refreshToken, user });
+      res.status(201).json({ token, refreshToken, user: { ...userData, plan: derivePlan(subscription) } });
     } catch (err) {
       next(err);
     }
@@ -54,7 +74,10 @@ router.post(
     try {
       const { email, password } = req.body;
 
-      const user = await prisma.user.findUnique({ where: { email } });
+      const user = await prisma.user.findUnique({
+        where: { email },
+        include: { subscription: true },
+      });
       if (!user) {
         throw new AppError('Invalid email or password', 401);
       }
@@ -67,8 +90,8 @@ router.post(
       const token = generateToken(user.id);
       const refreshToken = await createRefreshToken(user.id);
 
-      const { password: _, ...userWithoutPassword } = user;
-      res.json({ token, refreshToken, user: userWithoutPassword });
+      const { password: _, subscription, ...userWithoutPassword } = user;
+      res.json({ token, refreshToken, user: { ...userWithoutPassword, plan: derivePlan(subscription) } });
 
       // Generate any pending recurring transactions in background (non-blocking)
       generateRecurringTransactions(user.id).catch((err) => {
@@ -85,14 +108,15 @@ router.get('/me', authMiddleware, async (req: Request, res: Response, next: Next
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, name: true, currency: true, createdAt: true },
+      select: { id: true, email: true, name: true, currency: true, createdAt: true, subscription: true },
     });
 
     if (!user) {
       throw new AppError('User not found', 404);
     }
 
-    res.json({ user });
+    const { subscription, ...userData } = user;
+    res.json({ user: { ...userData, plan: derivePlan(subscription) } });
   } catch (err) {
     next(err);
   }
