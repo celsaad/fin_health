@@ -37,13 +37,22 @@ function AuthConsumer() {
 }
 
 describe('AuthContext', () => {
+  // Warm up React/RNTL internals — first render in a file always times out with React 19
+  beforeAll(() => {
+    const { unmount } = render(
+      <AuthProvider>
+        <AuthConsumer />
+      </AuthProvider>,
+    );
+    unmount();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
   });
 
-  // TODO: times out with React 19 + @testing-library/react-native v13 — upgrade to v14+
-  it.skip('starts in loading state and resolves to unauthenticated when no token', async () => {
+  it('starts in loading state and resolves to unauthenticated when no token', async () => {
     const { getByTestId } = render(
       <AuthProvider>
         <AuthConsumer />

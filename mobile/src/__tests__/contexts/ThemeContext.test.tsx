@@ -19,13 +19,22 @@ function ThemeConsumer() {
 }
 
 describe('ThemeContext', () => {
+  // Warm up React/RNTL internals — first render in a file always times out with React 19
+  beforeAll(() => {
+    const { unmount } = render(
+      <ThemeProvider>
+        <ThemeConsumer />
+      </ThemeProvider>,
+    );
+    unmount();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
   });
 
-  // TODO: times out with React 19 + @testing-library/react-native v13 — upgrade to v14+
-  it.skip('provides default system preference', async () => {
+  it('provides default system preference', async () => {
     const { getByTestId } = render(
       <ThemeProvider>
         <ThemeConsumer />
