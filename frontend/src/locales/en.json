@@ -159,7 +159,10 @@
     "exporting": "Exporting...",
     "exportCsv": "Export CSV",
     "editTransactionAriaLabel": "Edit transaction",
-    "deleteTransactionAriaLabel": "Delete transaction"
+    "deleteTransactionAriaLabel": "Delete transaction",
+    "filters": "Filters",
+    "openFilters": "Open filters",
+    "clearFilters": "Clear all"
   },
   "recurring": {
     "title": "Recurring Transactions",
@@ -277,7 +280,8 @@
     "settings": "Settings",
     "home": "Home",
     "txns": "Txns",
-    "tags": "Tags"
+    "tags": "Tags",
+    "more": "More"
   },
   "notFound": {
     "code": "404",
@@ -325,6 +329,32 @@
     "upgradeTitle": "Upgrade to Pro",
     "upgradeDescription": "This feature is available on the Pro plan. Upgrade to unlock insights and more.",
     "upgradeCta": "Upgrade Now"
+  },
+  "billing": {
+    "sectionTitle": "Subscription",
+    "currentPlan": "Current Plan",
+    "freeBadge": "Free",
+    "proBadge": "Pro",
+    "trialBadge": "Trial",
+    "cancelingBadge": "Canceling",
+    "renewsOn": "Renews on {{date}}",
+    "endsOn": "Access ends on {{date}}",
+    "trialEndsOn": "Trial ends on {{date}}",
+    "upgradeTitle": "Upgrade to Pro",
+    "upgradeDesc": "Unlock spending insights, advanced analytics, and more.",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "monthlyPrice": "$4.99/mo",
+    "yearlyPrice": "$39.99/yr",
+    "yearlySavings": "Save 33%",
+    "upgradeCta": "Upgrade Now",
+    "upgrading": "Redirecting...",
+    "manageDesc": "Change your plan, update payment method, or cancel your subscription.",
+    "manageCta": "Manage Subscription",
+    "managing": "Redirecting...",
+    "checkoutSuccess": "Welcome to Pro! Your subscription is now active.",
+    "checkoutCancel": "Checkout was canceled. You can try again anytime.",
+    "error": "Something went wrong. Please try again."
   },
   "errors": {
     "loadFailed": "Failed to load data. Please try again."

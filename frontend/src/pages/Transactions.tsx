@@ -59,9 +59,9 @@ export default function Transactions() {
         </div>
         <div className="flex items-center gap-2">
           <ExportButton filters={filters} />
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={() => setFormOpen(true)} aria-label={t('transactions.addTransaction')}>
             <Plus className="size-4" />
-            {t('transactions.addTransaction')}
+            <span className="hidden sm:inline">{t('transactions.addTransaction')}</span>
           </Button>
         </div>
       </div>
@@ -88,14 +88,18 @@ export default function Transactions() {
             <EmptyState
               icon={Receipt}
               title={
-                filters.search || hasActiveFilters ? t('transactions.noResults') : t('transactions.noTransactions')
+                filters.search || hasActiveFilters
+                  ? t('transactions.noResults')
+                  : t('transactions.noTransactions')
               }
               description={
                 filters.search || hasActiveFilters
                   ? t('transactions.noResultsDesc')
                   : t('transactions.noTransactionsDesc')
               }
-              actionLabel={filters.search || hasActiveFilters ? undefined : t('transactions.addTransaction')}
+              actionLabel={
+                filters.search || hasActiveFilters ? undefined : t('transactions.addTransaction')
+              }
               onAction={filters.search || hasActiveFilters ? undefined : () => setFormOpen(true)}
             />
           ) : (

@@ -86,7 +86,9 @@ export function TransactionList({ transactions }: TransactionListProps) {
     <>
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2">
-          <span className="text-sm font-medium">{t('transactions.selected', { count: selectedIds.size })}</span>
+          <span className="text-sm font-medium">
+            {t('transactions.selected', { count: selectedIds.size })}
+          </span>
           <Button variant="destructive" size="sm" onClick={() => setShowBulkDelete(true)}>
             <Trash2 className="size-4" />
             {t('transactions.deleteSelected')}

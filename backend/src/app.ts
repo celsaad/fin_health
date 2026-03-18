@@ -12,6 +12,7 @@ import categoryRoutes from './routes/categories';
 import budgetRoutes from './routes/budgets';
 import recurringRoutes from './routes/recurring';
 import dashboardRoutes from './routes/dashboard';
+import billingRoutes, { webhookRouter } from './routes/billing';
 
 const app = express();
 
@@ -22,6 +23,9 @@ import { env } from './lib/env';
 
 const corsOrigin = env.CORS_ORIGIN;
 app.use(cors({ origin: corsOrigin, credentials: true }));
+
+// Stripe webhook needs raw body — must be before express.json()
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }), webhookRouter);
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -57,6 +61,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/recurring', recurringRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Error handler (must be last)
 app.use(errorHandler);

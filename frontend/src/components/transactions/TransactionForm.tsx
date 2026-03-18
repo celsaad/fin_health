@@ -141,11 +141,11 @@ export function TransactionForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? t('transactions.editTransaction') : t('transactions.addTransaction')}</DialogTitle>
+          <DialogTitle>
+            {isEditing ? t('transactions.editTransaction') : t('transactions.addTransaction')}
+          </DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? t('transactions.editDesc')
-              : t('transactions.addDesc')}
+            {isEditing ? t('transactions.editDesc') : t('transactions.addDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -253,7 +253,9 @@ export function TransactionForm({
             value={watch('subcategoryName') ?? ''}
             onChange={(value) => setValue('subcategoryName', value)}
             placeholder={
-              selectedCategoryName ? t('transactions.subcategoryPlaceholder') : t('transactions.subcategoryDisabled')
+              selectedCategoryName
+                ? t('transactions.subcategoryPlaceholder')
+                : t('transactions.subcategoryDisabled')
             }
             disabled={!selectedCategoryName}
           />
@@ -273,7 +275,11 @@ export function TransactionForm({
               {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? t('common.saving') : isEditing ? t('common.update') : t('common.create')}
+              {isSubmitting
+                ? t('common.saving')
+                : isEditing
+                  ? t('common.update')
+                  : t('common.create')}
             </Button>
           </DialogFooter>
         </form>

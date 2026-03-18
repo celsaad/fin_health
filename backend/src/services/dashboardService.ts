@@ -289,11 +289,7 @@ export interface Insight {
   metadata?: Record<string, unknown>;
 }
 
-export async function getInsights(
-  userId: string,
-  month: number,
-  year: number,
-): Promise<Insight[]> {
+export async function getInsights(userId: string, month: number, year: number): Promise<Insight[]> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -389,7 +385,11 @@ export async function getInsights(
           title: 'Over-budget pace',
           description: `At this pace, you'll spend $${Math.round(projected).toLocaleString()} — $${Math.round(diff).toLocaleString()} over your $${Math.round(overallBudget).toLocaleString()} budget.`,
           sentiment: 'negative',
-          metadata: { projected: Math.round(projected), budget: overallBudget, overage: Math.round(diff) },
+          metadata: {
+            projected: Math.round(projected),
+            budget: overallBudget,
+            overage: Math.round(diff),
+          },
         });
       } else {
         insights.push({
@@ -477,7 +477,12 @@ export async function getInsights(
       title: `Unusual spending in ${mostUnusual.name}`,
       description: `$${Math.round(mostUnusual.current).toLocaleString()} vs $${Math.round(mostUnusual.avg).toLocaleString()} average — ${Math.round(mostUnusual.pct)}% above normal.`,
       sentiment: 'warning',
-      metadata: { category: mostUnusual.name, current: mostUnusual.current, average: mostUnusual.avg, percentAbove: Math.round(mostUnusual.pct) },
+      metadata: {
+        category: mostUnusual.name,
+        current: mostUnusual.current,
+        average: mostUnusual.avg,
+        percentAbove: Math.round(mostUnusual.pct),
+      },
     });
   }
 

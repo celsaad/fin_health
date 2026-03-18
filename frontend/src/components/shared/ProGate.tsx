@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { usePlan } from '@/hooks/usePlan';
 
 interface ProGateProps {
@@ -11,19 +12,21 @@ interface ProGateProps {
 
 function UpgradePrompt() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lock className="size-5" aria-hidden="true" />
-          {t('plan.upgradeTitle')}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{t('plan.upgradeDescription')}</p>
-      </CardContent>
-    </Card>
+    <div className="flex items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3">
+      <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+        <Lock className="size-5 text-primary" aria-hidden="true" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">{t('plan.upgradeTitle')}</p>
+        <p className="text-xs text-muted-foreground">{t('plan.upgradeDescription')}</p>
+      </div>
+      <Button size="sm" onClick={() => navigate('/settings')} className="shrink-0">
+        {t('plan.upgradeCta')}
+      </Button>
+    </div>
   );
 }
 

@@ -6,6 +6,7 @@ const DEFAULT_PLAN = {
   status: 'active' as SubscriptionStatus,
   trialEndsAt: null,
   currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
 };
 
 export function usePlan() {
@@ -18,6 +19,7 @@ export function usePlan() {
     isPro: plan.plan === 'pro' && (plan.status === 'active' || plan.status === 'trialing'),
     isFree: plan.plan === 'free' || plan.status === 'canceled' || plan.status === 'expired',
     isTrialing: plan.status === 'trialing',
+    isCanceling: plan.cancelAtPeriodEnd,
     trialEndsAt: plan.trialEndsAt,
     currentPeriodEnd: plan.currentPeriodEnd,
   };

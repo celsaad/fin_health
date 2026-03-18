@@ -319,6 +319,8 @@ function SummaryCard({
   );
 }
 
+const MIN_ARC_DEGREES = 10;
+
 function DonutChart({
   data,
   colors: chartColors,
@@ -328,17 +330,43 @@ function DonutChart({
   colors: string[];
   size: number;
 }) {
-  const total = data.reduce((sum, d) => sum + d.total, 0);
+  const total = data.reduce((sum: number, d: any) => sum + d.total, 0);
   if (total === 0) return null;
 
   const radius = size / 2;
   const strokeWidth = 24;
   const innerRadius = radius - strokeWidth;
+
+  // Compute angles with minimum arc enforcement
+  const rawAngles = data.map((d: any) => (d.total / total) * 360);
+  const adjustedAngles = [...rawAngles];
+  let deficit = 0;
+  const smallIndices: number[] = [];
+  const largeIndices: number[] = [];
+
+  rawAngles.forEach((angle, i) => {
+    if (angle > 0 && angle < MIN_ARC_DEGREES) {
+      deficit += MIN_ARC_DEGREES - angle;
+      adjustedAngles[i] = MIN_ARC_DEGREES;
+      smallIndices.push(i);
+    } else if (angle >= MIN_ARC_DEGREES) {
+      largeIndices.push(i);
+    }
+  });
+
+  if (deficit > 0 && largeIndices.length > 0) {
+    const totalLarge = largeIndices.reduce((s, i) => s + adjustedAngles[i], 0);
+    largeIndices.forEach((i) => {
+      adjustedAngles[i] -= deficit * (adjustedAngles[i] / totalLarge);
+    });
+  }
+
   let currentAngle = -90;
 
-  const segments = data.map((d, i) => {
-    const percentage = d.total / total;
-    const angle = percentage * 360;
+  const segments = data.map((_d: any, i: number) => {
+    const angle = adjustedAngles[i];
+    if (angle <= 0) return null;
+
     const startAngle = currentAngle;
     currentAngle += angle;
     const endAngle = currentAngle;
@@ -410,7 +438,6 @@ function InsightRow({ insight, colors }: { insight: Insight; colors: any }) {
     </View>
   );
 }
-
 
 const summaryStyles = StyleSheet.create({
   card: {

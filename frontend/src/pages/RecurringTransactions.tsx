@@ -42,9 +42,7 @@ export default function RecurringTransactions() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t('recurring.title')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('recurring.subtitle')}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('recurring.subtitle')}</p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <PlusCircle className="size-4" />

@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,31 +20,30 @@ function getNextMonth(m: number, y: number) {
 }
 
 export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorProps) {
-  const { t } = useTranslation();
-  const dirRef = useRef<'left' | 'right'>('right');
+  const [dir, setDir] = useState<'left' | 'right'>('right');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);
 
   const goPrev = () => {
-    dirRef.current = 'left';
+    setDir('left');
     const p = getPrevMonth(month, year);
     onChange(p.month, p.year);
   };
 
   const goNext = () => {
-    dirRef.current = 'right';
+    setDir('right');
     const n = getNextMonth(month, year);
     onChange(n.month, n.year);
   };
 
   const selectMonth = (m: number) => {
-    dirRef.current = pickerYear > year || (pickerYear === year && m > month) ? 'right' : 'left';
+    setDir(pickerYear > year || (pickerYear === year && m > month) ? 'right' : 'left');
     setPickerOpen(false);
     onChange(m, pickerYear);
   };
 
   const label = `${getMonthName(month)} ${year}`;
-  const animClass = dirRef.current === 'right' ? 'animate-slide-left' : 'animate-slide-right';
+  const animClass = dir === 'right' ? 'animate-slide-left' : 'animate-slide-right';
 
   return (
     <div className="flex items-center gap-1">
@@ -122,4 +120,3 @@ export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorPr
     </div>
   );
 }
-

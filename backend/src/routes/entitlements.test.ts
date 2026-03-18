@@ -27,9 +27,7 @@ describe('Entitlements', () => {
 
   describe('GET /api/auth/me — plan info', () => {
     it('returns free plan when user has no subscription', async () => {
-      const res = await api()
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${freeUser.token}`);
+      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${freeUser.token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.user.plan).toEqual({
@@ -37,13 +35,12 @@ describe('Entitlements', () => {
         status: 'active',
         trialEndsAt: null,
         currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
       });
     });
 
     it('returns pro plan when user has active subscription', async () => {
-      const res = await api()
-        .get('/api/auth/me')
-        .set('Authorization', `Bearer ${proUser.token}`);
+      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${proUser.token}`);
 
       expect(res.status).toBe(200);
       expect(res.body.user.plan.plan).toBe('pro');
@@ -53,11 +50,13 @@ describe('Entitlements', () => {
 
   describe('POST /api/auth/signup — plan info', () => {
     it('returns free plan for new users', async () => {
-      const res = await api().post('/api/auth/signup').send({
-        email: `entitlement-test-${Date.now()}@test.com`,
-        password: 'Test1234!',
-        name: 'Test',
-      });
+      const res = await api()
+        .post('/api/auth/signup')
+        .send({
+          email: `entitlement-test-${Date.now()}@test.com`,
+          password: 'Test1234!',
+          name: 'Test',
+        });
 
       expect(res.status).toBe(201);
       expect(res.body.user.plan.plan).toBe('free');

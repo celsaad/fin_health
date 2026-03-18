@@ -78,14 +78,6 @@ export default function Dashboard() {
             <SummaryCards summary={summary$.data} />
           ) : null}
 
-          <ProGate>
-            {insights$.isLoading ? (
-              <CardSkeleton />
-            ) : insights$.data ? (
-              <InsightsCard insights={insights$.data} />
-            ) : null}
-          </ProGate>
-
           <div className="grid gap-6 lg:grid-cols-2">
             {categoryBreakdown$.isLoading ? (
               <CardSkeleton />
@@ -113,6 +105,14 @@ export default function Dashboard() {
               <MonthlyTable breakdown={breakdown} />
             ) : null}
           </div>
+
+          <ProGate>
+            {insights$.isLoading ? (
+              <CardSkeleton />
+            ) : insights$.data ? (
+              <InsightsCard insights={insights$.data} />
+            ) : null}
+          </ProGate>
         </>
       )}
     </div>

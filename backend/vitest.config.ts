@@ -13,6 +13,11 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       JWT_SECRET: 'test-secret-key-for-vitest-only-do-not-use-in-prod',
+      STRIPE_SECRET_KEY: 'sk_test_fake_key_for_testing',
+      STRIPE_WEBHOOK_SECRET: 'whsec_test_fake_secret',
+      STRIPE_PRO_MONTHLY_PRICE_ID: 'price_test_monthly',
+      STRIPE_PRO_YEARLY_PRICE_ID: 'price_test_yearly',
+      CLIENT_URL: 'http://localhost:5173',
     },
   },
 });

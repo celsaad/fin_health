@@ -36,8 +36,12 @@ export function OverallBudget({ budgets }: OverallBudgetProps) {
             <p className="text-3xl font-bold">{formatCurrency(totalSpent)}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">{t('budgets.goal')}: {formatCurrency(totalBudgeted)}</p>
-            <p className="text-sm font-semibold text-primary">{pct}% {t('budgets.reached')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('budgets.goal')}: {formatCurrency(totalBudgeted)}
+            </p>
+            <p className="text-sm font-semibold text-primary">
+              {pct}% {t('budgets.reached')}
+            </p>
           </div>
         </div>
 
@@ -48,11 +52,13 @@ export function OverallBudget({ budgets }: OverallBudgetProps) {
           <span>
             {totalRemaining >= 0 ? (
               <>
-                {formatCurrency(totalRemaining)} {t('budgets.remaining')} {t('budgets.for')} {monthLabel}
+                {formatCurrency(totalRemaining)} {t('budgets.remaining')} {t('budgets.for')}{' '}
+                {monthLabel}
               </>
             ) : (
               <span className="text-red-600 dark:text-red-400">
-                {formatCurrency(Math.abs(totalRemaining))} {t('budgets.overBudget')} {t('budgets.for')} {monthLabel}
+                {formatCurrency(Math.abs(totalRemaining))} {t('budgets.overBudget')}{' '}
+                {t('budgets.for')} {monthLabel}
               </span>
             )}
           </span>

@@ -1,9 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
+import { X, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useCategories } from '@/hooks/useCategories';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import type { TransactionFilters as Filters } from '@/hooks/useTransactions';
 
 interface TransactionFiltersProps {
@@ -46,7 +49,7 @@ function FilterChip({
   );
 }
 
-export function TransactionFilters({ filters, onFilterChange }: TransactionFiltersProps) {
+function FilterContent({ filters, onFilterChange }: TransactionFiltersProps) {
   const { t } = useTranslation();
   const { data: categories = [] } = useCategories();
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
@@ -164,7 +167,8 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
           <FilterChip
             label={
               filters.subcategoryId
-                ? (subcategories.find((s) => s.id === filters.subcategoryId)?.name ?? t('transactions.subcategory'))
+                ? (subcategories.find((s) => s.id === filters.subcategoryId)?.name ??
+                  t('transactions.subcategory'))
                 : t('transactions.subcategory')
             }
             active={!!filters.subcategoryId}
@@ -217,5 +221,74 @@ export function TransactionFilters({ filters, onFilterChange }: TransactionFilte
         />
       </div>
     </div>
+  );
+}
+
+export function TransactionFilters({ filters, onFilterChange }: TransactionFiltersProps) {
+  const { t } = useTranslation();
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const activeCount =
+    (filters.type ? 1 : 0) +
+    (filters.categoryId ? 1 : 0) +
+    (filters.subcategoryId ? 1 : 0) +
+    (filters.startDate ? 1 : 0) +
+    (filters.endDate ? 1 : 0);
+
+  if (!isMobile) {
+    return <FilterContent filters={filters} onFilterChange={onFilterChange} />;
+  }
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setSheetOpen(true)}
+        aria-label={t('transactions.openFilters')}
+        className="relative"
+      >
+        <SlidersHorizontal className="size-4" />
+        <span>{t('transactions.filters')}</span>
+        {activeCount > 0 && (
+          <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+            {activeCount}
+          </span>
+        )}
+      </Button>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <SheetContent side="bottom">
+          <SheetHeader>
+            <div className="flex items-center justify-between">
+              <SheetTitle>{t('transactions.filters')}</SheetTitle>
+              {activeCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    onFilterChange({
+                      ...filters,
+                      type: '',
+                      categoryId: '',
+                      subcategoryId: '',
+                      startDate: '',
+                      endDate: '',
+                      page: 1,
+                    });
+                  }}
+                >
+                  {t('transactions.clearFilters')}
+                </Button>
+              )}
+            </div>
+          </SheetHeader>
+          <div className="px-4 pb-6">
+            <FilterContent filters={filters} onFilterChange={onFilterChange} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

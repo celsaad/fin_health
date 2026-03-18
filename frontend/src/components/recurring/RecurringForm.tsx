@@ -147,9 +147,7 @@ export function RecurringForm({ open, onOpenChange, editingTransaction }: Recurr
             {isEditing ? t('recurring.editRecurring') : t('recurring.addRecurring')}
           </DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? t('recurring.editDesc')
-              : t('recurring.addDesc')}
+            {isEditing ? t('recurring.editDesc') : t('recurring.addDesc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -281,7 +279,11 @@ export function RecurringForm({ open, onOpenChange, editingTransaction }: Recurr
 
           <div className="space-y-2">
             <Label htmlFor="notes">{t('recurring.notesOptional')}</Label>
-            <Input id="notes" placeholder={t('recurring.notesPlaceholder')} {...register('notes')} />
+            <Input
+              id="notes"
+              placeholder={t('recurring.notesPlaceholder')}
+              {...register('notes')}
+            />
           </div>
 
           <DialogFooter>

@@ -104,9 +104,7 @@ export function BudgetForm({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('budgets.addBudget')}</DialogTitle>
-          <DialogDescription>
-            {t('budgets.addBudgetDesc')}
-          </DialogDescription>
+          <DialogDescription>{t('budgets.addBudgetDesc')}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">

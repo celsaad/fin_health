@@ -23,9 +23,7 @@ export default function Categories() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('categories.title')}</h1>
-          <p className="text-muted-foreground">
-            {t('categories.subtitle')}
-          </p>
+          <p className="text-muted-foreground">{t('categories.subtitle')}</p>
         </div>
 
         {/* Segmented control */}
@@ -60,14 +58,20 @@ export default function Categories() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">
-              {activeType === 'expense' ? t('categories.expenseCategories') : t('categories.incomeCategories')}
+              {activeType === 'expense'
+                ? t('categories.expenseCategories')
+                : t('categories.incomeCategories')}
             </h2>
-            <span className="text-sm text-muted-foreground">{t('categories.total', { count })}</span>
+            <span className="text-sm text-muted-foreground">
+              {t('categories.total', { count })}
+            </span>
           </div>
           {count > 0 ? (
             <CategoryList categories={displayedCategories} />
           ) : (
-            <p className="py-8 text-center text-muted-foreground">{t('categories.noTypeCategories', { type: activeType })}</p>
+            <p className="py-8 text-center text-muted-foreground">
+              {t('categories.noTypeCategories', { type: activeType })}
+            </p>
           )}
         </div>
       )}

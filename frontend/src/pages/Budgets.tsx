@@ -28,11 +28,9 @@ export default function Budgets() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t('budgets.title')}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t('budgets.subtitle')}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('budgets.subtitle')}</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <DateRangeSelector
             month={month}
             year={year}
@@ -45,13 +43,14 @@ export default function Budgets() {
             variant="outline"
             onClick={() => copyBudgets.mutate({ month, year })}
             disabled={copyBudgets.isPending}
+            aria-label={t('budgets.copyLastMonth')}
           >
             <Copy className="size-4" />
-            {t('budgets.copyLastMonth')}
+            <span className="hidden sm:inline">{t('budgets.copyLastMonth')}</span>
           </Button>
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={() => setFormOpen(true)} aria-label={t('budgets.addBudget')}>
             <PlusCircle className="size-4" />
-            {t('budgets.addBudget')}
+            <span className="hidden sm:inline">{t('budgets.addBudget')}</span>
           </Button>
         </div>
       </div>

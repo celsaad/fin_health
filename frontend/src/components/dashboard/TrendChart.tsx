@@ -113,7 +113,13 @@ export function TrendChart({ trend }: TrendChartProps) {
             />
             <Tooltip content={<CustomTooltip />} />
             <Legend content={<CustomLegend />} />
-            <Bar dataKey="income" name={t('dashboard.income')} fill="#6366f1" radius={[4, 4, 0, 0]} barSize={20} />
+            <Bar
+              dataKey="income"
+              name={t('dashboard.income')}
+              fill="#6366f1"
+              radius={[4, 4, 0, 0]}
+              barSize={20}
+            />
             <Bar
               dataKey="expenses"
               name={t('dashboard.expenses')}

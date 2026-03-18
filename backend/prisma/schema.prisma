@@ -181,6 +181,7 @@ model Subscription {
   status                 SubscriptionStatus @default(active)
   trialEndsAt            DateTime?
   currentPeriodEnd       DateTime?
+  cancelAtPeriodEnd      Boolean            @default(false)
   stripeCustomerId       String?
   stripeSubscriptionId   String?
   createdAt              DateTime           @default(now())

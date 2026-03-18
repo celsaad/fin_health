@@ -78,15 +78,11 @@ export function Autocomplete({
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev < filteredItems.length - 1 ? prev + 1 : 0,
-        );
+        setHighlightedIndex((prev) => (prev < filteredItems.length - 1 ? prev + 1 : 0));
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredItems.length - 1,
-        );
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : filteredItems.length - 1));
         break;
       case 'Enter':
         e.preventDefault();
@@ -133,11 +129,7 @@ export function Autocomplete({
           sideOffset={4}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div
-            id={listboxId}
-            role="listbox"
-            className="max-h-48 overflow-y-auto"
-          >
+          <div id={listboxId} role="listbox" className="max-h-48 overflow-y-auto">
             {filteredItems.map((item, index) => (
               <button
                 key={item}

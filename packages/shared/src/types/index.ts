@@ -12,6 +12,7 @@ export interface UserPlan {
   status: SubscriptionStatus;
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
 }
 
 // ── Category ──

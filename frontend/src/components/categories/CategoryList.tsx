@@ -151,7 +151,9 @@ export function CategoryList({ categories }: CategoryListProps) {
                 </div>
                 <p className="text-xs text-muted-foreground pl-10.5">
                   {category._count.transactions !== 1
-                    ? t('categories.transactionCountPlural', { count: category._count.transactions })
+                    ? t('categories.transactionCountPlural', {
+                        count: category._count.transactions,
+                      })
                     : t('categories.transactionCount', { count: category._count.transactions })}
                 </p>
                 {/* Subcategory summary */}
@@ -165,7 +167,9 @@ export function CategoryList({ categories }: CategoryListProps) {
                 {/* Subcategories */}
                 {category.subcategories.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">{t('categories.subcategories')}</p>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {t('categories.subcategories')}
+                    </p>
                     <div className="space-y-1">
                       {category.subcategories.map((sub) => (
                         <div
@@ -311,7 +315,10 @@ export function CategoryList({ categories }: CategoryListProps) {
         title={t('categories.deleteCategory')}
         description={
           deletingCategory?._count.transactions
-            ? t('categories.deleteCategoryHasTxns', { name: deletingCategory.name, count: deletingCategory._count.transactions })
+            ? t('categories.deleteCategoryHasTxns', {
+                name: deletingCategory.name,
+                count: deletingCategory._count.transactions,
+              })
             : t('categories.deleteCategoryConfirm', { name: deletingCategory?.name })
         }
         onConfirm={handleDelete}

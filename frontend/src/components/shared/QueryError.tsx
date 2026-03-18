@@ -7,10 +7,7 @@ interface QueryErrorProps {
   onRetry?: () => void;
 }
 
-export function QueryError({
-  message,
-  onRetry,
-}: QueryErrorProps) {
+export function QueryError({ message, onRetry }: QueryErrorProps) {
   const { t } = useTranslation();
 
   return (

@@ -44,7 +44,12 @@ function DetailPanel({
               </p>
             </div>
           </div>
-          <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label={t('spending.closeDetail')}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onClose}
+            aria-label={t('spending.closeDetail')}
+          >
             <X className="size-4" />
           </Button>
         </div>

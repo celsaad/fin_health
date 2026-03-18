@@ -55,7 +55,9 @@ export class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="size-4" />
                   {t('errorBoundary.tryAgain')}
                 </Button>
-                <Button onClick={() => window.location.reload()}>{t('errorBoundary.refreshPage')}</Button>
+                <Button onClick={() => window.location.reload()}>
+                  {t('errorBoundary.refreshPage')}
+                </Button>
               </div>
               {import.meta.env.DEV && this.state.error && (
                 <pre className="mt-6 max-w-lg overflow-auto rounded-lg bg-muted p-4 text-left text-xs text-muted-foreground">

@@ -22,9 +22,17 @@ export function ExportButton({ filters }: ExportButtonProps) {
   };
 
   return (
-    <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleExport}
+      disabled={isExporting}
+      aria-label={t('transactions.exportCsv')}
+    >
       <Download className="size-4" />
-      {isExporting ? t('transactions.exporting') : t('transactions.exportCsv')}
+      <span className="hidden sm:inline">
+        {isExporting ? t('transactions.exporting') : t('transactions.exportCsv')}
+      </span>
     </Button>
   );
 }

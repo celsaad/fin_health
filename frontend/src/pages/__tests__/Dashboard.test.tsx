@@ -6,33 +6,42 @@ import Dashboard from '@/pages/Dashboard';
 
 // Mock the hooks to control data in tests
 const mockUseSummary = vi.fn();
-const mockUseBreakdown = vi.fn();
+const mockUseCategoryBreakdown = vi.fn();
 const mockUseTrend = vi.fn();
+const mockUseInsights = vi.fn();
 const mockUseBudgets = vi.fn();
 
 vi.mock('@/hooks/useDashboard', () => ({
   useSummary: (...args: unknown[]) => mockUseSummary(...args),
-  useBreakdown: (...args: unknown[]) => mockUseBreakdown(...args),
+  useCategoryBreakdown: (...args: unknown[]) => mockUseCategoryBreakdown(...args),
   useTrend: (...args: unknown[]) => mockUseTrend(...args),
+  useInsights: (...args: unknown[]) => mockUseInsights(...args),
 }));
 
 vi.mock('@/hooks/useBudgets', () => ({
   useBudgets: (...args: unknown[]) => mockUseBudgets(...args),
 }));
 
+vi.mock('@/hooks/usePlan', () => ({
+  usePlan: () => ({ isPro: false }),
+}));
+
 // Mock recharts to avoid rendering issues in jsdom
 vi.mock('recharts', () => ({
   ResponsiveContainer: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PieChart: () => <div data-testid="pie-chart" />,
-  Pie: () => null,
+  BarChart: () => <div data-testid="bar-chart" />,
+  Bar: () => null,
   Cell: () => null,
-  LineChart: () => <div data-testid="line-chart" />,
-  Line: () => null,
   XAxis: () => null,
   YAxis: () => null,
+  LineChart: () => <div data-testid="line-chart" />,
+  Line: () => null,
   CartesianGrid: () => null,
   Tooltip: () => null,
   Legend: () => null,
+  Treemap: () => <div data-testid="treemap" />,
+  PieChart: () => <div data-testid="pie-chart" />,
+  Pie: () => null,
 }));
 
 function renderDashboard() {
@@ -49,15 +58,25 @@ function renderDashboard() {
   );
 }
 
+function setupDefaultMocks() {
+  mockUseInsights.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  });
+}
+
 describe('Dashboard page', () => {
   it('renders loading state', () => {
+    setupDefaultMocks();
     mockUseSummary.mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
       refetch: vi.fn(),
     });
-    mockUseBreakdown.mockReturnValue({
+    mockUseCategoryBreakdown.mockReturnValue({
       data: undefined,
       isLoading: true,
       isError: false,
@@ -77,6 +96,7 @@ describe('Dashboard page', () => {
   });
 
   it('renders error state with retry', () => {
+    setupDefaultMocks();
     const mockRefetch = vi.fn();
     mockUseSummary.mockReturnValue({
       data: undefined,
@@ -84,7 +104,7 @@ describe('Dashboard page', () => {
       isError: true,
       refetch: mockRefetch,
     });
-    mockUseBreakdown.mockReturnValue({
+    mockUseCategoryBreakdown.mockReturnValue({
       data: undefined,
       isLoading: false,
       isError: false,
@@ -104,13 +124,14 @@ describe('Dashboard page', () => {
   });
 
   it('renders summary data when loaded', () => {
+    setupDefaultMocks();
     mockUseSummary.mockReturnValue({
       data: { totalIncome: 5000, totalExpenses: 3000, net: 2000, transactionCount: 15 },
       isLoading: false,
       isError: false,
       refetch: vi.fn(),
     });
-    mockUseBreakdown.mockReturnValue({
+    mockUseCategoryBreakdown.mockReturnValue({
       data: [],
       isLoading: false,
       isError: false,

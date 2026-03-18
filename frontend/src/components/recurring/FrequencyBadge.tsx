@@ -22,7 +22,8 @@ const frequencyKeys: Record<string, string> = {
 
 export function FrequencyBadge({ frequency }: FrequencyBadgeProps) {
   const { t } = useTranslation();
-  const className = frequencyStyles[frequency] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+  const className =
+    frequencyStyles[frequency] ?? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
   const label = frequencyKeys[frequency] ? t(frequencyKeys[frequency]) : frequency;
 
   return (

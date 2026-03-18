@@ -21,6 +21,7 @@ const FREE_PLAN: UserPlan = {
   status: 'active',
   trialEndsAt: null,
   currentPeriodEnd: null,
+  cancelAtPeriodEnd: false,
 };
 
 function derivePlan(subscription: Subscription | null | undefined): UserPlan {
@@ -30,6 +31,7 @@ function derivePlan(subscription: Subscription | null | undefined): UserPlan {
     status: subscription.status,
     trialEndsAt: subscription.trialEndsAt?.toISOString() ?? null,
     currentPeriodEnd: subscription.currentPeriodEnd?.toISOString() ?? null,
+    cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
   };
 }
 
@@ -52,14 +54,23 @@ router.post(
 
       const user = await prisma.user.create({
         data: { email, password: hashedPassword, name },
-        select: { id: true, email: true, name: true, currency: true, createdAt: true, subscription: true },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          currency: true,
+          createdAt: true,
+          subscription: true,
+        },
       });
 
       const token = generateToken(user.id);
       const refreshToken = await createRefreshToken(user.id);
       const { subscription, ...userData } = user;
 
-      res.status(201).json({ token, refreshToken, user: { ...userData, plan: derivePlan(subscription) } });
+      res
+        .status(201)
+        .json({ token, refreshToken, user: { ...userData, plan: derivePlan(subscription) } });
     } catch (err) {
       next(err);
     }
@@ -91,7 +102,11 @@ router.post(
       const refreshToken = await createRefreshToken(user.id);
 
       const { password: _, subscription, ...userWithoutPassword } = user;
-      res.json({ token, refreshToken, user: { ...userWithoutPassword, plan: derivePlan(subscription) } });
+      res.json({
+        token,
+        refreshToken,
+        user: { ...userWithoutPassword, plan: derivePlan(subscription) },
+      });
 
       // Generate any pending recurring transactions in background (non-blocking)
       generateRecurringTransactions(user.id).catch((err) => {
@@ -108,7 +123,14 @@ router.get('/me', authMiddleware, async (req: Request, res: Response, next: Next
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.userId },
-      select: { id: true, email: true, name: true, currency: true, createdAt: true, subscription: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        currency: true,
+        createdAt: true,
+        subscription: true,
+      },
     });
 
     if (!user) {
