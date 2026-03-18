@@ -58,7 +58,7 @@ describe('useAuth', () => {
   it('fetches user when token exists in localStorage', async () => {
     localStorage.setItem('token', 'existing-token');
     const mockUser = { id: '1', email: 'test@test.com', name: 'Test' };
-    mockApi.get.mockResolvedValueOnce({ data: mockUser });
+    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -93,7 +93,7 @@ describe('useAuth', () => {
     };
     mockApi.post.mockResolvedValueOnce(mockResponse);
     // After login sets the token, the useEffect fires fetchUser
-    mockApi.get.mockResolvedValueOnce({ data: mockUser });
+    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -124,7 +124,7 @@ describe('useAuth', () => {
     };
     mockApi.post.mockResolvedValueOnce(mockResponse);
     // After signup sets the token, the useEffect fires fetchUser
-    mockApi.get.mockResolvedValueOnce({ data: mockUser });
+    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -147,7 +147,7 @@ describe('useAuth', () => {
     localStorage.setItem('token', 'test-token');
     localStorage.setItem('refreshToken', 'test-refresh-token');
     const mockUser = { id: '1', email: 'test@test.com', name: 'Test' };
-    mockApi.get.mockResolvedValueOnce({ data: mockUser });
+    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
