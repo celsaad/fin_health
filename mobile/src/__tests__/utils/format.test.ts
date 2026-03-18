@@ -59,18 +59,23 @@ describe('formatDate', () => {
 describe('formatDateGroupHeader', () => {
   it("shows TODAY for today's date", () => {
     const today = new Date().toISOString();
-    expect(formatDateGroupHeader(today)).toMatch(/^TODAY,/);
+    const result = formatDateGroupHeader(today);
+    expect(result.key).toBe('today');
+    expect(result.formatted).toMatch(/^[A-Z]{3} \d{2}$/);
   });
 
   it("shows YESTERDAY for yesterday's date", () => {
     const yesterday = new Date(Date.now() - 86400000).toISOString();
-    expect(formatDateGroupHeader(yesterday)).toMatch(/^YESTERDAY,/);
+    const result = formatDateGroupHeader(yesterday);
+    expect(result.key).toBe('yesterday');
+    expect(result.formatted).toMatch(/^[A-Z]{3} \d{2}$/);
   });
 
   it('shows day name for other dates', () => {
     // Use noon to avoid timezone boundary issues
     const result = formatDateGroupHeader('2024-01-15T12:00:00');
-    expect(result).toBe('MON, JAN 15');
+    expect(result.key).toBeNull();
+    expect(result.formatted).toBe('MON, JAN 15');
   });
 });
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, Button } from 'react-native';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider, useTheme } from '../../contexts/ThemeContext';
 
@@ -25,18 +25,21 @@ describe('ThemeContext', () => {
   });
 
   it('provides default system preference', async () => {
-    const { getByTestId } = render(
-      <ThemeProvider>
-        <ThemeConsumer />
-      </ThemeProvider>,
-    );
-
-    await waitFor(() => {
-      expect(getByTestId('isReady').props.children).toBe('true');
+    let result: ReturnType<typeof render>;
+    await act(async () => {
+      result = render(
+        <ThemeProvider>
+          <ThemeConsumer />
+        </ThemeProvider>,
+      );
     });
 
-    expect(getByTestId('preference').props.children).toBe('system');
-    expect(getByTestId('theme').props.children).toBe('light');
+    await waitFor(() => {
+      expect(result!.getByTestId('isReady').props.children).toBe('true');
+    });
+
+    expect(result!.getByTestId('preference').props.children).toBe('system');
+    expect(result!.getByTestId('theme').props.children).toBe('light');
   });
 
   it('loads saved preference from AsyncStorage', async () => {
