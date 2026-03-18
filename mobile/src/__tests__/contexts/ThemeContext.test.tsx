@@ -25,21 +25,21 @@ describe('ThemeContext', () => {
   });
 
   it('provides default system preference', async () => {
-    let result: ReturnType<typeof render>;
-    await act(async () => {
-      result = render(
-        <ThemeProvider>
-          <ThemeConsumer />
-        </ThemeProvider>,
-      );
-    });
+    const { getByTestId } = render(
+      <ThemeProvider>
+        <ThemeConsumer />
+      </ThemeProvider>,
+    );
+
+    // Flush the async AsyncStorage.getItem in useEffect
+    await act(async () => {});
 
     await waitFor(() => {
-      expect(result!.getByTestId('isReady').props.children).toBe('true');
+      expect(getByTestId('isReady').props.children).toBe('true');
     });
 
-    expect(result!.getByTestId('preference').props.children).toBe('system');
-    expect(result!.getByTestId('theme').props.children).toBe('light');
+    expect(getByTestId('preference').props.children).toBe('system');
+    expect(getByTestId('theme').props.children).toBe('light');
   });
 
   it('loads saved preference from AsyncStorage', async () => {

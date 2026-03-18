@@ -43,21 +43,21 @@ describe('AuthContext', () => {
   });
 
   it('starts in loading state and resolves to unauthenticated when no token', async () => {
-    let result: ReturnType<typeof render>;
-    await act(async () => {
-      result = render(
-        <AuthProvider>
-          <AuthConsumer />
-        </AuthProvider>,
-      );
-    });
+    const { getByTestId } = render(
+      <AuthProvider>
+        <AuthConsumer />
+      </AuthProvider>,
+    );
+
+    // Flush the async getToken() call in useEffect
+    await act(async () => {});
 
     await waitFor(() => {
-      expect(result!.getByTestId('loading').props.children).toBe('false');
+      expect(getByTestId('loading').props.children).toBe('false');
     });
 
-    expect(result!.getByTestId('authenticated').props.children).toBe('false');
-    expect(result!.getByTestId('userName').props.children).toBe('none');
+    expect(getByTestId('authenticated').props.children).toBe('false');
+    expect(getByTestId('userName').props.children).toBe('none');
   });
 
   it('restores user from token on mount', async () => {
