@@ -12,9 +12,6 @@ export default defineConfig({
     sequence: { concurrent: false },
     env: {
       NODE_ENV: 'test',
-      DATABASE_URL:
-        process.env.DATABASE_URL ??
-        'postgresql://finhealth:finhealth@localhost:5432/finhealth?schema=public',
       JWT_SECRET: 'test-secret-key-for-vitest-only-do-not-use-in-prod',
       STRIPE_SECRET_KEY: 'sk_test_fake_key_for_testing',
       STRIPE_WEBHOOK_SECRET: 'whsec_test_fake_secret',
