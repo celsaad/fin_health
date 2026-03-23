@@ -4,7 +4,7 @@
 
 @theme {
   /* Page */
-  --color-background: hsl(220 14% 96%);
+  --color-background: hsl(228 33% 97%);
   --color-foreground: hsl(224 71% 4%);
 
   /* Cards: white, elevated on gray bg */
@@ -61,6 +61,15 @@
 
   --animate-slide-left: slide-left 200ms ease-out;
   --animate-slide-right: slide-right 200ms ease-out;
+
+  --font-headline: 'Manrope', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Surface Hierarchy */
+  --color-surface-container-low: hsl(228 20% 95%);
+  --color-surface-container: hsl(228 14% 93%);
+  --color-surface-bright: hsl(0 0% 100%);
+  --color-primary-container: hsl(239 82% 66%);
 }
 
 @keyframes slide-left {
@@ -91,10 +100,7 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family:
-      system-ui,
-      -apple-system,
-      sans-serif;
+    font-family: var(--font-body);
   }
 
   .dark {
@@ -140,5 +146,10 @@
     --color-sidebar-accent-foreground: hsl(0 0% 100%);
     --color-sidebar-border: hsl(217 33% 14%);
     --color-sidebar-ring: hsl(239 84% 67%);
+
+    --color-surface-container-low: hsl(217 33% 12%);
+    --color-surface-container: hsl(217 33% 17%);
+    --color-surface-bright: hsl(222 47% 14%);
+    --color-primary-container: hsl(239 82% 60%);
   }
 }
