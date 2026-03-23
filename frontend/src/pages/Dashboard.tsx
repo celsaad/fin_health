@@ -75,7 +75,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : summary$.data ? (
-            <SummaryCards summary={summary$.data} />
+            <SummaryCards summary={summary$.data} netChangePercent={null} />
           ) : null}
 
           <div className="grid gap-6 lg:grid-cols-2">
