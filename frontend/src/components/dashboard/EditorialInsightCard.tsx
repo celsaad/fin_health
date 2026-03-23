@@ -62,7 +62,7 @@ export function EditorialInsightCard({ month, year, className }: EditorialInsigh
                 <div className="h-3 w-3/4 animate-pulse rounded bg-white/10" />
                 <div className="h-3 w-1/2 animate-pulse rounded bg-white/10" />
               </div>
-              <button className="mt-6 w-full rounded-lg bg-white py-3 font-bold text-indigo-900 transition-opacity hover:opacity-90">
+              <button type="button" className="mt-6 w-full rounded-lg bg-white py-3 font-bold text-indigo-900 transition-opacity hover:opacity-90">
                 {t('dashboard.upgradeToPro')}
               </button>
             </>
