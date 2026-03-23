@@ -19,7 +19,7 @@
     "incomeLabel": "Income",
     "expenseLabel": "Expense",
     "editorialInsight": "Financial Insights",
-    "seeAllInsights": "See All Insights",
+    "seeAllInsights": "See all {{count}} insights",
     "upgradeToPro": "Upgrade to Pro",
     "spendingAllocation": "Spending Allocation",
     "noExpenses": "No expenses this month",
