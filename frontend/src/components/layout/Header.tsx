@@ -20,20 +20,22 @@ export function Header() {
   const title = titleKey ? t(titleKey) : t('auth.appName');
 
   return (
-    <header className="flex h-16 items-center justify-between bg-white/70 backdrop-blur-xl px-4 lg:px-6 shadow-sm dark:bg-[hsl(222,47%,11%)]/70">
+    <header className="flex h-16 items-center justify-between bg-white/70 backdrop-blur-xl px-4 lg:px-6 shadow-sm dark:bg-card/70">
       <div className="flex items-center gap-3">
         <h1 className="text-lg font-semibold lg:hidden">{t('auth.appName')}</h1>
         <h2 className="hidden text-lg font-semibold lg:block">{title}</h2>
       </div>
       <div className="flex items-center gap-2">
         <button
-          className="cursor-pointer rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary"
+          type="button"
+          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label={t('common.notifications')}
         >
           <Bell className="size-5" />
         </button>
         <button
-          className="cursor-pointer rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary"
+          type="button"
+          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label={t('common.help')}
         >
           <HelpCircle className="size-5" />

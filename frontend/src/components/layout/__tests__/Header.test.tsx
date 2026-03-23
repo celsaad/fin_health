@@ -26,6 +26,7 @@ describe('Header', () => {
     const { container } = renderHeader();
     const header = container.querySelector('header');
     expect(header?.className).toContain('backdrop-blur');
-    expect(header?.className).not.toContain('bg-card');
+    expect(header?.className).toContain('bg-white/70');
+    expect(header?.className).toContain('dark:bg-card/70');
   });
 });
