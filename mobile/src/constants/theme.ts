@@ -15,6 +15,10 @@ export interface ThemeColors {
   destructive: string;
   amber: string;
   amberBg: string;
+  primaryContainer: string;
+  surfaceContainerLow: string;
+  surfaceContainer: string;
+  surfaceBright: string;
 }
 
 export const Colors: { light: ThemeColors; dark: ThemeColors } = {
@@ -35,6 +39,10 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     destructive: '#dc2626',
     amber: '#d97706',
     amberBg: '#fffbeb',
+    primaryContainer: 'hsl(239, 82%, 66%)',
+    surfaceContainerLow: 'hsl(228, 20%, 95%)',
+    surfaceContainer: 'hsl(228, 14%, 93%)',
+    surfaceBright: 'hsl(0, 0%, 100%)',
   },
   dark: {
     primary: '#6366f1',
@@ -53,6 +61,10 @@ export const Colors: { light: ThemeColors; dark: ThemeColors } = {
     destructive: '#dc2626',
     amber: '#d97706',
     amberBg: '#451a03',
+    primaryContainer: 'hsl(239, 82%, 60%)',
+    surfaceContainerLow: 'hsl(217, 33%, 12%)',
+    surfaceContainer: 'hsl(217, 33%, 17%)',
+    surfaceBright: 'hsl(222, 47%, 14%)',
   },
 };
 
@@ -101,3 +113,12 @@ export const FontWeight = {
   semibold: '600' as const,
   bold: '700' as const,
 };
+
+export const FontFamily = {
+  headline: 'Manrope_700Bold',
+  headlineSemiBold: 'Manrope_600SemiBold',
+  body: 'Inter_400Regular',
+  bodyMedium: 'Inter_500Medium',
+  bodySemiBold: 'Inter_600SemiBold',
+  bodyBold: 'Inter_700Bold',
+} as const;
