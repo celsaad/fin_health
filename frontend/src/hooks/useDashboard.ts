@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { useTransactions } from '@/hooks/useTransactions';
+import { endOfMonth, format } from 'date-fns';
 
 export interface DashboardSummary {
   totalIncome: number;
@@ -148,4 +150,23 @@ export function useInsights(month: number, year: number, enabled = true) {
     },
     enabled,
   });
+}
+
+export function useRecentPeaks(month: number, year: number) {
+  const monthStart = format(new Date(year, month - 1, 1), 'yyyy-MM-dd');
+  const monthEnd = format(endOfMonth(new Date(year, month - 1, 1)), 'yyyy-MM-dd');
+
+  const query = useTransactions({
+    type: 'expense',
+    sortBy: 'amount',
+    sortOrder: 'desc',
+    limit: 5,
+    startDate: monthStart,
+    endDate: monthEnd,
+  });
+
+  return {
+    ...query,
+    data: query.data?.transactions,
+  };
 }
