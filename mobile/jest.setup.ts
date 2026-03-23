@@ -63,3 +63,27 @@ jest.mock('@sentry/react-native', () => ({
 
 // Global __DEV__
 (global as any).__DEV__ = true;
+
+// Mock @expo-google-fonts
+jest.mock('@expo-google-fonts/manrope', () => ({
+  useFonts: jest.fn(() => [true]),
+  Manrope_600SemiBold: 'Manrope_600SemiBold',
+  Manrope_700Bold: 'Manrope_700Bold',
+}));
+
+jest.mock('@expo-google-fonts/inter', () => ({
+  Inter_400Regular: 'Inter_400Regular',
+  Inter_500Medium: 'Inter_500Medium',
+  Inter_600SemiBold: 'Inter_600SemiBold',
+  Inter_700Bold: 'Inter_700Bold',
+}));
+
+// Mock expo-blur
+jest.mock('expo-blur', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    BlurView: ({ children, ...props }: any) =>
+      React.createElement(View, { testID: 'blur-view', ...props }, children),
+  };
+});
