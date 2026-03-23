@@ -1,4 +1,5 @@
 import api from './api';
+import { startOfMonth, endOfMonth, format } from 'date-fns';
 
 export async function getSummary(month: number, year: number) {
   const { data } = await api.get('/dashboard/summary', { params: { month, year } });
@@ -36,6 +37,16 @@ export interface Insight {
 export async function getInsights(month: number, year: number) {
   const { data } = await api.get<{ insights: Insight[] }>('/dashboard/insights', {
     params: { month, year },
+  });
+  return data;
+}
+
+export async function getRecentPeaks(month: number, year: number, limit = 5) {
+  const date = new Date(year, month - 1);
+  const startDate = format(startOfMonth(date), 'yyyy-MM-dd');
+  const endDate = format(endOfMonth(date), 'yyyy-MM-dd');
+  const { data } = await api.get('/transactions', {
+    params: { startDate, endDate, sortBy: 'amount', sortOrder: 'desc', limit, type: 'expense' },
   });
   return data;
 }
