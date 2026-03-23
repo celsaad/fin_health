@@ -21,7 +21,9 @@
     "mainNavigation": "Main navigation",
     "amount": "Amount",
     "warning": "Warning",
-    "actions": "Actions"
+    "actions": "Actions",
+    "notifications": "Notifications",
+    "help": "Help"
   },
   "auth": {
     "appName": "FinHealth",
