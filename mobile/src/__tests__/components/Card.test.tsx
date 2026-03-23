@@ -26,4 +26,22 @@ describe('Card', () => {
     );
     await waitFor(() => expect(getByText('Styled card')).toBeTruthy());
   });
+
+  it('applies shadow instead of border in light mode', async () => {
+    const { getByText } = renderWithTheme(
+      <Card>
+        <Text>Shadow card</Text>
+      </Card>,
+    );
+    await waitFor(() => {
+      const card = getByText('Shadow card').parent!.parent;
+      expect(card).toBeTruthy();
+      const flatStyle = Array.isArray(card!.props.style)
+        ? Object.assign({}, ...card!.props.style.filter(Boolean))
+        : card!.props.style;
+      expect(flatStyle).not.toHaveProperty('borderWidth');
+      expect(flatStyle).toHaveProperty('shadowColor');
+      expect(flatStyle).toHaveProperty('shadowOpacity');
+    });
+  });
 });
