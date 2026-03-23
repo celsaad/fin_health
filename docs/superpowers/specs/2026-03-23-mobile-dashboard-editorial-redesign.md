@@ -98,6 +98,21 @@ Avatar | "FinHealth" centered | Settings gear
 
 Extracted from inline `SummaryCard` function (DashboardScreen lines 294-320).
 
+### Local Types
+
+The mobile dashboard services return untyped data. Define a local `DashboardSummary` interface in this component (or a shared `mobile/src/types/dashboard.ts` file):
+
+```ts
+interface DashboardSummary {
+  totalIncome: number;
+  totalExpenses: number;
+  net: number;
+  transactionCount: number;
+}
+```
+
+This matches the shape returned by `getSummary()`. If other components also need dashboard types, create `mobile/src/types/dashboard.ts` and co-locate all dashboard-related interfaces there.
+
 ### Layout
 
 2×2 grid with the net balance card spanning full width (first row).
@@ -229,7 +244,7 @@ Replaces the SVG donut chart + legend (DashboardScreen lines 182-218, inline `Do
 
 Each row is a vertical stack:
 1. Category name (`FontFamily.bodySemiBold`, left) + amount + percentage (`FontFamily.bodyMedium`, `textSecondary`, right)
-2. Progress bar: `View` `height: 8`, `borderRadius: 4`, background `surfaceContainerLow`. Inner `View` with `width: ${percentage}%`, `borderRadius: 4`, fill from `CategoryColors`
+2. Progress bar: `View` `height: 8`, `borderRadius: 4`, background `surfaceContainerLow`. Inner `View` with `width: ${percentage}%`, `borderRadius: 4`, fill from `CategoryColors` keyed by the category's `color` field. **Null fallback:** when `color` is null, use `colors.primary` (indigo) as the bar fill color.
 
 Gap: `Spacing.md` between rows.
 
@@ -287,13 +302,20 @@ Each row inside a `Card`:
 New function in `mobile/src/services/dashboard.ts`:
 
 ```ts
+import { startOfMonth, endOfMonth, format } from 'date-fns';
+
 export async function getRecentPeaks(month: number, year: number, limit = 5) {
+  const date = new Date(year, month - 1);
+  const startDate = format(startOfMonth(date), 'yyyy-MM-dd');
+  const endDate = format(endOfMonth(date), 'yyyy-MM-dd');
   const { data } = await api.get('/transactions', {
-    params: { month, year, sort: 'amount', order: 'desc', limit, type: 'expense' },
+    params: { startDate, endDate, sortBy: 'amount', sortOrder: 'desc', limit, type: 'expense' },
   });
   return data;
 }
 ```
+
+Parameters match the backend's `/api/transactions` endpoint contract: `startDate`/`endDate` (yyyy-MM-dd), `sortBy`/`sortOrder`, `limit`, `type`.
 
 ### Props
 
@@ -340,12 +362,30 @@ Only rendered when budgets exist. If no budgets, section is not rendered (matche
 
 Receives `categories` (from `getBreakdown`) and `budgets` (from budget service). Joins client-side by category name, computes `spent / budget` ratio.
 
+### Types
+
+Define a shared `BreakdownItem` interface for both SpendingAllocation and BudgetComplianceTable (in `mobile/src/types/dashboard.ts`):
+
+```ts
+interface BreakdownItem {
+  categoryId: string;
+  categoryName: string;
+  total: number;
+  percentage: number;
+  transactionCount?: number;
+  icon: string | null;
+  color: string | null;
+}
+```
+
+The `Budget` type is already available from `@fin-health/shared/types` (fields: `id`, `amount`, `month`, `year`, `isRecurring`, `categoryId`, `category`, `spent`, `remaining`).
+
 ### Props
 
 ```ts
 interface BudgetComplianceTableProps {
   categories: BreakdownItem[];
-  budgets: Budget[];
+  budgets: Budget[];  // from @fin-health/shared/types
 }
 ```
 
@@ -371,6 +411,17 @@ Target: ~120-150 lines (from 578).
 | `summaryStyles` StyleSheet        | Moved into `SummaryCards.tsx`         |
 | `insightStyles` StyleSheet        | Moved into `EditorialInsightCard.tsx` |
 | Donut/legend/bar chart styles     | Deleted or moved to respective files |
+
+### New Imports & Hooks
+
+```ts
+import { usePlan } from '../hooks/usePlan';
+import { getBudgets } from '../services/budgets';
+import { getRecentPeaks } from '../services/dashboard';
+
+// In component body:
+const { isPro } = usePlan();
+```
 
 ### New Queries
 
@@ -461,21 +512,22 @@ All added to `mobile/src/locales/en.json` under the `dashboard` namespace:
 
 ## 13. New Dependencies
 
-| Package                        | Purpose                      |
-| ------------------------------ | ---------------------------- |
-| `expo-blur`                    | Header glassmorphism         |
-| `expo-linear-gradient`         | Net balance gradient card    |
-| `@expo-google-fonts/manrope`   | Headline font                |
-| `@expo-google-fonts/inter`     | Body font                    |
+| Package                        | Purpose                      | Status          |
+| ------------------------------ | ---------------------------- | --------------- |
+| `expo-blur`                    | Header glassmorphism         | **To install**  |
+| `expo-linear-gradient`         | Net balance gradient card    | Already in package.json |
+| `@expo-google-fonts/manrope`   | Headline font                | **To install**  |
+| `@expo-google-fonts/inter`     | Body font                    | **To install**  |
 
 ---
 
 ## 14. File Summary
 
-### New Files (7)
+### New Files (8)
 
 | File                                                    | Purpose                |
 | ------------------------------------------------------- | ---------------------- |
+| `mobile/src/types/dashboard.ts`                         | Local types: `DashboardSummary`, `BreakdownItem` |
 | `mobile/src/components/dashboard/SummaryCards.tsx`       | Gradient + standard summary cards |
 | `mobile/src/components/dashboard/TrendChart.tsx`         | Opacity-ramp bar chart |
 | `mobile/src/components/dashboard/EditorialInsightCard.tsx` | Dark indigo insight card with pro gate |
@@ -484,7 +536,7 @@ All added to `mobile/src/locales/en.json` under the `dashboard` namespace:
 | `mobile/src/components/dashboard/BudgetComplianceTable.tsx` | Budget vs. actual table |
 | `mobile/src/components/dashboard/__tests__/` (7 test files) | One test file per component |
 
-### Modified Files (5)
+### Modified Files (6)
 
 | File                                    | Changes                                          |
 | --------------------------------------- | ------------------------------------------------ |
