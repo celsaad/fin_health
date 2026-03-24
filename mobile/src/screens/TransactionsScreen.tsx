@@ -248,7 +248,7 @@ function groupByDate(transactions: Transaction[]): any[] {
   for (const tx of transactions) {
     const dateKey = tx.date.split('T')[0];
     if (dateKey !== lastDate) {
-      result.push({ type: 'header', date: dateKey, label: formatDateGroupHeader(tx.date) });
+      result.push({ type: 'header', date: dateKey, label: formatDateGroupHeader(tx.date).formatted });
       lastDate = dateKey;
     }
     result.push(tx);
