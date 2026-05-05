@@ -10,6 +10,7 @@ import { QueryProvider } from '@/providers/QueryProvider';
 import { AuthProvider } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { ToastProvider } from '@/providers/ToastProvider';
+import { TransactionFormProvider } from '@/providers/TransactionFormProvider';
 
 initSentry();
 
@@ -20,8 +21,10 @@ createRoot(document.getElementById('root')!).render(
         <QueryProvider>
           <ThemeProvider>
             <AuthProvider>
-              <App />
-              <ToastProvider />
+              <TransactionFormProvider>
+                <App />
+                <ToastProvider />
+              </TransactionFormProvider>
             </AuthProvider>
           </ThemeProvider>
         </QueryProvider>

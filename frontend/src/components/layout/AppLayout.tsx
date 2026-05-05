@@ -3,9 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Header } from '@/components/layout/Header';
+import { AddTransactionFAB } from '@/components/layout/AddTransactionFAB';
+import { TransactionForm } from '@/components/transactions/TransactionForm';
+import { useTransactionForm } from '@/providers/TransactionFormProvider';
 
 export function AppLayout() {
   const { t } = useTranslation();
+  const { isOpen, closeForm } = useTransactionForm();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -23,6 +27,8 @@ export function AppLayout() {
         </main>
       </div>
       <BottomNav />
+      <AddTransactionFAB />
+      <TransactionForm open={isOpen} onOpenChange={closeForm} />
     </div>
   );
 }
