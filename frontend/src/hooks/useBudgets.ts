@@ -1,90 +1,53 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
-import type { Budget } from '@fin-health/shared/types';
-
-export type { Budget };
-
-interface BudgetsResponse {
-  budgets: Budget[];
-}
-
-interface UpsertBudgetPayload {
-  amount: number;
-  month?: number;
-  year?: number;
-  categoryId?: string | null;
-  isRecurring?: boolean;
-}
+import { trpc } from '@/lib/trpc';
 
 export function useBudgets(month: number, year: number) {
-  return useQuery({
-    queryKey: ['budgets', month, year],
-    queryFn: async () => {
-      const { data } = await api.get<BudgetsResponse>('/budgets', {
-        params: { month, year },
-      });
-      return data.budgets;
-    },
-  });
+  const result = trpc.budgets.list.useQuery({ month, year });
+  return { ...result, data: result.data?.budgets };
 }
 
 export function useUpsertBudget() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (payload: UpsertBudgetPayload) => {
-      const { data } = await api.post('/budgets', payload);
-      return data;
-    },
+  return trpc.budgets.upsert.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      utils.budgets.list.invalidate();
       toast.success('Budget saved successfully');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useCopyPreviousMonthBudgets() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (payload: { month: number; year: number }) => {
-      const { data } = await api.post<{ budgets: Budget[]; copied: number }>(
-        '/budgets/copy-previous',
-        payload,
-      );
-      return data;
-    },
+  return trpc.budgets.copyPrevious.useMutation({
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      utils.budgets.list.invalidate();
       if (data.copied > 0) {
         toast.success(`Copied ${data.copied} budget(s) from last month`);
       } else {
         toast.info('No budgets to copy from last month');
       }
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useDeleteBudget() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/budgets/${id}`);
-    },
+  return trpc.budgets.delete.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['budgets'] });
+      utils.budgets.list.invalidate();
       toast.success('Budget deleted successfully');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }

@@ -1,11 +1,7 @@
-import api from './api';
-import type { RecurringTransaction } from '@fin-health/shared/types';
+import { trpcClient } from '../lib/trpc';
 
-export async function getRecurringTransactions(): Promise<{
-  recurringTransactions: RecurringTransaction[];
-}> {
-  const { data } = await api.get('/recurring');
-  return data;
+export async function getRecurringTransactions() {
+  return trpcClient.recurring.list.query();
 }
 
 export async function createRecurring(body: {
@@ -19,8 +15,18 @@ export async function createRecurring(body: {
   subcategoryName?: string;
   notes?: string;
 }) {
-  const { data } = await api.post('/recurring', body);
-  return data.recurringTransaction;
+  const result = await trpcClient.recurring.create.mutate({
+    amount: body.amount,
+    type: body.type as 'expense' | 'income',
+    description: body.description,
+    frequency: body.frequency as 'weekly' | 'biweekly' | 'monthly' | 'yearly',
+    startDate: body.startDate,
+    endDate: body.endDate,
+    categoryName: body.categoryName,
+    subcategoryName: body.subcategoryName,
+    notes: body.notes,
+  });
+  return result.recurringTransaction;
 }
 
 export async function updateRecurring(
@@ -37,15 +43,20 @@ export async function updateRecurring(
     notes?: string | null;
   }>,
 ) {
-  const { data } = await api.put(`/recurring/${id}`, body);
-  return data.recurringTransaction;
+  const result = await trpcClient.recurring.update.mutate({
+    id,
+    ...body,
+    type: body.type as 'expense' | 'income' | undefined,
+    frequency: body.frequency as 'weekly' | 'biweekly' | 'monthly' | 'yearly' | undefined,
+  });
+  return result.recurringTransaction;
 }
 
 export async function toggleRecurring(id: string) {
-  const { data } = await api.patch(`/recurring/${id}/toggle`);
-  return data.recurringTransaction;
+  const result = await trpcClient.recurring.toggle.mutate({ id });
+  return result.recurringTransaction;
 }
 
 export async function deleteRecurring(id: string) {
-  await api.delete(`/recurring/${id}`);
+  return trpcClient.recurring.delete.mutate({ id });
 }

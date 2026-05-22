@@ -1,15 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
+import { trpc } from '@/lib/trpc';
 import type { RecurringTransaction } from '@fin-health/shared/types';
 
 export type { RecurringTransaction };
 
-interface RecurringResponse {
-  recurringTransactions: RecurringTransaction[];
-}
-
-interface CreateRecurringPayload {
+export interface CreateRecurringPayload {
   amount: number;
   type: string;
   description: string;
@@ -21,87 +16,67 @@ interface CreateRecurringPayload {
   notes?: string | null;
 }
 
-interface UpdateRecurringPayload extends Partial<CreateRecurringPayload> {
+export interface UpdateRecurringPayload extends Partial<CreateRecurringPayload> {
   id: string;
 }
 
 export function useRecurringTransactions() {
-  return useQuery({
-    queryKey: ['recurring'],
-    queryFn: async () => {
-      const { data } = await api.get<RecurringResponse>('/recurring');
-      return data.recurringTransactions;
-    },
-  });
+  const result = trpc.recurring.list.useQuery();
+  return { ...result, data: result.data?.recurringTransactions };
 }
 
 export function useCreateRecurring() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (payload: CreateRecurringPayload) => {
-      const { data } = await api.post('/recurring', payload);
-      return data;
-    },
+  return trpc.recurring.create.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recurring'] });
+      utils.recurring.list.invalidate();
       toast.success('Recurring transaction created');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useUpdateRecurring() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async ({ id, ...payload }: UpdateRecurringPayload) => {
-      const { data } = await api.put(`/recurring/${id}`, payload);
-      return data;
-    },
+  return trpc.recurring.update.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recurring'] });
+      utils.recurring.list.invalidate();
       toast.success('Recurring transaction updated');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useDeleteRecurring() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/recurring/${id}`);
-    },
+  return trpc.recurring.delete.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recurring'] });
+      utils.recurring.list.invalidate();
       toast.success('Recurring transaction deleted');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useToggleRecurring() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { data } = await api.patch(`/recurring/${id}/toggle`);
-      return data;
-    },
+  return trpc.recurring.toggle.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recurring'] });
+      utils.recurring.list.invalidate();
       toast.success('Recurring transaction toggled');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }

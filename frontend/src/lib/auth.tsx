@@ -1,7 +1,14 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { UserPlan } from '@fin-health/shared/types';
-import api, { setAuthErrorHandler } from '@/lib/api';
+import { trpc, setTRPCAuthFailure } from '@/lib/trpc';
 
 interface User {
   id: string;
@@ -25,72 +32,92 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasToken, setHasToken] = useState(() => !!localStorage.getItem('token'));
+  const [isLoading, setIsLoading] = useState(() => !!localStorage.getItem('token'));
 
-  const logout = useCallback(() => {
-    api.post('/auth/logout').catch(() => {});
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    setToken(null);
-    setUser(null);
-    navigate('/login', { replace: true });
-  }, [navigate]);
+  const loginMut = trpc.auth.login.useMutation();
+  const signupMut = trpc.auth.signup.useMutation();
+  const logoutMut = trpc.auth.logout.useMutation();
 
-  // Register the logout handler with the API interceptor so 401s
-  // go through React Router instead of a hard page reload.
+  const meQuery = trpc.auth.me.useQuery(undefined, {
+    enabled: hasToken,
+    retry: false,
+  });
+
+  // Resolve loading state from the me query
   useEffect(() => {
-    setAuthErrorHandler(logout);
-    return () => setAuthErrorHandler(() => {});
-  }, [logout]);
-
-  const fetchUser = useCallback(async () => {
-    try {
-      const { data } = await api.get<{ user: User }>('/auth/me');
-      setUser(data.user);
-    } catch {
-      setToken(null);
-      setUser(null);
+    if (!hasToken) {
+      setIsLoading(false);
+      return;
+    }
+    if (meQuery.isSuccess) {
+      setUser(meQuery.data.user as User);
+      setIsLoading(false);
+    } else if (meQuery.isError) {
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
-    } finally {
+      setHasToken(false);
+      setUser(null);
       setIsLoading(false);
     }
-  }, []);
+  }, [hasToken, meQuery.isSuccess, meQuery.isError, meQuery.data]);
 
+  // Register the refresh-failure handler so 401s go through React Router
   useEffect(() => {
-    if (token) {
-      fetchUser();
-    } else {
-      setIsLoading(false);
-    }
-  }, [token, fetchUser]);
+    setTRPCAuthFailure(() => {
+      setHasToken(false);
+      setUser(null);
+      navigate('/login', { replace: true });
+    });
+    return () => setTRPCAuthFailure(null);
+  }, [navigate]);
 
-  const login = async (email: string, password: string) => {
-    const { data } = await api.post<{ token: string; refreshToken?: string; user: User }>(
-      '/auth/login',
-      { email, password },
-    );
-    localStorage.setItem('token', data.token);
-    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-    setToken(data.token);
-    setUser(data.user);
-  };
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const data = await loginMut.mutateAsync({ email, password });
+      localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      setHasToken(true);
+      setUser(data.user as User);
+    },
+    [loginMut],
+  );
 
-  const signup = async (email: string, password: string, name: string) => {
-    const { data } = await api.post<{ token: string; refreshToken?: string; user: User }>(
-      '/auth/signup',
-      { email, password, name },
-    );
-    localStorage.setItem('token', data.token);
-    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-    setToken(data.token);
-    setUser(data.user);
-  };
+  const signup = useCallback(
+    async (email: string, password: string, name: string) => {
+      const data = await signupMut.mutateAsync({ email, password, name });
+      localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      setHasToken(true);
+      setUser(data.user as User);
+    },
+    [signupMut],
+  );
+
+  const logout = useCallback(() => {
+    logoutMut.mutate(undefined);
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    setHasToken(false);
+    setUser(null);
+    navigate('/login', { replace: true });
+  }, [logoutMut, navigate]);
+
+  const refreshUser = useCallback(async () => {
+    await meQuery.refetch();
+  }, [meQuery]);
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, signup, logout, refreshUser: fetchUser, isLoading }}
+      value={{
+        user,
+        token: hasToken ? localStorage.getItem('token') : null,
+        login,
+        signup,
+        logout,
+        refreshUser,
+        isLoading,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -4,6 +4,8 @@ import app from '../app';
 import prisma from '../lib/prisma';
 import { hashPassword } from '../lib/password';
 import { generateToken } from '../lib/jwt';
+import { appRouter } from '../routers';
+import { createCallerFactory } from '../trpc';
 
 export function uniqueEmail(): string {
   return `test-${crypto.randomUUID()}@test.com`;
@@ -22,11 +24,7 @@ export async function createTestUser(
   const password = await hashPassword(overrides.password || 'Test1234!');
 
   const user = await prisma.user.create({
-    data: {
-      email,
-      password,
-      name: overrides.name || 'Test User',
-    },
+    data: { email, password, name: overrides.name || 'Test User' },
   });
 
   const token = generateToken(user.id);
@@ -34,10 +32,22 @@ export async function createTestUser(
 }
 
 export async function cleanupUser(userId: string): Promise<void> {
-  // Cascade delete handles related records
   await prisma.user.delete({ where: { id: userId } }).catch(() => {});
 }
 
+// Kept for plain Express routes (webhook, CSV export)
 export function api() {
   return request(app);
+}
+
+// tRPC server-side caller — bypasses HTTP entirely
+const createCaller = createCallerFactory(appRouter);
+
+export function publicCaller() {
+  return createCaller({ userId: null, subscription: null });
+}
+
+export async function callerFor(user: TestUser) {
+  const sub = await prisma.subscription.findUnique({ where: { userId: user.id } });
+  return createCaller({ userId: user.id, subscription: sub });
 }

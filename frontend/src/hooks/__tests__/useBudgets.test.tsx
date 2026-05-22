@@ -1,15 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { useBudgets, useUpsertBudget, useDeleteBudget } from '@/hooks/useBudgets';
-import api from '@/lib/api';
 import type { ReactNode } from 'react';
 
-vi.mock('@/lib/api', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
-    delete: vi.fn(),
+const mockBudgetsListUseQuery = vi.fn();
+const mockBudgetsUpsertUseMutation = vi.fn();
+const mockBudgetsDeleteUseMutation = vi.fn();
+const mockInvalidateBudgets = vi.fn();
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    budgets: {
+      list: { useQuery: (...args: unknown[]) => mockBudgetsListUseQuery(...args) },
+      upsert: { useMutation: (...args: unknown[]) => mockBudgetsUpsertUseMutation(...args) },
+      delete: { useMutation: (...args: unknown[]) => mockBudgetsDeleteUseMutation(...args) },
+    },
+    useUtils: () => ({
+      budgets: { list: { invalidate: mockInvalidateBudgets } },
+    }),
   },
 }));
 
@@ -17,97 +27,65 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
-const mockApi = vi.mocked(api);
-
 function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, gcTime: 0 },
-      mutations: { retry: false },
-    },
-  });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
-});
+beforeEach(() => vi.clearAllMocks());
 
 describe('useBudgets', () => {
-  it('fetches budgets for a given month and year', async () => {
+  it('fetches budgets for a given month and year', () => {
     const mockBudgets = [{ id: '1', amount: 500, month: 3, year: 2024, categoryId: 'cat-1' }];
-    mockApi.get.mockResolvedValueOnce({ data: { budgets: mockBudgets } });
-
-    const { result } = renderHook(() => useBudgets(3, 2024), {
-      wrapper: createWrapper(),
+    mockBudgetsListUseQuery.mockReturnValue({
+      data: { budgets: mockBudgets },
+      isSuccess: true,
+      isError: false,
     });
 
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
+    const { result } = renderHook(() => useBudgets(3, 2024), { wrapper: createWrapper() });
 
     expect(result.current.data).toEqual(mockBudgets);
-    expect(mockApi.get).toHaveBeenCalledWith('/budgets', {
-      params: { month: 3, year: 2024 },
-    });
+    expect(mockBudgetsListUseQuery).toHaveBeenCalledWith({ month: 3, year: 2024 });
   });
 
-  it('handles error', async () => {
-    mockApi.get.mockRejectedValueOnce(new Error('Failed'));
+  it('handles error', () => {
+    mockBudgetsListUseQuery.mockReturnValue({ data: undefined, isSuccess: false, isError: true });
 
-    const { result } = renderHook(() => useBudgets(3, 2024), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHook(() => useBudgets(3, 2024), { wrapper: createWrapper() });
 
-    await waitFor(() => {
-      expect(result.current.isError).toBe(true);
-    });
+    expect(result.current.isError).toBe(true);
   });
 });
 
 describe('useUpsertBudget', () => {
-  it('creates a budget and shows success toast', async () => {
-    const { toast } = await import('sonner');
-    mockApi.post.mockResolvedValueOnce({ data: { id: '2', amount: 300 } });
+  it('triggers invalidation and success toast on success', () => {
+    mockBudgetsUpsertUseMutation.mockImplementation((options: { onSuccess?: () => void }) => ({
+      mutate: () => options?.onSuccess?.(),
+      isSuccess: false,
+    }));
 
-    const { result } = renderHook(() => useUpsertBudget(), {
-      wrapper: createWrapper(),
-    });
-
+    const { result } = renderHook(() => useUpsertBudget(), { wrapper: createWrapper() });
     result.current.mutate({ amount: 300, month: 3, year: 2024, categoryId: 'cat-1' });
 
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    expect(mockApi.post).toHaveBeenCalledWith('/budgets', {
-      amount: 300,
-      month: 3,
-      year: 2024,
-      categoryId: 'cat-1',
-    });
+    expect(mockInvalidateBudgets).toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith('Budget saved successfully');
   });
 });
 
 describe('useDeleteBudget', () => {
-  it('deletes a budget by id', async () => {
-    const { toast } = await import('sonner');
-    mockApi.delete.mockResolvedValueOnce({});
+  it('triggers invalidation and success toast on success', () => {
+    mockBudgetsDeleteUseMutation.mockImplementation((options: { onSuccess?: () => void }) => ({
+      mutate: () => options?.onSuccess?.(),
+      isSuccess: false,
+    }));
 
-    const { result } = renderHook(() => useDeleteBudget(), {
-      wrapper: createWrapper(),
-    });
-
+    const { result } = renderHook(() => useDeleteBudget(), { wrapper: createWrapper() });
     result.current.mutate('budget-1');
 
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    expect(mockApi.delete).toHaveBeenCalledWith('/budgets/budget-1');
+    expect(mockInvalidateBudgets).toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith('Budget deleted successfully');
   });
 });

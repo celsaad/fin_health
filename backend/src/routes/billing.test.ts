@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { api, createTestUser, cleanupUser, TestUser } from '../test/helpers';
+import { TRPCError } from '@trpc/server';
+import { api, callerFor, publicCaller, createTestUser, cleanupUser, TestUser } from '../test/helpers';
 import prisma from '../lib/prisma';
 
 vi.mock('../services/stripeService', () => ({
@@ -8,14 +9,12 @@ vi.mock('../services/stripeService', () => ({
   handleWebhookEvent: vi.fn().mockResolvedValue(undefined),
   stripe: vi.fn(() => ({
     webhooks: {
-      constructEvent: vi.fn(() => {
-        throw new Error('Invalid signature');
-      }),
+      constructEvent: vi.fn(() => { throw new Error('Invalid signature'); }),
     },
   })),
 }));
 
-describe('Billing routes', () => {
+describe('Billing procedures', () => {
   let freeUser: TestUser;
   let proUser: TestUser;
 
@@ -24,12 +23,7 @@ describe('Billing routes', () => {
     proUser = await createTestUser();
 
     await prisma.subscription.create({
-      data: {
-        userId: proUser.id,
-        plan: 'pro',
-        status: 'active',
-        stripeCustomerId: 'cus_test_123',
-      },
+      data: { userId: proUser.id, plan: 'pro', status: 'active', stripeCustomerId: 'cus_test_123' },
     });
   });
 
@@ -38,58 +32,46 @@ describe('Billing routes', () => {
     await cleanupUser(proUser.id);
   });
 
-  describe('POST /api/billing/checkout', () => {
+  describe('billing.checkout', () => {
     it('requires authentication', async () => {
-      const res = await api().post('/api/billing/checkout').send({ interval: 'monthly' });
-      expect(res.status).toBe(401);
+      await expect(
+        publicCaller().billing.checkout({ interval: 'monthly' }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
 
     it('rejects invalid interval', async () => {
-      const res = await api()
-        .post('/api/billing/checkout')
-        .set('Authorization', `Bearer ${freeUser.token}`)
-        .send({ interval: 'weekly' });
-
-      expect(res.status).toBe(400);
+      const caller = await callerFor(freeUser);
+      await expect(
+        caller.billing.checkout({ interval: 'weekly' as 'monthly' }),
+      ).rejects.toBeInstanceOf(TRPCError);
     });
 
-    it('returns checkout URL for valid request', async () => {
-      const res = await api()
-        .post('/api/billing/checkout')
-        .set('Authorization', `Bearer ${freeUser.token}`)
-        .send({ interval: 'monthly' });
-
-      expect(res.status).toBe(200);
-      expect(res.body.url).toBe('https://checkout.stripe.com/test-session');
+    it('returns checkout URL for valid monthly request', async () => {
+      const caller = await callerFor(freeUser);
+      const result = await caller.billing.checkout({ interval: 'monthly' });
+      expect(result.url).toBe('https://checkout.stripe.com/test-session');
     });
 
     it('accepts yearly interval', async () => {
-      const res = await api()
-        .post('/api/billing/checkout')
-        .set('Authorization', `Bearer ${freeUser.token}`)
-        .send({ interval: 'yearly' });
-
-      expect(res.status).toBe(200);
-      expect(res.body.url).toBe('https://checkout.stripe.com/test-session');
+      const caller = await callerFor(freeUser);
+      const result = await caller.billing.checkout({ interval: 'yearly' });
+      expect(result.url).toBe('https://checkout.stripe.com/test-session');
     });
   });
 
-  describe('GET /api/billing/portal', () => {
+  describe('billing.portal', () => {
     it('requires authentication', async () => {
-      const res = await api().get('/api/billing/portal');
-      expect(res.status).toBe(401);
+      await expect(publicCaller().billing.portal()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
 
     it('returns portal URL for authenticated user', async () => {
-      const res = await api()
-        .get('/api/billing/portal')
-        .set('Authorization', `Bearer ${proUser.token}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.url).toBe('https://billing.stripe.com/test-portal');
+      const caller = await callerFor(proUser);
+      const result = await caller.billing.portal();
+      expect(result.url).toBe('https://billing.stripe.com/test-portal');
     });
   });
 
+  // Webhook is a plain Express route — test with Supertest
   describe('POST /api/billing/webhook', () => {
     it('rejects requests without Stripe signature', async () => {
       const res = await api()

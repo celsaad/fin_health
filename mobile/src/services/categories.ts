@@ -1,43 +1,37 @@
-import api from './api';
-import type { Category } from '@fin-health/shared/types';
+import { trpcClient } from '../lib/trpc';
 
-export async function getCategories(): Promise<{ categories: Category[] }> {
-  const { data } = await api.get('/categories');
-  return data;
+export async function getCategories() {
+  return trpcClient.categories.list.query();
 }
 
-export async function updateCategory(
-  id: string,
-  body: { name?: string; icon?: string; color?: string },
-) {
-  const { data } = await api.put(`/categories/${id}`, body);
-  return data.category;
+export async function updateCategory(id: string, body: { name?: string; icon?: string; color?: string }) {
+  const result = await trpcClient.categories.update.mutate({ id, ...body });
+  return result.category;
 }
 
 export async function deleteCategory(id: string) {
-  await api.delete(`/categories/${id}`);
+  return trpcClient.categories.delete.mutate({ id });
 }
 
 export async function mergeCategory(id: string, targetCategoryId: string) {
-  const { data } = await api.post(`/categories/${id}/merge`, { targetCategoryId });
-  return data;
+  return trpcClient.categories.merge.mutate({ id, targetCategoryId });
 }
 
 export async function getSubcategories(categoryId: string) {
-  const { data } = await api.get(`/categories/${categoryId}/subcategories`);
-  return data.subcategories;
+  const result = await trpcClient.categories.listSubcategories.query({ categoryId });
+  return result.subcategories;
 }
 
 export async function createSubcategory(categoryId: string, name: string) {
-  const { data } = await api.post(`/categories/${categoryId}/subcategories`, { name });
-  return data.subcategory;
+  const result = await trpcClient.categories.createSubcategory.mutate({ categoryId, name });
+  return result.subcategory;
 }
 
-export async function renameSubcategory(categoryId: string, subId: string, name: string) {
-  const { data } = await api.put(`/categories/${categoryId}/subcategories/${subId}`, { name });
-  return data.subcategory;
+export async function renameSubcategory(categoryId: string, subcategoryId: string, name: string) {
+  const result = await trpcClient.categories.renameSubcategory.mutate({ categoryId, subcategoryId, name });
+  return result.subcategory;
 }
 
-export async function deleteSubcategory(categoryId: string, subId: string) {
-  await api.delete(`/categories/${categoryId}/subcategories/${subId}`);
+export async function deleteSubcategory(categoryId: string, subcategoryId: string) {
+  return trpcClient.categories.deleteSubcategory.mutate({ categoryId, subcategoryId });
 }

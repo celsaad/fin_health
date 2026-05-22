@@ -3,29 +3,41 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
+import { createExpressMiddleware } from '@trpc/server/adapters/express';
+import { stringify } from 'csv-stringify';
+import { Prisma } from '@prisma/client';
 import prisma from './lib/prisma';
 import { logger } from './lib/logger';
-import { errorHandler } from './middleware/errorHandler';
-import authRoutes from './routes/auth';
-import transactionRoutes from './routes/transactions';
-import categoryRoutes from './routes/categories';
-import budgetRoutes from './routes/budgets';
-import recurringRoutes from './routes/recurring';
-import dashboardRoutes from './routes/dashboard';
-import billingRoutes, { webhookRouter } from './routes/billing';
+import { errorHandler, AppError } from './middleware/errorHandler';
+import { authMiddleware } from './middleware/auth';
+import { env } from './lib/env';
+import { Sentry } from './lib/sentry';
+import { appRouter } from './routers';
+import { createContext } from './context';
+import { generateToken } from './lib/jwt';
+import { consumeRefreshToken, createRefreshToken } from './lib/refreshToken';
+import { handleWebhookEvent, stripe } from './services/stripeService';
 
 const app = express();
 
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 app.use(helmet());
+app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 
-import { env } from './lib/env';
-
-const corsOrigin = env.CORS_ORIGIN;
-app.use(cors({ origin: corsOrigin, credentials: true }));
-
-// Stripe webhook needs raw body — must be before express.json()
-app.use('/api/billing/webhook', express.raw({ type: 'application/json' }), webhookRouter);
+// Stripe webhook needs raw body — must be registered before express.json()
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), async (req, res, next) => {
+  try {
+    const sig = req.headers['stripe-signature'];
+    if (!sig || typeof sig !== 'string') throw new AppError('Missing Stripe signature', 400);
+    const event = stripe().webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET);
+    await handleWebhookEvent(event);
+    res.json({ received: true });
+  } catch (err) {
+    if (err instanceof AppError) { next(err); return; }
+    logger.error({ err }, 'Webhook signature verification failed');
+    res.status(400).json({ error: 'Webhook signature verification failed' });
+  }
+});
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -54,14 +66,94 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/budgets', budgetRoutes);
-app.use('/api/recurring', recurringRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/billing', billingRoutes);
+// POST /api/auth/refresh — plain Express route consumed by the tRPC client's refresh handler
+app.post('/api/auth/refresh', async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken || typeof refreshToken !== 'string') {
+      return void res.status(400).json({ error: 'Refresh token is required' });
+    }
+    const record = await consumeRefreshToken(refreshToken);
+    if (!record) {
+      return void res.status(401).json({ error: 'Invalid or expired refresh token' });
+    }
+    const token = generateToken(record.userId);
+    const newRefreshToken = await createRefreshToken(record.userId);
+    res.json({ token, refreshToken: newRefreshToken });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/transactions/export/csv — streaming download, kept outside tRPC
+app.get('/api/transactions/export/csv', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = req.userId!;
+    const { type, categoryId, startDate, endDate, search } = req.query;
+
+    const where: Prisma.TransactionWhereInput = { userId, deletedAt: null };
+    if (type && (type === 'expense' || type === 'income')) where.type = type;
+    if (categoryId && typeof categoryId === 'string') where.categoryId = categoryId;
+    if (startDate || endDate) {
+      where.date = {};
+      if (startDate && typeof startDate === 'string')
+        (where.date as Prisma.DateTimeFilter).gte = new Date(startDate + 'T00:00:00.000Z');
+      if (endDate && typeof endDate === 'string')
+        (where.date as Prisma.DateTimeFilter).lte = new Date(endDate + 'T23:59:59.999Z');
+    }
+    if (search && typeof search === 'string') where.description = { contains: search, mode: 'insensitive' };
+
+    const transactions = await prisma.transaction.findMany({
+      where,
+      include: {
+        category: { select: { name: true } },
+        subcategory: { select: { name: true } },
+      },
+      orderBy: { date: 'desc' },
+    });
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
+
+    const stringifier = stringify({
+      header: true,
+      columns: ['Date', 'Type', 'Description', 'Amount', 'Category', 'Subcategory', 'Notes'],
+    });
+    stringifier.pipe(res);
+
+    for (const t of transactions) {
+      stringifier.write([
+        new Date(t.date).toISOString().split('T')[0],
+        t.type,
+        t.description,
+        t.amount.toString(),
+        t.category.name,
+        t.subcategory?.name || '',
+        t.notes || '',
+      ]);
+    }
+    stringifier.end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// tRPC handler — all application procedures live here
+app.use(
+  '/api/trpc',
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+    onError({ error, path }) {
+      if (error.code === 'INTERNAL_SERVER_ERROR') {
+        Sentry.captureException(error.cause ?? error);
+        logger.error({ err: error.cause, path }, 'tRPC internal error');
+      } else {
+        logger.warn({ err: error.message, path, code: error.code }, 'tRPC error');
+      }
+    },
+  }),
+);
 
 // Error handler (must be last)
 app.use(errorHandler);

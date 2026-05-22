@@ -11,6 +11,8 @@ interface MonthlySummary {
 interface CategoryBreakdown {
   categoryId: string;
   categoryName: string;
+  icon: string | null;
+  color: string | null;
   total: number;
   percentage: number;
 }
@@ -88,13 +90,13 @@ export async function getMonthlyBreakdown(
     orderBy: { _sum: { amount: 'desc' } },
   });
 
-  // Get category names
+  // Get category names and appearance
   const categoryIds = expenses.map((e) => e.categoryId);
   const categories = await prisma.category.findMany({
     where: { id: { in: categoryIds } },
-    select: { id: true, name: true },
+    select: { id: true, name: true, icon: true, color: true },
   });
-  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
+  const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
   // Calculate total for percentages
   const total = expenses.reduce(
@@ -105,10 +107,13 @@ export async function getMonthlyBreakdown(
   return expenses.map((e) => {
     const amount = e._sum.amount || new Decimal(0);
     const percentage = total.isZero() ? 0 : parseFloat(amount.div(total).mul(100).toFixed(1));
+    const cat = categoryMap.get(e.categoryId);
 
     return {
       categoryId: e.categoryId,
-      categoryName: categoryMap.get(e.categoryId) || 'Unknown',
+      categoryName: cat?.name || 'Unknown',
+      icon: cat?.icon ?? null,
+      color: cat?.color ?? null,
       total: parseFloat(amount.toString()),
       percentage,
     };

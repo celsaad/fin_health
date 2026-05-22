@@ -32,6 +32,9 @@
     }
   },
   "dependencies": {
+    "@fin-health/backend": "*",
+    "@trpc/client": "^11.0.0",
+    "superjson": "^1.13.3",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/vector-icons": "^15.0.2",

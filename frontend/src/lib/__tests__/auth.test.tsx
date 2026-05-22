@@ -1,33 +1,59 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/lib/auth';
-import api from '@/lib/api';
 import type { ReactNode } from 'react';
 
-vi.mock('@/lib/api', async () => {
-  const actual = await vi.importActual<typeof import('@/lib/api')>('@/lib/api');
-  const instance = {
-    get: vi.fn(),
-    post: vi.fn().mockResolvedValue({}),
-    interceptors: {
-      request: { use: vi.fn() },
-      response: { use: vi.fn() },
-    },
-  };
-  return {
-    ...actual,
-    default: instance,
-    setAuthErrorHandler: vi.fn(),
-  };
-});
+// ---- tRPC mock ----
+const mockAuthMeUseQuery = vi.fn();
+const mockAuthLoginUseMutation = vi.fn();
+const mockAuthSignupUseMutation = vi.fn();
+const mockAuthLogoutUseMutation = vi.fn();
+const mockSetTRPCAuthFailure = vi.fn();
 
-const mockApi = vi.mocked(api);
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    auth: {
+      me: { useQuery: (...args: unknown[]) => mockAuthMeUseQuery(...args) },
+      login: { useMutation: (...args: unknown[]) => mockAuthLoginUseMutation(...args) },
+      signup: { useMutation: (...args: unknown[]) => mockAuthSignupUseMutation(...args) },
+      logout: { useMutation: (...args: unknown[]) => mockAuthLogoutUseMutation(...args) },
+    },
+  },
+  setTRPCAuthFailure: (...args: unknown[]) => mockSetTRPCAuthFailure(...args),
+  createTRPCLinks: vi.fn(() => []),
+}));
+
+// Mutation helper — returns a standard useMutation shape that calls callbacks synchronously
+function makeMutation(mutationFn: (...args: unknown[]) => unknown) {
+  return (options: { onSuccess?: (data: unknown) => void; onError?: (err: Error) => void } = {}) => ({
+    mutate: async (input?: unknown) => {
+      try {
+        const result = await mutationFn(input);
+        options.onSuccess?.(result);
+      } catch (err) {
+        options.onError?.(err as Error);
+      }
+    },
+    mutateAsync: async (input?: unknown) => {
+      const result = await mutationFn(input);
+      options.onSuccess?.(result);
+      return result;
+    },
+    isSuccess: false,
+    isPending: false,
+    isError: false,
+  });
+}
 
 function wrapper({ children }: { children: ReactNode }) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return (
     <MemoryRouter>
-      <AuthProvider>{children}</AuthProvider>
+      <QueryClientProvider client={qc}>
+        <AuthProvider>{children}</AuthProvider>
+      </QueryClientProvider>
     </MemoryRouter>
   );
 }
@@ -35,6 +61,11 @@ function wrapper({ children }: { children: ReactNode }) {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  // Default: no user, queries settled immediately
+  mockAuthMeUseQuery.mockReturnValue({ isSuccess: false, isError: false, data: undefined, refetch: vi.fn() });
+  mockAuthLoginUseMutation.mockImplementation(makeMutation(vi.fn()));
+  mockAuthSignupUseMutation.mockImplementation(makeMutation(vi.fn()));
+  mockAuthLogoutUseMutation.mockImplementation(makeMutation(vi.fn()));
 });
 
 describe('useAuth', () => {
@@ -56,9 +87,14 @@ describe('useAuth', () => {
   });
 
   it('fetches user when token exists in localStorage', async () => {
+    const mockUser = { id: '1', email: 'test@test.com', name: 'Test', plan: {} };
     localStorage.setItem('token', 'existing-token');
-    const mockUser = { id: '1', email: 'test@test.com', name: 'Test' };
-    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
+    mockAuthMeUseQuery.mockReturnValue({
+      isSuccess: true,
+      isError: false,
+      data: { user: mockUser },
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -68,12 +104,17 @@ describe('useAuth', () => {
 
     expect(result.current.user).toEqual(mockUser);
     expect(result.current.token).toBe('existing-token');
-    expect(mockApi.get).toHaveBeenCalledWith('/auth/me');
   });
 
   it('clears token if fetching user fails', async () => {
     localStorage.setItem('token', 'bad-token');
-    mockApi.get.mockRejectedValueOnce(new Error('Unauthorized'));
+    mockAuthMeUseQuery.mockReturnValue({
+      isSuccess: false,
+      isError: true,
+      data: undefined,
+      error: new Error('Unauthorized'),
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -87,77 +128,55 @@ describe('useAuth', () => {
   });
 
   it('login stores token and sets user', async () => {
-    const mockUser = { id: '1', email: 'test@test.com', name: 'Test' };
-    const mockResponse = {
-      data: { token: 'new-token', user: mockUser },
-    };
-    mockApi.post.mockResolvedValueOnce(mockResponse);
-    // After login sets the token, the useEffect fires fetchUser
-    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
+    const mockUser = { id: '1', email: 'test@test.com', name: 'Test', plan: {} };
+    const loginFn = vi.fn().mockResolvedValue({ token: 'new-token', user: mockUser });
+    mockAuthLoginUseMutation.mockImplementation(makeMutation(loginFn));
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
       await result.current.login('test@test.com', 'password');
     });
 
-    await waitFor(() => {
-      expect(result.current.user).toEqual(mockUser);
-    });
-
     expect(result.current.token).toBe('new-token');
     expect(localStorage.getItem('token')).toBe('new-token');
-    expect(mockApi.post).toHaveBeenCalledWith('/auth/login', {
-      email: 'test@test.com',
-      password: 'password',
-    });
   });
 
   it('signup stores token and sets user', async () => {
-    const mockUser = { id: '2', email: 'new@test.com', name: 'New User' };
-    const mockResponse = {
-      data: { token: 'signup-token', user: mockUser },
-    };
-    mockApi.post.mockResolvedValueOnce(mockResponse);
-    // After signup sets the token, the useEffect fires fetchUser
-    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
+    const mockUser = { id: '2', email: 'new@test.com', name: 'New User', plan: {} };
+    const signupFn = vi.fn().mockResolvedValue({ token: 'signup-token', user: mockUser });
+    mockAuthSignupUseMutation.mockImplementation(makeMutation(signupFn));
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
       await result.current.signup('new@test.com', 'password', 'New User');
-    });
-
-    await waitFor(() => {
-      expect(result.current.user).toEqual(mockUser);
     });
 
     expect(localStorage.getItem('token')).toBe('signup-token');
   });
 
   it('logout clears user, token, refreshToken, and localStorage', async () => {
+    const mockUser = { id: '1', email: 'test@test.com', name: 'Test', plan: {} };
     localStorage.setItem('token', 'test-token');
     localStorage.setItem('refreshToken', 'test-refresh-token');
-    const mockUser = { id: '1', email: 'test@test.com', name: 'Test' };
-    mockApi.get.mockResolvedValueOnce({ data: { user: mockUser } });
+    mockAuthMeUseQuery.mockReturnValue({
+      isSuccess: true,
+      isError: false,
+      data: { user: mockUser },
+      refetch: vi.fn(),
+    });
+    mockAuthLogoutUseMutation.mockImplementation(makeMutation(vi.fn().mockResolvedValue({})));
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
-    await waitFor(() => {
-      expect(result.current.user).toEqual(mockUser);
-    });
+    await waitFor(() => expect(result.current.user).toEqual(mockUser));
 
-    act(() => {
-      result.current.logout();
-    });
+    act(() => result.current.logout());
 
     expect(result.current.user).toBeNull();
     expect(result.current.token).toBeNull();

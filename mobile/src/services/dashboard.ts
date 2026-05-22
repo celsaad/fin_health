@@ -1,29 +1,24 @@
-import api from './api';
 import { startOfMonth, endOfMonth, format } from 'date-fns';
+import { trpcClient } from '../lib/trpc';
 
 export async function getSummary(month: number, year: number) {
-  const { data } = await api.get('/dashboard/summary', { params: { month, year } });
-  return data;
+  return trpcClient.dashboard.summary.query({ month, year });
 }
 
 export async function getBreakdown(month: number, year: number) {
-  const { data } = await api.get('/dashboard/breakdown', { params: { month, year } });
-  return data;
+  return trpcClient.dashboard.breakdown.query({ month, year });
 }
 
 export async function getCategoryBreakdown(month: number, year: number) {
-  const { data } = await api.get('/dashboard/category-breakdown', { params: { month, year } });
-  return data;
+  return trpcClient.dashboard.categoryBreakdown.query({ month, year });
 }
 
 export async function getTrend(months = 6) {
-  const { data } = await api.get('/dashboard/trend', { params: { months } });
-  return data;
+  return trpcClient.dashboard.trend.query({ months });
 }
 
 export async function getYearlyOverview(year: number) {
-  const { data } = await api.get('/dashboard/yearly', { params: { year } });
-  return data;
+  return trpcClient.dashboard.yearly.query({ year });
 }
 
 export interface Insight {
@@ -35,18 +30,19 @@ export interface Insight {
 }
 
 export async function getInsights(month: number, year: number) {
-  const { data } = await api.get<{ insights: Insight[] }>('/dashboard/insights', {
-    params: { month, year },
-  });
-  return data;
+  return trpcClient.dashboard.insights.query({ month, year });
 }
 
 export async function getRecentPeaks(month: number, year: number, limit = 5) {
   const date = new Date(year, month - 1);
   const startDate = format(startOfMonth(date), 'yyyy-MM-dd');
   const endDate = format(endOfMonth(date), 'yyyy-MM-dd');
-  const { data } = await api.get('/transactions', {
-    params: { startDate, endDate, sortBy: 'amount', sortOrder: 'desc', limit, type: 'expense' },
+  return trpcClient.transactions.list.query({
+    startDate,
+    endDate,
+    sortBy: 'amount',
+    sortOrder: 'desc',
+    limit,
+    type: 'expense',
   });
-  return data;
 }

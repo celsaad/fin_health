@@ -1,16 +1,24 @@
-import api from './api';
-import type { TransactionFilters, PaginatedResponse, Transaction } from '@fin-health/shared/types';
+import { trpcClient } from '../lib/trpc';
+import type { TransactionFilters } from '@fin-health/shared/types';
 
-export async function getTransactions(
-  filters: TransactionFilters,
-): Promise<PaginatedResponse<Transaction>> {
-  const { data } = await api.get('/transactions', { params: filters });
-  return data;
+export async function getTransactions(filters: TransactionFilters) {
+  return trpcClient.transactions.list.query({
+    page: filters.page ?? 1,
+    limit: filters.limit ?? 20,
+    type: (filters.type || undefined) as 'expense' | 'income' | undefined,
+    categoryId: filters.categoryId || undefined,
+    subcategoryId: filters.subcategoryId || undefined,
+    startDate: filters.startDate || undefined,
+    endDate: filters.endDate || undefined,
+    search: filters.search || undefined,
+    sortBy: (filters.sortBy || undefined) as 'date' | 'amount' | 'description' | 'createdAt' | undefined,
+    sortOrder: (filters.sortOrder || undefined) as 'asc' | 'desc' | undefined,
+  });
 }
 
 export async function getTransaction(id: string) {
-  const { data } = await api.get(`/transactions/${id}`);
-  return data.transaction;
+  const result = await trpcClient.transactions.byId.query({ id });
+  return result.transaction;
 }
 
 export async function createTransaction(body: {
@@ -22,8 +30,16 @@ export async function createTransaction(body: {
   subcategoryName?: string;
   notes?: string;
 }) {
-  const { data } = await api.post('/transactions', body);
-  return data.transaction;
+  const result = await trpcClient.transactions.create.mutate({
+    amount: body.amount,
+    type: body.type as 'expense' | 'income',
+    description: body.description,
+    date: body.date,
+    categoryName: body.categoryName,
+    subcategoryName: body.subcategoryName,
+    notes: body.notes,
+  });
+  return result.transaction;
 }
 
 export async function updateTransaction(
@@ -38,15 +54,18 @@ export async function updateTransaction(
     notes?: string | null;
   }>,
 ) {
-  const { data } = await api.put(`/transactions/${id}`, body);
-  return data.transaction;
+  const result = await trpcClient.transactions.update.mutate({
+    id,
+    ...body,
+    type: body.type as 'expense' | 'income' | undefined,
+  });
+  return result.transaction;
 }
 
 export async function deleteTransaction(id: string) {
-  await api.delete(`/transactions/${id}`);
+  return trpcClient.transactions.delete.mutate({ id });
 }
 
 export async function bulkDeleteTransactions(ids: string[]) {
-  const { data } = await api.post('/transactions/bulk-delete', { ids });
-  return data;
+  return trpcClient.transactions.bulkDelete.mutate({ ids });
 }

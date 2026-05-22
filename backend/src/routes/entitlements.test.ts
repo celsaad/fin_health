@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { api, createTestUser, cleanupUser, TestUser } from '../test/helpers';
+import { callerFor, publicCaller, createTestUser, cleanupUser, TestUser } from '../test/helpers';
 import prisma from '../lib/prisma';
 
 describe('Entitlements', () => {
@@ -10,13 +10,8 @@ describe('Entitlements', () => {
     freeUser = await createTestUser();
     proUser = await createTestUser();
 
-    // Give proUser a pro subscription
     await prisma.subscription.create({
-      data: {
-        userId: proUser.id,
-        plan: 'pro',
-        status: 'active',
-      },
+      data: { userId: proUser.id, plan: 'pro', status: 'active' },
     });
   });
 
@@ -25,12 +20,12 @@ describe('Entitlements', () => {
     await cleanupUser(proUser.id);
   });
 
-  describe('GET /api/auth/me — plan info', () => {
+  describe('auth.me — plan info', () => {
     it('returns free plan when user has no subscription', async () => {
-      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${freeUser.token}`);
+      const caller = await callerFor(freeUser);
+      const result = await caller.auth.me();
 
-      expect(res.status).toBe(200);
-      expect(res.body.user.plan).toEqual({
+      expect(result.user.plan).toEqual({
         plan: 'free',
         status: 'active',
         trialEndsAt: null,
@@ -40,67 +35,56 @@ describe('Entitlements', () => {
     });
 
     it('returns pro plan when user has active subscription', async () => {
-      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${proUser.token}`);
+      const caller = await callerFor(proUser);
+      const result = await caller.auth.me();
 
-      expect(res.status).toBe(200);
-      expect(res.body.user.plan.plan).toBe('pro');
-      expect(res.body.user.plan.status).toBe('active');
+      expect(result.user.plan.plan).toBe('pro');
+      expect(result.user.plan.status).toBe('active');
     });
   });
 
-  describe('POST /api/auth/signup — plan info', () => {
+  describe('auth.signup — plan info', () => {
     it('returns free plan for new users', async () => {
-      const res = await api()
-        .post('/api/auth/signup')
-        .send({
-          email: `entitlement-test-${Date.now()}@test.com`,
-          password: 'Test1234!',
-          name: 'Test',
-        });
+      const caller = publicCaller();
+      const result = await caller.auth.signup({
+        email: `entitlement-test-${Date.now()}@test.com`,
+        password: 'Test1234!',
+        name: 'Test',
+      });
 
-      expect(res.status).toBe(201);
-      expect(res.body.user.plan.plan).toBe('free');
-
-      // cleanup
-      await cleanupUser(res.body.user.id);
+      expect(result.user.plan.plan).toBe('free');
+      await cleanupUser(result.user.id);
     });
   });
 
-  describe('POST /api/auth/login — plan info', () => {
+  describe('auth.login — plan info', () => {
     it('returns plan info on login', async () => {
       const email = `entitlement-login-${Date.now()}@test.com`;
       const password = 'Test1234!';
-      const signupRes = await api()
-        .post('/api/auth/signup')
-        .send({ email, password, name: 'Test' });
-      const userId = signupRes.body.user.id;
+      const signupResult = await publicCaller().auth.signup({ email, password, name: 'Test' });
+      const userId = signupResult.user.id;
 
-      const res = await api().post('/api/auth/login').send({ email, password });
-
-      expect(res.status).toBe(200);
-      expect(res.body.user.plan.plan).toBe('free');
+      const loginResult = await publicCaller().auth.login({ email, password });
+      expect(loginResult.user.plan.plan).toBe('free');
 
       await cleanupUser(userId);
     });
   });
 
-  describe('GET /api/dashboard/insights — pro gating', () => {
-    it('returns 403 with PRO_REQUIRED for free user', async () => {
-      const res = await api()
-        .get('/api/dashboard/insights?month=3&year=2025')
-        .set('Authorization', `Bearer ${freeUser.token}`);
+  describe('dashboard.insights — pro gating', () => {
+    it('returns FORBIDDEN with PRO_REQUIRED for free user', async () => {
+      const caller = await callerFor(freeUser);
+      const error = await caller.dashboard.insights({ month: 3, year: 2025 }).catch((e) => e);
 
-      expect(res.status).toBe(403);
-      expect(res.body.code).toBe('PRO_REQUIRED');
+      expect(error.code).toBe('FORBIDDEN');
+      expect(error.message).toBe('PRO_REQUIRED');
     });
 
-    it('returns 200 for pro user', async () => {
-      const res = await api()
-        .get('/api/dashboard/insights?month=3&year=2025')
-        .set('Authorization', `Bearer ${proUser.token}`);
+    it('returns insights for pro user', async () => {
+      const caller = await callerFor(proUser);
+      const result = await caller.dashboard.insights({ month: 3, year: 2025 });
 
-      expect(res.status).toBe(200);
-      expect(res.body.insights).toBeInstanceOf(Array);
+      expect(result.insights).toBeInstanceOf(Array);
     });
   });
 
@@ -122,21 +106,11 @@ describe('Entitlements', () => {
           trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         },
       });
-
       await prisma.subscription.create({
-        data: {
-          userId: canceledUser.id,
-          plan: 'pro',
-          status: 'canceled',
-        },
+        data: { userId: canceledUser.id, plan: 'pro', status: 'canceled' },
       });
-
       await prisma.subscription.create({
-        data: {
-          userId: expiredUser.id,
-          plan: 'pro',
-          status: 'expired',
-        },
+        data: { userId: expiredUser.id, plan: 'pro', status: 'expired' },
       });
     });
 
@@ -147,47 +121,37 @@ describe('Entitlements', () => {
     });
 
     it('allows trialing users to access pro features', async () => {
-      const res = await api()
-        .get('/api/dashboard/insights?month=3&year=2025')
-        .set('Authorization', `Bearer ${trialingUser.token}`);
-
-      expect(res.status).toBe(200);
+      const caller = await callerFor(trialingUser);
+      const result = await caller.dashboard.insights({ month: 3, year: 2025 });
+      expect(result.insights).toBeInstanceOf(Array);
     });
 
     it('blocks canceled users from pro features', async () => {
-      const res = await api()
-        .get('/api/dashboard/insights?month=3&year=2025')
-        .set('Authorization', `Bearer ${canceledUser.token}`);
-
-      expect(res.status).toBe(403);
-      expect(res.body.code).toBe('PRO_REQUIRED');
+      const caller = await callerFor(canceledUser);
+      const error = await caller.dashboard.insights({ month: 3, year: 2025 }).catch((e) => e);
+      expect(error.code).toBe('FORBIDDEN');
+      expect(error.message).toBe('PRO_REQUIRED');
     });
 
     it('blocks expired users from pro features', async () => {
-      const res = await api()
-        .get('/api/dashboard/insights?month=3&year=2025')
-        .set('Authorization', `Bearer ${expiredUser.token}`);
-
-      expect(res.status).toBe(403);
-      expect(res.body.code).toBe('PRO_REQUIRED');
+      const caller = await callerFor(expiredUser);
+      const error = await caller.dashboard.insights({ month: 3, year: 2025 }).catch((e) => e);
+      expect(error.code).toBe('FORBIDDEN');
+      expect(error.message).toBe('PRO_REQUIRED');
     });
   });
 
   describe('non-gated routes — unaffected', () => {
     it('free users can access dashboard summary', async () => {
-      const res = await api()
-        .get('/api/dashboard/summary?month=3&year=2025')
-        .set('Authorization', `Bearer ${freeUser.token}`);
-
-      expect(res.status).toBe(200);
+      const caller = await callerFor(freeUser);
+      const result = await caller.dashboard.summary({ month: 3, year: 2025 });
+      expect(result.transactionCount).toBeGreaterThanOrEqual(0);
     });
 
     it('free users can access dashboard breakdown', async () => {
-      const res = await api()
-        .get('/api/dashboard/breakdown?month=3&year=2025')
-        .set('Authorization', `Bearer ${freeUser.token}`);
-
-      expect(res.status).toBe(200);
+      const caller = await callerFor(freeUser);
+      const result = await caller.dashboard.breakdown({ month: 3, year: 2025 });
+      expect(result.breakdown).toBeInstanceOf(Array);
     });
   });
 });

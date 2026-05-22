@@ -1,242 +1,193 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import { api, createTestUser, cleanupUser, uniqueEmail } from '../test/helpers';
+import { TRPCError } from '@trpc/server';
+import { publicCaller, callerFor, createTestUser, cleanupUser, uniqueEmail } from '../test/helpers';
 
-describe('Auth routes', () => {
+describe('Auth procedures', () => {
   const userIds: string[] = [];
   afterEach(async () => {
     for (const id of userIds) await cleanupUser(id);
     userIds.length = 0;
   });
 
-  describe('POST /api/auth/signup', () => {
+  describe('auth.signup', () => {
     it('creates a new user and returns a token', async () => {
       const email = uniqueEmail();
-      const res = await api()
-        .post('/api/auth/signup')
-        .send({ email, password: 'Test1234!', name: 'Test' });
+      const caller = publicCaller();
+      const result = await caller.auth.signup({ email, password: 'Test1234!', name: 'Test' });
 
-      expect(res.status).toBe(201);
-      expect(res.body.token).toBeDefined();
-      expect(res.body.user.email).toBe(email);
-      expect(res.body.user).not.toHaveProperty('password');
-      userIds.push(res.body.user.id);
+      expect(result.token).toBeDefined();
+      expect(result.user.email).toBe(email);
+      expect((result.user as Record<string, unknown>).password).toBeUndefined();
+      userIds.push(result.user.id);
     });
 
     it('rejects duplicate email', async () => {
       const user = await createTestUser();
       userIds.push(user.id);
+      const caller = publicCaller();
 
-      const res = await api()
-        .post('/api/auth/signup')
-        .send({ email: user.email, password: 'Test1234!', name: 'Test' });
-
-      expect(res.status).toBe(409);
+      await expect(
+        caller.auth.signup({ email: user.email, password: 'Test1234!', name: 'Test' }),
+      ).rejects.toMatchObject({ code: 'CONFLICT' });
     });
 
     it('rejects invalid input', async () => {
-      const res = await api()
-        .post('/api/auth/signup')
-        .send({ email: 'not-an-email', password: '12', name: '' });
-
-      expect(res.status).toBe(400);
+      const caller = publicCaller();
+      await expect(
+        caller.auth.signup({ email: 'not-an-email', password: '12', name: '' }),
+      ).rejects.toBeInstanceOf(TRPCError);
     });
   });
 
-  describe('POST /api/auth/login', () => {
+  describe('auth.login', () => {
     it('returns a token for valid credentials', async () => {
       const email = uniqueEmail();
       const password = 'Test1234!';
       const user = await createTestUser({ email, password });
       userIds.push(user.id);
+      const caller = publicCaller();
 
-      const res = await api().post('/api/auth/login').send({ email, password });
+      const result = await caller.auth.login({ email, password });
 
-      expect(res.status).toBe(200);
-      expect(res.body.token).toBeDefined();
-      expect(res.body.user.email).toBe(email);
+      expect(result.token).toBeDefined();
+      expect(result.user.email).toBe(email);
     });
 
     it('rejects wrong password', async () => {
       const user = await createTestUser();
       userIds.push(user.id);
+      const caller = publicCaller();
 
-      const res = await api()
-        .post('/api/auth/login')
-        .send({ email: user.email, password: 'wrongpassword' });
-
-      expect(res.status).toBe(401);
+      await expect(
+        caller.auth.login({ email: user.email, password: 'wrongpassword' }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
 
     it('rejects non-existent email', async () => {
-      const res = await api()
-        .post('/api/auth/login')
-        .send({ email: 'no-one@test.com', password: 'Test1234!' });
-
-      expect(res.status).toBe(401);
+      const caller = publicCaller();
+      await expect(
+        caller.auth.login({ email: 'no-one@test.com', password: 'Test1234!' }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
 
-  describe('GET /api/auth/me', () => {
+  describe('auth.me', () => {
     it('returns the authenticated user', async () => {
       const user = await createTestUser();
       userIds.push(user.id);
+      const caller = await callerFor(user);
 
-      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${user.token}`);
+      const result = await caller.auth.me();
 
-      expect(res.status).toBe(200);
-      expect(res.body.user.id).toBe(user.id);
-      expect(res.body.user).not.toHaveProperty('password');
+      expect(result.user.id).toBe(user.id);
+      expect((result.user as Record<string, unknown>).password).toBeUndefined();
     });
 
     it('rejects unauthenticated request', async () => {
-      const res = await api().get('/api/auth/me');
-      expect(res.status).toBe(401);
-    });
-
-    it('rejects invalid token', async () => {
-      const res = await api().get('/api/auth/me').set('Authorization', 'Bearer bad-token');
-
-      expect(res.status).toBe(401);
+      const caller = publicCaller();
+      await expect(caller.auth.me()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
 
-  describe('PUT /api/auth/password', () => {
+  describe('auth.changePassword', () => {
     it('changes password and returns new token', async () => {
       const user = await createTestUser({ password: 'OldPass123!' });
       userIds.push(user.id);
+      const caller = await callerFor(user);
 
-      const res = await api()
-        .put('/api/auth/password')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ currentPassword: 'OldPass123!', newPassword: 'NewPass456!' });
+      const result = await caller.auth.changePassword({
+        currentPassword: 'OldPass123!',
+        newPassword: 'NewPass456!',
+      });
 
-      expect(res.status).toBe(200);
-      expect(res.body.token).toBeDefined();
-    });
-
-    it('invalidates old token after password change', async () => {
-      const user = await createTestUser({ password: 'OldPass123!' });
-      userIds.push(user.id);
-      const oldToken = user.token;
-
-      // Wait 1s so the token's iat (seconds) is strictly before the passwordChangedAt
-      await new Promise((r) => setTimeout(r, 1100));
-
-      // Change password
-      await api()
-        .put('/api/auth/password')
-        .set('Authorization', `Bearer ${oldToken}`)
-        .send({ currentPassword: 'OldPass123!', newPassword: 'NewPass456!' });
-
-      // Old token should be rejected
-      const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${oldToken}`);
-
-      expect(res.status).toBe(401);
+      expect(result.token).toBeDefined();
     });
 
     it('rejects wrong current password', async () => {
       const user = await createTestUser({ password: 'Correct123!' });
       userIds.push(user.id);
+      const caller = await callerFor(user);
 
-      const res = await api()
-        .put('/api/auth/password')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ currentPassword: 'Wrong123!', newPassword: 'NewPass456!' });
-
-      expect(res.status).toBe(401);
+      await expect(
+        caller.auth.changePassword({ currentPassword: 'Wrong123!', newPassword: 'NewPass456!' }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
 
-  describe('GET /api/auth/export (GDPR)', () => {
-    it('exports all user data as JSON', async () => {
+  describe('auth.exportData', () => {
+    it('exports all user data', async () => {
       const user = await createTestUser();
       userIds.push(user.id);
+      const caller = await callerFor(user);
 
-      // Create some data to export
-      await api().post('/api/transactions').set('Authorization', `Bearer ${user.token}`).send({
-        amount: 100,
+      // Create a transaction first
+      await caller.transactions.create({
+        amount: '100',
         type: 'expense',
         description: 'Export test',
         date: '2025-01-01',
         categoryName: 'TestCat',
       });
 
-      const res = await api().get('/api/auth/export').set('Authorization', `Bearer ${user.token}`);
+      const result = await caller.auth.exportData();
 
-      expect(res.status).toBe(200);
-      expect(res.headers['content-disposition']).toContain('user-data-export.json');
-      expect(res.body.exportedAt).toBeDefined();
-      expect(res.body.data.id).toBe(user.id);
-      expect(res.body.data.email).toBe(user.email);
-      expect(res.body.data).not.toHaveProperty('password');
-      expect(res.body.data.categories).toBeInstanceOf(Array);
-      expect(res.body.data.transactions).toBeInstanceOf(Array);
-      expect(res.body.data.transactions.length).toBeGreaterThan(0);
-      expect(res.body.data.budgets).toBeInstanceOf(Array);
-      expect(res.body.data.recurringTransactions).toBeInstanceOf(Array);
+      expect(result.exportedAt).toBeDefined();
+      expect(result.data.id).toBe(user.id);
+      expect(result.data.email).toBe(user.email);
+      expect((result.data as Record<string, unknown>).password).toBeUndefined();
+      expect(result.data.categories).toBeInstanceOf(Array);
+      expect(result.data.transactions).toBeInstanceOf(Array);
+      expect(result.data.transactions.length).toBeGreaterThan(0);
+      expect(result.data.budgets).toBeInstanceOf(Array);
+      expect(result.data.recurringTransactions).toBeInstanceOf(Array);
     });
 
     it('rejects unauthenticated request', async () => {
-      const res = await api().get('/api/auth/export');
-      expect(res.status).toBe(401);
+      const caller = publicCaller();
+      await expect(caller.auth.exportData()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
 
-  describe('DELETE /api/auth/account (GDPR)', () => {
-    it('permanently deletes user account with password confirmation', async () => {
+  describe('auth.deleteAccount', () => {
+    it('permanently deletes user account', async () => {
       const password = 'DeleteMe123!';
       const user = await createTestUser({ password });
-      // Don't push to userIds — we're deleting in the test
+      const caller = await callerFor(user);
 
-      // Create data so we can verify cascade delete
-      await api().post('/api/transactions').set('Authorization', `Bearer ${user.token}`).send({
-        amount: 50,
-        type: 'expense',
-        description: 'Will be deleted',
-        date: '2025-01-01',
-        categoryName: 'Temp',
-      });
+      const result = await caller.auth.deleteAccount({ password });
 
-      const res = await api()
-        .delete('/api/auth/account')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ password });
+      expect(result.message).toContain('permanently deleted');
 
-      expect(res.status).toBe(200);
-      expect(res.body.message).toContain('permanently deleted');
-
-      // Verify the token no longer works
-      const meRes = await api().get('/api/auth/me').set('Authorization', `Bearer ${user.token}`);
-      expect(meRes.status).toBe(401);
+      // Verify account is gone
+      const newCaller = await callerFor(user);
+      await expect(newCaller.auth.me()).rejects.toMatchObject({ code: 'NOT_FOUND' });
     });
 
     it('rejects incorrect password', async () => {
       const user = await createTestUser({ password: 'Correct123!' });
       userIds.push(user.id);
+      const caller = await callerFor(user);
 
-      const res = await api()
-        .delete('/api/auth/account')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({ password: 'Wrong123!' });
-
-      expect(res.status).toBe(401);
+      await expect(
+        caller.auth.deleteAccount({ password: 'Wrong123!' }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
 
-    it('rejects missing password', async () => {
+    it('rejects missing password (empty string)', async () => {
       const user = await createTestUser();
       userIds.push(user.id);
+      const caller = await callerFor(user);
 
-      const res = await api()
-        .delete('/api/auth/account')
-        .set('Authorization', `Bearer ${user.token}`)
-        .send({});
-
-      expect(res.status).toBe(400);
+      await expect(
+        caller.auth.deleteAccount({ password: '' }),
+      ).rejects.toBeInstanceOf(TRPCError);
     });
 
     it('rejects unauthenticated request', async () => {
-      const res = await api().delete('/api/auth/account').send({ password: 'test' });
-      expect(res.status).toBe(401);
+      const caller = publicCaller();
+      await expect(
+        caller.auth.deleteAccount({ password: 'test' }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
 });

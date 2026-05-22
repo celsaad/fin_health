@@ -1,36 +1,46 @@
-import api from '../../services/api';
 import { getRecentPeaks } from '../../services/dashboard';
 
-jest.mock('../../services/api');
-const mockApi = api as jest.Mocked<typeof api>;
+const mockTransactionsList = jest.fn();
+
+jest.mock('../../lib/trpc', () => ({
+  trpcClient: {
+    transactions: {
+      list: { query: (...args: unknown[]) => mockTransactionsList(...args) },
+    },
+  },
+  setCachedToken: jest.fn(),
+  setTRPCAuthFailure: jest.fn(),
+}));
 
 describe('getRecentPeaks', () => {
-  it('calls /transactions with correct params for January 2026', async () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('calls transactions.list with correct params for January 2026', async () => {
     const mockData = { transactions: [], pagination: { total: 0 } };
-    mockApi.get.mockResolvedValue({ data: mockData });
+    mockTransactionsList.mockResolvedValue(mockData);
 
     const result = await getRecentPeaks(1, 2026);
 
-    expect(mockApi.get).toHaveBeenCalledWith('/transactions', {
-      params: {
+    expect(mockTransactionsList).toHaveBeenCalledWith(
+      expect.objectContaining({
         startDate: '2026-01-01',
         endDate: '2026-01-31',
         sortBy: 'amount',
         sortOrder: 'desc',
         limit: 5,
         type: 'expense',
-      },
-    });
+      }),
+    );
     expect(result).toEqual(mockData);
   });
 
   it('respects custom limit', async () => {
-    mockApi.get.mockResolvedValue({ data: { transactions: [] } });
+    mockTransactionsList.mockResolvedValue({ transactions: [] });
 
     await getRecentPeaks(3, 2026, 10);
 
-    expect(mockApi.get).toHaveBeenCalledWith('/transactions', {
-      params: expect.objectContaining({ limit: 10 }),
-    });
+    expect(mockTransactionsList).toHaveBeenCalledWith(
+      expect.objectContaining({ limit: 10 }),
+    );
   });
 });

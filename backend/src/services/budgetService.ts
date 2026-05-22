@@ -9,7 +9,7 @@ interface BudgetWithSpent {
   isRecurring: boolean;
   categoryId: string | null;
   categoryName: string | null;
-  category: { id: string; name: string } | null;
+  category: { id: string; name: string; icon: string | null; color: string | null } | null;
   spent: string;
   remaining: string;
 }
@@ -29,7 +29,7 @@ export async function getBudgetsWithSpent(
       ],
     },
     include: {
-      category: { select: { id: true, name: true } },
+      category: { select: { id: true, name: true, icon: true, color: true } },
     },
   });
 

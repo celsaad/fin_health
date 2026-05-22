@@ -1,11 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { parseError } from '@/lib/api';
 import { toast } from 'sonner';
-import type { Transaction, TransactionFilters, PaginatedResponse } from '@fin-health/shared/types';
+import { trpc } from '@/lib/trpc';
+import api, { parseError } from '@/lib/api';
+import type { TransactionFilters } from '@fin-health/shared/types';
 
-export type { Transaction, TransactionFilters };
-
-type TransactionsResponse = PaginatedResponse<Transaction>;
+export type { TransactionFilters };
 
 export interface CreateTransactionInput {
   amount: number;
@@ -18,101 +16,81 @@ export interface CreateTransactionInput {
 }
 
 export function useTransactions(filters: TransactionFilters = {}) {
-  return useQuery({
-    queryKey: ['transactions', filters],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters.page) params.set('page', String(filters.page));
-      if (filters.limit) params.set('limit', String(filters.limit));
-      if (filters.type) params.set('type', filters.type);
-      if (filters.categoryId) params.set('categoryId', filters.categoryId);
-      if (filters.subcategoryId) params.set('subcategoryId', filters.subcategoryId);
-      if (filters.startDate) params.set('startDate', filters.startDate);
-      if (filters.endDate) params.set('endDate', filters.endDate);
-      if (filters.search) params.set('search', filters.search);
-      if (filters.sortBy) params.set('sortBy', filters.sortBy);
-      if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
-
-      const { data } = await api.get<TransactionsResponse>(`/transactions?${params.toString()}`);
-      return data;
-    },
+  return trpc.transactions.list.useQuery({
+    page: filters.page ?? 1,
+    limit: filters.limit ?? 20,
+    type: (filters.type || undefined) as 'expense' | 'income' | undefined,
+    categoryId: filters.categoryId || undefined,
+    subcategoryId: filters.subcategoryId || undefined,
+    startDate: filters.startDate || undefined,
+    endDate: filters.endDate || undefined,
+    search: filters.search || undefined,
+    sortBy: (filters.sortBy || undefined) as 'date' | 'amount' | 'description' | 'createdAt' | undefined,
+    sortOrder: (filters.sortOrder || undefined) as 'asc' | 'desc' | undefined,
   });
 }
 
 export function useCreateTransaction() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (input: CreateTransactionInput) => {
-      const { data } = await api.post<{ transaction: Transaction }>('/transactions', input);
-      return data.transaction;
-    },
+  return trpc.transactions.create.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      utils.transactions.list.invalidate();
+      utils.categories.list.invalidate();
       toast.success('Transaction created successfully');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useUpdateTransaction() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async ({ id, ...input }: Partial<CreateTransactionInput> & { id: string }) => {
-      const { data } = await api.put<{ transaction: Transaction }>(`/transactions/${id}`, input);
-      return data.transaction;
-    },
+  return trpc.transactions.update.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      utils.transactions.list.invalidate();
+      utils.categories.list.invalidate();
       toast.success('Transaction updated successfully');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useDeleteTransaction() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/transactions/${id}`);
-    },
+  return trpc.transactions.delete.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      utils.transactions.list.invalidate();
+      utils.categories.list.invalidate();
       toast.success('Transaction deleted successfully');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
 export function useBulkDeleteTransactions() {
-  const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
 
-  return useMutation({
-    mutationFn: async (ids: string[]) => {
-      await api.post('/transactions/bulk-delete', { ids });
-    },
+  return trpc.transactions.bulkDelete.useMutation({
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      utils.transactions.list.invalidate();
+      utils.categories.list.invalidate();
       toast.success('Transactions deleted successfully');
     },
-    onError: (error: unknown) => {
-      toast.error(parseError(error).message);
+    onError: (error) => {
+      toast.error(error.message);
     },
   });
 }
 
+// CSV export stays as a plain HTTP download (streaming response)
 export async function exportTransactions(filters: TransactionFilters = {}): Promise<void> {
   try {
     const params = new URLSearchParams();

@@ -3,25 +3,24 @@ import { Text, Button } from 'react-native';
 import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import * as SecureStore from 'expo-secure-store';
 import { AuthProvider, useAuth } from '../../contexts/AuthContext';
-import api from '../../services/api';
 
-jest.mock('../../services/api', () => {
-  const actual = jest.requireActual('../../services/api');
-  return {
-    ...actual,
-    __esModule: true,
-    default: {
-      get: jest.fn(),
-      post: jest.fn(),
-      interceptors: {
-        request: { use: jest.fn() },
-        response: { use: jest.fn() },
-      },
+const mockAuthMe = jest.fn();
+const mockAuthLogin = jest.fn();
+const mockAuthLogout = jest.fn();
+const mockAuthSignup = jest.fn();
+
+jest.mock('../../lib/trpc', () => ({
+  trpcClient: {
+    auth: {
+      me: { query: (...args: unknown[]) => mockAuthMe(...args) },
+      login: { mutate: (...args: unknown[]) => mockAuthLogin(...args) },
+      logout: { mutate: (...args: unknown[]) => mockAuthLogout(...args) },
+      signup: { mutate: (...args: unknown[]) => mockAuthSignup(...args) },
     },
-  };
-});
-
-const mockApi = api as jest.Mocked<typeof api>;
+  },
+  setCachedToken: jest.fn(),
+  setTRPCAuthFailure: jest.fn(),
+}));
 
 function AuthConsumer() {
   const { user, isLoading, isAuthenticated, login, logout } = useAuth();
@@ -37,7 +36,6 @@ function AuthConsumer() {
 }
 
 describe('AuthContext', () => {
-  // Warm up React/RNTL internals — first render in a file always times out with React 19
   beforeAll(() => {
     const { unmount } = render(
       <AuthProvider>
@@ -71,9 +69,7 @@ describe('AuthContext', () => {
 
   it('restores user from token on mount', async () => {
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('valid-token');
-    (mockApi.get as jest.Mock).mockResolvedValue({
-      data: { user: { id: '1', name: 'John', email: 'john@test.com' } },
-    });
+    mockAuthMe.mockResolvedValue({ user: { id: '1', name: 'John', email: 'john@test.com' } });
 
     const { getByTestId } = render(
       <AuthProvider>
@@ -91,7 +87,7 @@ describe('AuthContext', () => {
 
   it('clears token when restore fails', async () => {
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('expired-token');
-    (mockApi.get as jest.Mock).mockRejectedValue(new Error('Unauthorized'));
+    mockAuthMe.mockRejectedValue(new Error('Unauthorized'));
 
     const { getByTestId } = render(
       <AuthProvider>
@@ -108,12 +104,10 @@ describe('AuthContext', () => {
   });
 
   it('login sets user and stores token and refresh token', async () => {
-    (mockApi.post as jest.Mock).mockResolvedValue({
-      data: {
-        token: 'new-token',
-        refreshToken: 'new-refresh-token',
-        user: { id: '2', name: 'Jane', email: 'jane@test.com' },
-      },
+    mockAuthLogin.mockResolvedValue({
+      token: 'new-token',
+      refreshToken: 'new-refresh-token',
+      user: { id: '2', name: 'Jane', email: 'jane@test.com' },
     });
 
     const { getByTestId, getByText } = render(
@@ -141,10 +135,8 @@ describe('AuthContext', () => {
 
   it('logout clears user and token', async () => {
     (SecureStore.getItemAsync as jest.Mock).mockResolvedValue('valid-token');
-    (mockApi.get as jest.Mock).mockResolvedValue({
-      data: { user: { id: '1', name: 'John', email: 'john@test.com' } },
-    });
-    (mockApi.post as jest.Mock).mockResolvedValue({});
+    mockAuthMe.mockResolvedValue({ user: { id: '1', name: 'John', email: 'john@test.com' } });
+    mockAuthLogout.mockResolvedValue({});
 
     const { getByTestId, getByText } = render(
       <AuthProvider>
@@ -170,9 +162,7 @@ describe('AuthContext', () => {
 
   it('throws when useAuth is used outside AuthProvider', () => {
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
     expect(() => render(<AuthConsumer />)).toThrow('useAuth must be used within AuthProvider');
-
     spy.mockRestore();
   });
 });

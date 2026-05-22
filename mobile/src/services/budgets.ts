@@ -1,9 +1,7 @@
-import api from './api';
-import type { Budget } from '@fin-health/shared/types';
+import { trpcClient } from '../lib/trpc';
 
-export async function getBudgets(month: number, year: number): Promise<{ budgets: Budget[] }> {
-  const { data } = await api.get('/budgets', { params: { month, year } });
-  return data;
+export async function getBudgets(month: number, year: number) {
+  return trpcClient.budgets.list.query({ month, year });
 }
 
 export async function upsertBudget(body: {
@@ -13,15 +11,20 @@ export async function upsertBudget(body: {
   categoryId?: string | null;
   isRecurring?: boolean;
 }) {
-  const { data } = await api.post('/budgets', body);
-  return data.budget;
+  const result = await trpcClient.budgets.upsert.mutate({
+    amount: body.amount,
+    month: body.month,
+    year: body.year,
+    categoryId: body.categoryId,
+    isRecurring: body.isRecurring,
+  });
+  return result.budget;
 }
 
 export async function deleteBudget(id: string) {
-  await api.delete(`/budgets/${id}`);
+  return trpcClient.budgets.delete.mutate({ id });
 }
 
 export async function copyPreviousBudgets(month: number, year: number) {
-  const { data } = await api.post('/budgets/copy-previous', { month, year });
-  return data;
+  return trpcClient.budgets.copyPrevious.mutate({ month, year });
 }

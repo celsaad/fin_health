@@ -1,6 +1,5 @@
-import api from './api';
+import { trpcClient } from '../lib/trpc';
 
 export async function changePassword(currentPassword: string, newPassword: string) {
-  const { data } = await api.put('/auth/password', { currentPassword, newPassword });
-  return data;
+  return trpcClient.auth.changePassword.mutate({ currentPassword, newPassword });
 }

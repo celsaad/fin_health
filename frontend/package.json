@@ -15,7 +15,11 @@
     "format:check": "prettier --check 'src/**/*.{ts,tsx,css}'"
   },
   "dependencies": {
+    "@fin-health/backend": "*",
     "@fin-health/shared": "*",
+    "@trpc/client": "^11.0.0",
+    "@trpc/react-query": "^11.0.0",
+    "superjson": "^1.13.3",
     "@hookform/resolvers": "^5.2.2",
     "@sentry/react": "^10.42.0",
     "@tailwindcss/vite": "^4.2.1",
