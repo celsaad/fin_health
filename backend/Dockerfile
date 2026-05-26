@@ -12,9 +12,9 @@ RUN npm ci --workspace=@fin-health/backend --workspace=@fin-health/shared --incl
 FROM deps AS build
 COPY packages/shared/ packages/shared/
 COPY backend/ backend/
+RUN cd backend && npx prisma generate
 RUN npm run build -w @fin-health/shared && \
     npm run build -w @fin-health/backend
-RUN cd backend && npx prisma generate
 
 # --- Production ---
 FROM base AS production
