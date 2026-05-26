@@ -70,14 +70,14 @@ export function TransactionList({ transactions }: TransactionListProps) {
 
   const handleDelete = async () => {
     if (!deletingId) return;
-    await deleteMutation.mutateAsync(deletingId);
+    await deleteMutation.mutateAsync({ id: deletingId });
     setDeletingId(null);
     selectedIds.delete(deletingId);
     setSelectedIds(new Set(selectedIds));
   };
 
   const handleBulkDelete = async () => {
-    await bulkDeleteMutation.mutateAsync(Array.from(selectedIds));
+    await bulkDeleteMutation.mutateAsync({ ids: Array.from(selectedIds) });
     setSelectedIds(new Set());
     setShowBulkDelete(false);
   };

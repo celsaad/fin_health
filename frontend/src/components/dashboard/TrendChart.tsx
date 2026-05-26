@@ -107,14 +107,14 @@ export function TrendChart({ trend, className }: TrendChartProps) {
                   payload,
                   index,
                 }: {
-                  x: number;
-                  y: number;
+                  x: string | number;
+                  y: string | number;
                   payload: { value: string };
                   index: number;
                 }) => (
                   <text
                     x={x}
-                    y={y + 16}
+                    y={Number(y) + 16}
                     textAnchor="middle"
                     className={
                       index === chartData.length - 1

@@ -20,7 +20,7 @@ export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) 
   const deleteBudget = useDeleteBudget();
 
   const handleDelete = () => {
-    deleteBudget.mutate(budget.id);
+    deleteBudget.mutate({ id: budget.id });
     setConfirmOpen(false);
   };
 

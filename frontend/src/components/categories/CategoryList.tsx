@@ -60,7 +60,7 @@ export function CategoryList({ categories }: CategoryListProps) {
 
   const handleDelete = async () => {
     if (!deletingCategory) return;
-    await deleteMutation.mutateAsync(deletingCategory.id);
+    await deleteMutation.mutateAsync({ id: deletingCategory.id });
     setDeletingCategory(null);
   };
 

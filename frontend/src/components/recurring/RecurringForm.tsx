@@ -112,9 +112,10 @@ export function RecurringForm({ open, onOpenChange, editingTransaction }: Recurr
   const onSubmit = (values: RecurringFormValues) => {
     const payload = {
       ...values,
+      amount: String(values.amount),
       endDate: values.endDate || null,
-      subcategoryName: values.subcategoryName || null,
-      notes: values.notes || null,
+      subcategoryName: values.subcategoryName || undefined,
+      notes: values.notes || undefined,
     };
 
     if (isEditing) {

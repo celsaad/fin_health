@@ -1,5 +1,8 @@
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
+import type { Budget } from '@fin-health/shared/types';
+
+export type { Budget };
 
 export function useBudgets(month: number, year: number) {
   const result = trpc.budgets.list.useQuery({ month, year });

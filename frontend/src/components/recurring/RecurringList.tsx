@@ -36,7 +36,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
 
   const handleDelete = () => {
     if (deleteId) {
-      deleteRecurring.mutate(deleteId);
+      deleteRecurring.mutate({ id: deleteId });
       setDeleteId(null);
     }
   };
@@ -99,7 +99,7 @@ export function RecurringList({ transactions, onEdit }: RecurringListProps) {
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={txn.isActive}
-                      onCheckedChange={() => toggleRecurring.mutate(txn.id)}
+                      onCheckedChange={() => toggleRecurring.mutate({ id: txn.id })}
                     />
                     <span className="text-sm text-muted-foreground">
                       {txn.isActive ? t('recurring.active') : t('recurring.paused')}

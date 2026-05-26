@@ -67,7 +67,7 @@ export const RecurringCard = memo(function RecurringCard({
         </span>
         <Switch
           checked={transaction.isActive}
-          onCheckedChange={() => toggleRecurring.mutate(transaction.id)}
+          onCheckedChange={() => toggleRecurring.mutate({ id: transaction.id })}
         />
         <div className="flex items-center gap-0.5">
           <Button

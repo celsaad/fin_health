@@ -10,8 +10,15 @@ const includeRelations = {
   subcategory: { select: { id: true, name: true } },
 } as const;
 
-function serializeRecurring<T extends { amount: { toString(): string } }>(t: T) {
-  return { ...t, amount: Number(t.amount) };
+function serializeRecurring<
+  T extends { amount: { toString(): string }; startDate: Date; endDate: Date | null },
+>(t: T) {
+  return {
+    ...t,
+    amount: Number(t.amount),
+    startDate: t.startDate.toISOString().split('T')[0],
+    endDate: t.endDate?.toISOString().split('T')[0] ?? null,
+  };
 }
 
 export const recurringRouter = router({

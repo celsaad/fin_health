@@ -38,7 +38,7 @@ export function MergeDialog({ open, onOpenChange, sourceCategory, categories }: 
   const handleMerge = async () => {
     if (!targetId) return;
     await mergeMutation.mutateAsync({
-      sourceId: sourceCategory.id,
+      id: sourceCategory.id,
       targetCategoryId: targetId,
     });
     onOpenChange(false);

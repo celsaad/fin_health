@@ -35,9 +35,9 @@ async function doRefresh(): Promise<string | null> {
   }
 }
 
-async function authenticatedFetch(url: RequestInfo | URL, init: RequestInit): Promise<Response> {
+async function authenticatedFetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const token = localStorage.getItem('token');
-  const headers = new Headers(init.headers);
+  const headers = new Headers(init?.headers);
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
   const response = await fetch(url, { ...init, headers });
@@ -75,7 +75,7 @@ async function authenticatedFetch(url: RequestInfo | URL, init: RequestInit): Pr
 
   if (!newToken) return response;
 
-  const retryHeaders = new Headers(init.headers);
+  const retryHeaders = new Headers(init?.headers);
   retryHeaders.set('Authorization', `Bearer ${newToken}`);
   return fetch(url, { ...init, headers: retryHeaders });
 }

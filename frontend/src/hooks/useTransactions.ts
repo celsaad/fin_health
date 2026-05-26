@@ -1,9 +1,9 @@
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
 import api, { parseError } from '@/lib/api';
-import type { TransactionFilters } from '@fin-health/shared/types';
+import type { Transaction, TransactionFilters } from '@fin-health/shared/types';
 
-export type { TransactionFilters };
+export type { Transaction, TransactionFilters };
 
 export interface CreateTransactionInput {
   amount: number;
