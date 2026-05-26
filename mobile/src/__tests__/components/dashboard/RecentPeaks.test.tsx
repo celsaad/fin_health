@@ -28,6 +28,11 @@ const mockTransactions: Transaction[] = [
 ];
 
 describe('RecentPeaks', () => {
+  beforeAll(() => {
+    const { unmount } = renderWithTheme(<RecentPeaks transactions={[]} isLoading={false} />);
+    unmount();
+  });
+
   it('renders transaction descriptions', async () => {
     const { getByText } = renderWithTheme(
       <RecentPeaks transactions={mockTransactions} isLoading={false} />,
