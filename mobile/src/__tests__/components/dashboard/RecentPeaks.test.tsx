@@ -60,10 +60,8 @@ describe('RecentPeaks', () => {
     });
   });
 
-  it('shows loading skeletons', async () => {
+  it('shows loading skeletons', () => {
     const { queryByText } = renderWithTheme(<RecentPeaks transactions={[]} isLoading={true} />);
-    await waitFor(() => {
-      expect(queryByText('No transactions this month')).toBeNull();
-    });
+    expect(queryByText('No transactions this month')).toBeNull();
   });
 });
