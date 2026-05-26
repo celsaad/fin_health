@@ -4,7 +4,7 @@
 
 [deploy]
   # Run migrations before each deployment goes live
-  releaseCommand   = "npx prisma migrate deploy --schema=./backend/prisma/schema.prisma"
+  releaseCommand   = "node_modules/.bin/prisma migrate deploy --schema=./backend/prisma/schema.prisma"
   healthcheckPath  = "/api/health"
   healthcheckTimeout = 300
   restartPolicyType      = "ON_FAILURE"
