@@ -1,10 +1,9 @@
-import { initSentry } from './lib/sentry';
+import './instrument'; // must be first — initializes Sentry before any other modules load
+import * as Sentry from '@sentry/node';
 import app from './app';
 import prisma from './lib/prisma';
 import { logger } from './lib/logger';
 import { env } from './lib/env';
-
-initSentry();
 
 const PORT = env.PORT;
 
@@ -16,6 +15,7 @@ function shutdown(signal: string) {
   logger.info({ signal }, 'Shutdown signal received, draining connections');
   server.close(async () => {
     await prisma.$disconnect();
+    await Sentry.flush(2000);
     logger.info('Shutdown complete');
     process.exit(0);
   });

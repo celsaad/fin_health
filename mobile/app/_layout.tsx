@@ -1,7 +1,8 @@
 import '../src/lib/i18n';
 import React, { useEffect } from 'react';
 import * as Sentry from '@sentry/react-native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { isRunningInExpoGo } from 'expo';
+import { Stack, useNavigationContainerRef, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -28,11 +29,24 @@ import { env } from '../src/lib/env';
 
 SplashScreen.preventAutoHideAsync();
 
+const navigationIntegration = Sentry.reactNavigationIntegration({
+  enableTimeToInitialDisplay: !isRunningInExpoGo(),
+});
+
 Sentry.init({
   dsn: env.EXPO_PUBLIC_SENTRY_DSN,
-  enabled: !__DEV__,
-  tracesSampleRate: 0.2,
-  sendDefaultPii: false,
+  environment: __DEV__ ? 'development' : 'production',
+  sendDefaultPii: true,
+  enableLogs: true,
+  tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+  profilesSampleRate: 1.0,
+  replaysSessionSampleRate: __DEV__ ? 1.0 : 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  enableNativeFramesTracking: !isRunningInExpoGo(),
+  integrations: [
+    navigationIntegration,
+    Sentry.mobileReplayIntegration({ maskAllText: true, maskAllImages: true }),
+  ],
 });
 
 const queryClient = new QueryClient({
@@ -86,6 +100,14 @@ function InnerLayout() {
 }
 
 function RootLayout() {
+  const navigationRef = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (navigationRef) {
+      navigationIntegration.registerNavigationContainer(navigationRef);
+    }
+  }, [navigationRef]);
+
   const [fontsLoaded] = useFonts({
     Manrope_600SemiBold,
     Manrope_700Bold,

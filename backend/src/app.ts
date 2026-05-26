@@ -163,6 +163,9 @@ app.use(
   }),
 );
 
+// Sentry error handler must come before the custom error handler
+Sentry.setupExpressErrorHandler(app);
+
 // Error handler (must be last)
 app.use(errorHandler);
 
