@@ -28,6 +28,10 @@
       "/__tests__/test-utils"
     ],
     "moduleNameMapper": {
+      "^react$": "<rootDir>/node_modules/react",
+      "^react/(.*)$": "<rootDir>/node_modules/react/$1",
+      "^react-test-renderer$": "<rootDir>/node_modules/react-test-renderer",
+      "^react-test-renderer/(.*)$": "<rootDir>/node_modules/react-test-renderer/$1",
       "^@/(.*)$": "<rootDir>/src/$1"
     }
   },
