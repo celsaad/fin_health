@@ -2,20 +2,35 @@
   "name": "@fin-health/shared",
   "version": "0.0.0",
   "private": true,
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./src/index.ts",
-    "./types": "./src/types/index.ts",
-    "./validators": "./src/validators/index.ts",
-    "./errors": "./src/errors.ts",
-    "./format": "./src/format.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./src/types/index.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./validators": {
+      "types": "./src/validators/index.ts",
+      "default": "./dist/validators/index.js"
+    },
+    "./errors": {
+      "types": "./src/errors.ts",
+      "default": "./dist/errors.js"
+    },
+    "./format": {
+      "types": "./src/format.ts",
+      "default": "./dist/format.js"
+    }
   },
   "dependencies": {
     "date-fns": "^4.1.0",
     "zod": "^3.24.2"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
