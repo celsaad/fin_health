@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build -w @fin-health/frontend"
+  command = "cd backend && npx prisma generate && cd .. && npm run build -w @fin-health/frontend"
   publish = "frontend/dist"
 
 [build.environment]
