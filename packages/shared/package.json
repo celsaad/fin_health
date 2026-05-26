@@ -6,23 +6,28 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./dist/index.js"
+      "require": "./dist/index.js",
+      "default": "./src/index.ts"
     },
     "./types": {
       "types": "./src/types/index.ts",
-      "default": "./dist/types/index.js"
+      "require": "./dist/types/index.js",
+      "default": "./src/types/index.ts"
     },
     "./validators": {
       "types": "./src/validators/index.ts",
-      "default": "./dist/validators/index.js"
+      "require": "./dist/validators/index.js",
+      "default": "./src/validators/index.ts"
     },
     "./errors": {
       "types": "./src/errors.ts",
-      "default": "./dist/errors.js"
+      "require": "./dist/errors.js",
+      "default": "./src/errors.ts"
     },
     "./format": {
       "types": "./src/format.ts",
-      "default": "./dist/format.js"
+      "require": "./dist/format.js",
+      "default": "./src/format.ts"
     }
   },
   "dependencies": {
@@ -31,6 +36,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "clean": "node --eval \"require('fs').rmSync('dist', {recursive:true,force:true})\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

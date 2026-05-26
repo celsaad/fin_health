@@ -89,6 +89,7 @@ All commands are run from the root directory.
 | `npm run lint:fix` | Lint and auto-fix all packages |
 | `npm run format` | Format all packages with Prettier |
 | `npm run format:check` | Check formatting without writing changes |
+| `npm run clean` | Remove all `dist/` folders and the Turborepo cache |
 | `npm run db:push` | Push Prisma schema to database |
 | `npm run db:seed` | Seed database with demo data |
 | `npm run db:studio` | Open Prisma Studio GUI |

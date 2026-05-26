@@ -22,6 +22,7 @@
     "db:push": "npm run db:push -w @fin-health/backend",
     "db:seed": "npm run db:seed -w @fin-health/backend",
     "db:studio": "npm run db:studio -w @fin-health/backend",
+    "clean": "turbo run clean && node --eval \"require('fs').rmSync('.turbo', {recursive:true,force:true})\"",
     "prepare": "husky"
   },
   "devDependencies": {
