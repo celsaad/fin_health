@@ -168,9 +168,9 @@ describe('Auth procedures', () => {
       userIds.push(user.id);
       const caller = await callerFor(user);
 
-      await expect(
-        caller.auth.deleteAccount({ password: 'Wrong123!' }),
-      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(caller.auth.deleteAccount({ password: 'Wrong123!' })).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
     });
 
     it('rejects missing password (empty string)', async () => {
@@ -178,16 +178,14 @@ describe('Auth procedures', () => {
       userIds.push(user.id);
       const caller = await callerFor(user);
 
-      await expect(
-        caller.auth.deleteAccount({ password: '' }),
-      ).rejects.toBeInstanceOf(TRPCError);
+      await expect(caller.auth.deleteAccount({ password: '' })).rejects.toBeInstanceOf(TRPCError);
     });
 
     it('rejects unauthenticated request', async () => {
       const caller = publicCaller();
-      await expect(
-        caller.auth.deleteAccount({ password: 'test' }),
-      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(caller.auth.deleteAccount({ password: 'test' })).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
     });
   });
 });

@@ -55,8 +55,18 @@ function renderDashboard() {
 }
 
 function setupDefaultMocks() {
-  mockUseInsights.mockReturnValue({ data: undefined, isLoading: false, isError: false, refetch: vi.fn() });
-  mockUseRecentPeaks.mockReturnValue({ data: undefined, isLoading: false, isError: false, refetch: vi.fn() });
+  mockUseInsights.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  });
+  mockUseRecentPeaks.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  });
 }
 
 describe('Dashboard page', () => {
@@ -66,9 +76,24 @@ describe('Dashboard page', () => {
 
   it('renders loading state', () => {
     setupDefaultMocks();
-    mockUseSummary.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
-    mockUseCategoryBreakdown.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
-    mockUseTrend.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
+    mockUseSummary.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mockUseCategoryBreakdown.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mockUseTrend.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
     mockUseBudgets.mockReturnValue({ data: undefined });
 
     renderDashboard();
@@ -78,9 +103,24 @@ describe('Dashboard page', () => {
   it('renders error state with retry', () => {
     setupDefaultMocks();
     const mockRefetch = vi.fn();
-    mockUseSummary.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: mockRefetch });
-    mockUseCategoryBreakdown.mockReturnValue({ data: undefined, isLoading: false, isError: false, refetch: vi.fn() });
-    mockUseTrend.mockReturnValue({ data: undefined, isLoading: false, isError: false, refetch: vi.fn() });
+    mockUseSummary.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch: mockRefetch,
+    });
+    mockUseCategoryBreakdown.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mockUseTrend.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     mockUseBudgets.mockReturnValue({ data: undefined });
 
     renderDashboard();
@@ -92,9 +132,16 @@ describe('Dashboard page', () => {
     setupDefaultMocks();
     mockUseSummary.mockReturnValue({
       data: { totalIncome: 5000, totalExpenses: 3000, net: 2000, transactionCount: 15 },
-      isLoading: false, isError: false, refetch: vi.fn(),
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
     });
-    mockUseCategoryBreakdown.mockReturnValue({ data: [], isLoading: false, isError: false, refetch: vi.fn() });
+    mockUseCategoryBreakdown.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
     mockUseTrend.mockReturnValue({ data: [], isLoading: false, isError: false, refetch: vi.fn() });
     mockUseBudgets.mockReturnValue({ data: [] });
 
@@ -104,9 +151,24 @@ describe('Dashboard page', () => {
 
   it('fetches previous month summary for MoM calculation', () => {
     setupDefaultMocks();
-    mockUseSummary.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
-    mockUseCategoryBreakdown.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
-    mockUseTrend.mockReturnValue({ data: undefined, isLoading: true, isError: false, refetch: vi.fn() });
+    mockUseSummary.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mockUseCategoryBreakdown.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mockUseTrend.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      isError: false,
+      refetch: vi.fn(),
+    });
     mockUseBudgets.mockReturnValue({ data: undefined });
 
     renderDashboard();

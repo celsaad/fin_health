@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { api, callerFor, publicCaller, createTestUser, cleanupUser, TestUser } from '../test/helpers';
+import {
+  api,
+  callerFor,
+  publicCaller,
+  createTestUser,
+  cleanupUser,
+  TestUser,
+} from '../test/helpers';
 
 describe('Transaction procedures', () => {
   let user: TestUser;
@@ -27,7 +34,11 @@ describe('Transaction procedures', () => {
 
   describe('transactions.create', () => {
     it('creates a transaction with category auto-resolution', async () => {
-      const result = await createTx({ description: 'Groceries', categoryName: 'Food', subcategoryName: 'Groceries' });
+      const result = await createTx({
+        description: 'Groceries',
+        categoryName: 'Food',
+        subcategoryName: 'Groceries',
+      });
 
       expect(result.transaction.description).toBe('Groceries');
       expect(result.transaction.amount).toBe(50);
@@ -38,7 +49,12 @@ describe('Transaction procedures', () => {
     });
 
     it('creates an income transaction', async () => {
-      const result = await createTx({ amount: '3000', type: 'income', description: 'Salary', categoryName: 'Employment' });
+      const result = await createTx({
+        amount: '3000',
+        type: 'income',
+        description: 'Salary',
+        categoryName: 'Employment',
+      });
 
       expect(result.transaction.type).toBe('income');
       expect(result.transaction.amount).toBe(3000);
@@ -48,9 +64,9 @@ describe('Transaction procedures', () => {
 
     it('rejects missing required fields', async () => {
       const caller = await callerFor(user);
-      await expect(
-        caller.transactions.create({ amount: '10' } as never),
-      ).rejects.toBeInstanceOf(TRPCError);
+      await expect(caller.transactions.create({ amount: '10' } as never)).rejects.toBeInstanceOf(
+        TRPCError,
+      );
     });
 
     it('rejects negative amount', async () => {
@@ -60,7 +76,13 @@ describe('Transaction procedures', () => {
     it('rejects unauthenticated request', async () => {
       const caller = publicCaller();
       await expect(
-        caller.transactions.create({ amount: '50', type: 'expense', description: 'Test', date: '2025-01-01', categoryName: 'Food' }),
+        caller.transactions.create({
+          amount: '50',
+          type: 'expense',
+          description: 'Test',
+          date: '2025-01-01',
+          categoryName: 'Food',
+        }),
       ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
@@ -87,7 +109,10 @@ describe('Transaction procedures', () => {
 
     it('filters by date range', async () => {
       const caller = await callerFor(user);
-      const result = await caller.transactions.list({ startDate: '2025-03-01', endDate: '2025-03-31' });
+      const result = await caller.transactions.list({
+        startDate: '2025-03-01',
+        endDate: '2025-03-31',
+      });
 
       for (const tx of result.transactions) {
         expect(tx.date >= '2025-03-01').toBe(true);
@@ -114,7 +139,9 @@ describe('Transaction procedures', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      await expect(publicCaller().transactions.list({})).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(publicCaller().transactions.list({})).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
     });
   });
 
@@ -132,7 +159,9 @@ describe('Transaction procedures', () => {
 
     it('returns NOT_FOUND for non-existent id', async () => {
       const caller = await callerFor(user);
-      await expect(caller.transactions.byId({ id: 'nonexistent-id' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(caller.transactions.byId({ id: 'nonexistent-id' })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
 
     it("cannot access another user's transaction", async () => {
@@ -141,7 +170,9 @@ describe('Transaction procedures', () => {
       const id = created.transaction.id;
       const otherCaller = await callerFor(other);
 
-      await expect(otherCaller.transactions.byId({ id })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(otherCaller.transactions.byId({ id })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
       await cleanupUser(other.id);
     });
   });
@@ -152,7 +183,11 @@ describe('Transaction procedures', () => {
       const id = created.transaction.id;
       const caller = await callerFor(user);
 
-      const result = await caller.transactions.update({ id, description: 'After update', amount: '99' });
+      const result = await caller.transactions.update({
+        id,
+        description: 'After update',
+        amount: '99',
+      });
 
       expect(result.transaction.description).toBe('After update');
       expect(result.transaction.amount).toBe(99);
@@ -220,7 +255,11 @@ describe('Transaction procedures', () => {
       const other = await createTestUser();
       const otherCaller = await callerFor(other);
       const created = await otherCaller.transactions.create({
-        amount: '10', type: 'expense', description: 'Other user tx', date: '2025-01-01', categoryName: 'Misc',
+        amount: '10',
+        type: 'expense',
+        description: 'Other user tx',
+        date: '2025-01-01',
+        categoryName: 'Misc',
       });
 
       const caller = await callerFor(user);
@@ -239,7 +278,9 @@ describe('Transaction procedures', () => {
   // CSV export stays as a plain Express route
   describe('GET /api/transactions/export/csv', () => {
     it('exports transactions as CSV', async () => {
-      const res = await api().get('/api/transactions/export/csv').set('Authorization', `Bearer ${user.token}`);
+      const res = await api()
+        .get('/api/transactions/export/csv')
+        .set('Authorization', `Bearer ${user.token}`);
 
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toContain('text/csv');

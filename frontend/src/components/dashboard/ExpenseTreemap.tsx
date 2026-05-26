@@ -13,15 +13,7 @@ const COLORS = [
   'bg-slate-500',
 ];
 
-const DOT_COLORS = [
-  '#6366f1',
-  '#10b981',
-  '#f59e0b',
-  '#a855f6',
-  '#f43f5e',
-  '#0ea5e9',
-  '#64748b',
-];
+const DOT_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#a855f6', '#f43f5e', '#0ea5e9', '#64748b'];
 
 interface ExpenseTreemapProps {
   categories: CategorySpending[];

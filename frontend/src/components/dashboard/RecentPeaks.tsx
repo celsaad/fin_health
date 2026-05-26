@@ -49,7 +49,11 @@ export function RecentPeaks({ transactions, isLoading, className }: RecentPeaksP
           ) : (
             <ul className="space-y-1">
               {transactions.map((tx) => {
-                const config = getCategoryIcon(tx.category.name, tx.category.icon, tx.category.color);
+                const config = getCategoryIcon(
+                  tx.category.name,
+                  tx.category.icon,
+                  tx.category.color,
+                );
                 const Icon = config.icon;
                 return (
                   <li
@@ -64,7 +68,8 @@ export function RecentPeaks({ transactions, isLoading, className }: RecentPeaksP
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold">{tx.description}</p>
                       <p className="text-[10px] uppercase tracking-tighter text-muted-foreground">
-                        {tx.category.name} &bull; {format(new Date(tx.date), 'MMM dd').toUpperCase()}
+                        {tx.category.name} &bull;{' '}
+                        {format(new Date(tx.date), 'MMM dd').toUpperCase()}
                       </p>
                     </div>
                     <span className="shrink-0 text-sm font-bold text-destructive">

@@ -10,11 +10,43 @@ describe('Dashboard procedures', () => {
     const caller = await callerFor(user);
 
     // Seed transactions sequentially
-    await caller.transactions.create({ amount: '3000', type: 'income', description: 'Salary', date: '2025-03-01', categoryName: 'Employment' });
-    await caller.transactions.create({ amount: '200', type: 'expense', description: 'Groceries', date: '2025-03-05', categoryName: 'Food', subcategoryName: 'Groceries' });
-    await caller.transactions.create({ amount: '80', type: 'expense', description: 'Gas', date: '2025-03-10', categoryName: 'Transport' });
-    await caller.transactions.create({ amount: '50', type: 'expense', description: 'Dining', date: '2025-03-15', categoryName: 'Food', subcategoryName: 'Dining' });
-    await caller.transactions.create({ amount: '1500', type: 'income', description: 'Feb income', date: '2025-02-15', categoryName: 'Employment' });
+    await caller.transactions.create({
+      amount: '3000',
+      type: 'income',
+      description: 'Salary',
+      date: '2025-03-01',
+      categoryName: 'Employment',
+    });
+    await caller.transactions.create({
+      amount: '200',
+      type: 'expense',
+      description: 'Groceries',
+      date: '2025-03-05',
+      categoryName: 'Food',
+      subcategoryName: 'Groceries',
+    });
+    await caller.transactions.create({
+      amount: '80',
+      type: 'expense',
+      description: 'Gas',
+      date: '2025-03-10',
+      categoryName: 'Transport',
+    });
+    await caller.transactions.create({
+      amount: '50',
+      type: 'expense',
+      description: 'Dining',
+      date: '2025-03-15',
+      categoryName: 'Food',
+      subcategoryName: 'Dining',
+    });
+    await caller.transactions.create({
+      amount: '1500',
+      type: 'income',
+      description: 'Feb income',
+      date: '2025-02-15',
+      categoryName: 'Employment',
+    });
   });
 
   afterAll(async () => {
@@ -43,7 +75,9 @@ describe('Dashboard procedures', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      await expect(publicCaller().dashboard.summary({ month: 3, year: 2025 })).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(
+        publicCaller().dashboard.summary({ month: 3, year: 2025 }),
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
     });
   });
 
@@ -99,7 +133,9 @@ describe('Dashboard procedures', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      await expect(publicCaller().dashboard.yearly({ year: 2025 })).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(publicCaller().dashboard.yearly({ year: 2025 })).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
     });
   });
 

@@ -9,5 +9,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "App.tsx", "app.json", "metro.config.js"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "App.tsx", "app/**/*.ts", "app/**/*.tsx", "app.json", "metro.config.js"]
 }

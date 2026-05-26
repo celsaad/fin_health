@@ -39,8 +39,6 @@ describe('getRecentPeaks', () => {
 
     await getRecentPeaks(3, 2026, 10);
 
-    expect(mockTransactionsList).toHaveBeenCalledWith(
-      expect.objectContaining({ limit: 10 }),
-    );
+    expect(mockTransactionsList).toHaveBeenCalledWith(expect.objectContaining({ limit: 10 }));
   });
 });

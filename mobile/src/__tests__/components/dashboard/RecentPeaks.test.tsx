@@ -49,18 +49,14 @@ describe('RecentPeaks', () => {
   });
 
   it('shows empty state when no transactions', async () => {
-    const { getByText } = renderWithTheme(
-      <RecentPeaks transactions={[]} isLoading={false} />,
-    );
+    const { getByText } = renderWithTheme(<RecentPeaks transactions={[]} isLoading={false} />);
     await waitFor(() => {
       expect(getByText('No transactions this month')).toBeTruthy();
     });
   });
 
   it('shows loading skeletons', async () => {
-    const { queryByText } = renderWithTheme(
-      <RecentPeaks transactions={[]} isLoading={true} />,
-    );
+    const { queryByText } = renderWithTheme(<RecentPeaks transactions={[]} isLoading={true} />);
     await waitFor(() => {
       expect(queryByText('No transactions this month')).toBeNull();
     });

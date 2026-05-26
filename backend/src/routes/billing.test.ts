@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { api, callerFor, publicCaller, createTestUser, cleanupUser, TestUser } from '../test/helpers';
+import {
+  api,
+  callerFor,
+  publicCaller,
+  createTestUser,
+  cleanupUser,
+  TestUser,
+} from '../test/helpers';
 import prisma from '../lib/prisma';
 
 vi.mock('../services/stripeService', () => ({
@@ -9,7 +16,9 @@ vi.mock('../services/stripeService', () => ({
   handleWebhookEvent: vi.fn().mockResolvedValue(undefined),
   stripe: vi.fn(() => ({
     webhooks: {
-      constructEvent: vi.fn(() => { throw new Error('Invalid signature'); }),
+      constructEvent: vi.fn(() => {
+        throw new Error('Invalid signature');
+      }),
     },
   })),
 }));
@@ -34,9 +43,9 @@ describe('Billing procedures', () => {
 
   describe('billing.checkout', () => {
     it('requires authentication', async () => {
-      await expect(
-        publicCaller().billing.checkout({ interval: 'monthly' }),
-      ).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(publicCaller().billing.checkout({ interval: 'monthly' })).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
     });
 
     it('rejects invalid interval', async () => {

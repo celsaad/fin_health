@@ -26,25 +26,32 @@ export default function BudgetComplianceTable({ categories, budgets }: BudgetCom
       const isOver = category.total > budget.amount;
       return { budget, category, ratio, isOver };
     })
-    .filter(Boolean) as { budget: Budget; category: BreakdownItem; ratio: number; isOver: boolean }[];
+    .filter(Boolean) as {
+    budget: Budget;
+    category: BreakdownItem;
+    ratio: number;
+    isOver: boolean;
+  }[];
 
   if (rows.length === 0) return null;
 
   return (
     <Card style={styles.container}>
-      <Text style={[styles.title, { color: colors.text }]}>
-        {t('dashboard.budgetCompliance')}
-      </Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('dashboard.budgetCompliance')}</Text>
 
       {/* Column headers */}
       <View style={styles.headerRow}>
         <Text style={[styles.colHeader, { color: colors.textSecondary, flex: 1 }]}>
           {t('dashboard.category').toUpperCase()}
         </Text>
-        <Text style={[styles.colHeader, { color: colors.textSecondary, flex: 1, textAlign: 'center' }]}>
+        <Text
+          style={[styles.colHeader, { color: colors.textSecondary, flex: 1, textAlign: 'center' }]}
+        >
           {t('dashboard.progress').toUpperCase()}
         </Text>
-        <Text style={[styles.colHeader, { color: colors.textSecondary, width: 80, textAlign: 'right' }]}>
+        <Text
+          style={[styles.colHeader, { color: colors.textSecondary, width: 80, textAlign: 'right' }]}
+        >
           {t('dashboard.status').toUpperCase()}
         </Text>
       </View>
@@ -56,10 +63,7 @@ export default function BudgetComplianceTable({ categories, budgets }: BudgetCom
             {/* Category */}
             <View style={styles.categoryCell}>
               <CategoryIcon icon={category.icon} color={category.color} size={32} />
-              <Text
-                style={[styles.categoryName, { color: colors.text }]}
-                numberOfLines={1}
-              >
+              <Text style={[styles.categoryName, { color: colors.text }]} numberOfLines={1}>
                 {category.categoryName}
               </Text>
             </View>
@@ -80,14 +84,13 @@ export default function BudgetComplianceTable({ categories, budgets }: BudgetCom
             </View>
 
             {/* Status badge */}
-            <View style={[
-              styles.badge,
-              { backgroundColor: isOver ? colors.expenseBg : colors.incomeBg },
-            ]}>
-              <Text style={[
-                styles.badgeText,
-                { color: isOver ? colors.expense : colors.income },
-              ]}>
+            <View
+              style={[
+                styles.badge,
+                { backgroundColor: isOver ? colors.expenseBg : colors.incomeBg },
+              ]}
+            >
+              <Text style={[styles.badgeText, { color: isOver ? colors.expense : colors.income }]}>
                 {isOver ? t('dashboard.overBudget') : t('dashboard.onTrack')}
               </Text>
             </View>

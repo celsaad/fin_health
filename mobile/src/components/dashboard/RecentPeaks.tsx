@@ -46,16 +46,9 @@ export default function RecentPeaks({ transactions, isLoading }: RecentPeaksProp
         <View style={styles.list}>
           {transactions.map((tx) => (
             <View key={tx.id} style={styles.row}>
-              <CategoryIcon
-                icon={tx.category?.icon}
-                color={tx.category?.color}
-                size={40}
-              />
+              <CategoryIcon icon={tx.category?.icon} color={tx.category?.color} size={40} />
               <View style={styles.middle}>
-                <Text
-                  style={[styles.description, { color: colors.text }]}
-                  numberOfLines={1}
-                >
+                <Text style={[styles.description, { color: colors.text }]} numberOfLines={1}>
                   {tx.description}
                 </Text>
                 <Text style={[styles.categoryName, { color: colors.textSecondary }]}>

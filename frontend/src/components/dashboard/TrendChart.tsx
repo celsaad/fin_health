@@ -1,12 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import type { TrendData } from '@/hooks/useDashboard';
 import { formatCurrency, getShortMonthName } from '@fin-health/shared/format';
@@ -108,7 +101,17 @@ export function TrendChart({ trend, className }: TrendChartProps) {
             <BarChart data={chartData} barGap={4}>
               <XAxis
                 dataKey="label"
-                tick={({ x, y, payload, index }: { x: number; y: number; payload: { value: string }; index: number }) => (
+                tick={({
+                  x,
+                  y,
+                  payload,
+                  index,
+                }: {
+                  x: number;
+                  y: number;
+                  payload: { value: string };
+                  index: number;
+                }) => (
                   <text
                     x={x}
                     y={y + 16}

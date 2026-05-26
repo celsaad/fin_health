@@ -48,9 +48,7 @@ describe('EditorialInsightCard', () => {
   });
 
   it('renders nothing when no insights', async () => {
-    const { toJSON } = renderWithTheme(
-      <EditorialInsightCard insights={[]} isPro={true} />,
-    );
+    const { toJSON } = renderWithTheme(<EditorialInsightCard insights={[]} isPro={true} />);
     await waitFor(() => {
       expect(toJSON()).toBeNull();
     });

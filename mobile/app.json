@@ -56,10 +56,16 @@
       "expo-font",
       "expo-secure-store",
       "expo-splash-screen",
-      ["@sentry/react-native", {
-        "organization": "YOUR_SENTRY_ORG",
-        "project": "YOUR_SENTRY_PROJECT"
-      }]
+      [
+        "@sentry/react-native",
+        {
+          "organization": "YOUR_SENTRY_ORG",
+          "project": "YOUR_SENTRY_PROJECT"
+        }
+      ],
+      "expo-asset",
+      "expo-router",
+      "expo-status-bar"
     ],
     "scheme": "finhealth",
     "extra": {

@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { trpcClient, setCachedToken, setTRPCAuthFailure } from '../lib/trpc';
-import { setToken, getToken, removeToken, setRefreshToken, removeRefreshToken } from '../services/api';
+import {
+  setToken,
+  getToken,
+  removeToken,
+  setRefreshToken,
+  removeRefreshToken,
+} from '../services/api';
 import type { UserPlan } from '@fin-health/shared/types';
 
 interface User {
@@ -87,7 +93,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, isAuthenticated: !!user, login, signup, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

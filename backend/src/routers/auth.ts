@@ -62,7 +62,10 @@ export const authRouter = router({
   login: publicProcedure.input(loginSchema).mutation(async ({ input }) => {
     const { email, password } = input;
 
-    const user = await prisma.user.findUnique({ where: { email }, include: { subscription: true } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { subscription: true },
+    });
     if (!user) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
     }
@@ -110,33 +113,35 @@ export const authRouter = router({
     return { message: 'Logged out successfully' };
   }),
 
-  changePassword: protectedProcedure.input(changePasswordSchema).mutation(async ({ ctx, input }) => {
-    const { currentPassword, newPassword } = input;
+  changePassword: protectedProcedure
+    .input(changePasswordSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { currentPassword, newPassword } = input;
 
-    const user = await prisma.user.findUnique({ where: { id: ctx.userId } });
-    if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      const user = await prisma.user.findUnique({ where: { id: ctx.userId } });
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
 
-    const valid = await comparePassword(currentPassword, user.password);
-    if (!valid) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Current password is incorrect' });
-    }
+      const valid = await comparePassword(currentPassword, user.password);
+      if (!valid) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Current password is incorrect' });
+      }
 
-    const hashedPassword = await hashPassword(newPassword);
-    await prisma.user.update({
-      where: { id: ctx.userId },
-      data: { password: hashedPassword, passwordChangedAt: new Date() },
-    });
-    await revokeUserRefreshTokens(user.id);
+      const hashedPassword = await hashPassword(newPassword);
+      await prisma.user.update({
+        where: { id: ctx.userId },
+        data: { password: hashedPassword, passwordChangedAt: new Date() },
+      });
+      await revokeUserRefreshTokens(user.id);
 
-    const newToken = generateToken(user.id);
-    const newRefreshToken = await createRefreshToken(user.id);
+      const newToken = generateToken(user.id);
+      const newRefreshToken = await createRefreshToken(user.id);
 
-    return {
-      message: 'Password updated successfully',
-      token: newToken,
-      refreshToken: newRefreshToken,
-    };
-  }),
+      return {
+        message: 'Password updated successfully',
+        token: newToken,
+        refreshToken: newRefreshToken,
+      };
+    }),
 
   exportData: protectedProcedure.query(async ({ ctx }) => {
     const user = await prisma.user.findUnique({

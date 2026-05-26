@@ -36,7 +36,12 @@ describe('Budget procedures', () => {
 
     it('creates a category-specific budget', async () => {
       const caller = await callerFor(user);
-      const result = await caller.budgets.upsert({ amount: '500', month: 3, year: 2025, categoryId });
+      const result = await caller.budgets.upsert({
+        amount: '500',
+        month: 3,
+        year: 2025,
+        categoryId,
+      });
 
       expect(result.budget.categoryId).toBe(categoryId);
     });
@@ -53,14 +58,21 @@ describe('Budget procedures', () => {
     it('upserts on duplicate month/year/category', async () => {
       const caller = await callerFor(user);
       await caller.budgets.upsert({ amount: '300', month: 6, year: 2025, categoryId });
-      const result = await caller.budgets.upsert({ amount: '400', month: 6, year: 2025, categoryId });
+      const result = await caller.budgets.upsert({
+        amount: '400',
+        month: 6,
+        year: 2025,
+        categoryId,
+      });
 
       expect(result.budget.amount).toBe(400);
     });
 
     it('rejects non-recurring budget without month/year', async () => {
       const caller = await callerFor(user);
-      await expect(caller.budgets.upsert({ amount: '500' } as never)).rejects.toBeInstanceOf(TRPCError);
+      await expect(caller.budgets.upsert({ amount: '500' } as never)).rejects.toBeInstanceOf(
+        TRPCError,
+      );
     });
 
     it('rejects invalid categoryId', async () => {
@@ -93,12 +105,16 @@ describe('Budget procedures', () => {
     });
 
     it('rejects unauthenticated request', async () => {
-      await expect(publicCaller().budgets.list({ month: 3, year: 2025 })).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+      await expect(publicCaller().budgets.list({ month: 3, year: 2025 })).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
     });
 
     it('rejects invalid month', async () => {
       const caller = await callerFor(user);
-      await expect(caller.budgets.list({ month: 13, year: 2025 })).rejects.toBeInstanceOf(TRPCError);
+      await expect(caller.budgets.list({ month: 13, year: 2025 })).rejects.toBeInstanceOf(
+        TRPCError,
+      );
     });
   });
 
@@ -114,7 +130,9 @@ describe('Budget procedures', () => {
 
     it('returns NOT_FOUND for non-existent budget', async () => {
       const caller = await callerFor(user);
-      await expect(caller.budgets.delete({ id: 'nonexistent-id' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(caller.budgets.delete({ id: 'nonexistent-id' })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
 
     it("cannot delete another user's budget", async () => {
@@ -124,7 +142,9 @@ describe('Budget procedures', () => {
       const budgetId = createResult.budget.id;
 
       const otherCaller = await callerFor(other);
-      await expect(otherCaller.budgets.delete({ id: budgetId })).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(otherCaller.budgets.delete({ id: budgetId })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
       await cleanupUser(other.id);
     });
   });

@@ -6,13 +6,47 @@ import type { BreakdownItem } from '../../../types/dashboard';
 import type { Budget } from '@fin-health/shared/types';
 
 const mockCategories: BreakdownItem[] = [
-  { categoryId: '1', categoryName: 'Food', total: 400, percentage: 40, icon: 'utensils', color: 'orange' },
-  { categoryId: '2', categoryName: 'Transport', total: 250, percentage: 25, icon: 'car', color: 'blue' },
+  {
+    categoryId: '1',
+    categoryName: 'Food',
+    total: 400,
+    percentage: 40,
+    icon: 'utensils',
+    color: 'orange',
+  },
+  {
+    categoryId: '2',
+    categoryName: 'Transport',
+    total: 250,
+    percentage: 25,
+    icon: 'car',
+    color: 'blue',
+  },
 ];
 
 const mockBudgets: Budget[] = [
-  { id: 'b1', amount: 500, month: 3, year: 2026, isRecurring: false, categoryId: '1', category: { id: '1', name: 'Food', icon: 'utensils', color: 'orange' }, spent: 400, remaining: 100 },
-  { id: 'b2', amount: 200, month: 3, year: 2026, isRecurring: false, categoryId: '2', category: { id: '2', name: 'Transport', icon: 'car', color: 'blue' }, spent: 250, remaining: -50 },
+  {
+    id: 'b1',
+    amount: 500,
+    month: 3,
+    year: 2026,
+    isRecurring: false,
+    categoryId: '1',
+    category: { id: '1', name: 'Food', icon: 'utensils', color: 'orange' },
+    spent: 400,
+    remaining: 100,
+  },
+  {
+    id: 'b2',
+    amount: 200,
+    month: 3,
+    year: 2026,
+    isRecurring: false,
+    categoryId: '2',
+    category: { id: '2', name: 'Transport', icon: 'car', color: 'blue' },
+    spent: 250,
+    remaining: -50,
+  },
 ] as Budget[];
 
 describe('BudgetComplianceTable', () => {

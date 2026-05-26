@@ -29,14 +29,30 @@ export const recurringRouter = router({
       where: { id: input.id, userId: ctx.userId },
       include: includeRelations,
     });
-    if (!template) throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
+    if (!template)
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
     return { recurringTransaction: serializeRecurring(template) };
   }),
 
   create: protectedProcedure.input(createRecurringSchema).mutation(async ({ ctx, input }) => {
-    const { amount, type, description, frequency, startDate, endDate, categoryName, subcategoryName, notes } = input;
+    const {
+      amount,
+      type,
+      description,
+      frequency,
+      startDate,
+      endDate,
+      categoryName,
+      subcategoryName,
+      notes,
+    } = input;
 
-    const { categoryId, subcategoryId } = await resolveCategory(ctx.userId, categoryName, type, subcategoryName);
+    const { categoryId, subcategoryId } = await resolveCategory(
+      ctx.userId,
+      categoryName,
+      type,
+      subcategoryName,
+    );
 
     const template = await prisma.recurringTransaction.create({
       data: {
@@ -60,10 +76,24 @@ export const recurringRouter = router({
   update: protectedProcedure
     .input(z.object({ id: z.string() }).merge(updateRecurringSchema))
     .mutation(async ({ ctx, input }) => {
-      const { id, amount, type, description, frequency, startDate, endDate, categoryName, subcategoryName, notes } = input;
+      const {
+        id,
+        amount,
+        type,
+        description,
+        frequency,
+        startDate,
+        endDate,
+        categoryName,
+        subcategoryName,
+        notes,
+      } = input;
 
-      const existing = await prisma.recurringTransaction.findFirst({ where: { id, userId: ctx.userId } });
-      if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
+      const existing = await prisma.recurringTransaction.findFirst({
+        where: { id, userId: ctx.userId },
+      });
+      if (!existing)
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
 
       const updateData: Record<string, unknown> = {};
       if (amount !== undefined) updateData.amount = amount;
@@ -76,7 +106,12 @@ export const recurringRouter = router({
 
       if (categoryName) {
         const effectiveType = type ?? existing.type;
-        const resolved = await resolveCategory(ctx.userId, categoryName, effectiveType, subcategoryName ?? undefined);
+        const resolved = await resolveCategory(
+          ctx.userId,
+          categoryName,
+          effectiveType,
+          subcategoryName ?? undefined,
+        );
         updateData.categoryId = resolved.categoryId;
         updateData.subcategoryId = resolved.subcategoryId ?? null;
       } else if (subcategoryName === null) {
@@ -98,7 +133,8 @@ export const recurringRouter = router({
       const existing = await prisma.recurringTransaction.findFirst({
         where: { id: input.id, userId: ctx.userId },
       });
-      if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
+      if (!existing)
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
 
       await prisma.recurringTransaction.delete({ where: { id: input.id } });
       return { message: 'Recurring transaction deleted' };
@@ -110,7 +146,8 @@ export const recurringRouter = router({
       const existing = await prisma.recurringTransaction.findFirst({
         where: { id: input.id, userId: ctx.userId },
       });
-      if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
+      if (!existing)
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Recurring transaction not found' });
 
       const template = await prisma.recurringTransaction.update({
         where: { id: input.id },

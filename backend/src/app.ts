@@ -25,19 +25,26 @@ app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 
 // Stripe webhook needs raw body — must be registered before express.json()
-app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), async (req, res, next) => {
-  try {
-    const sig = req.headers['stripe-signature'];
-    if (!sig || typeof sig !== 'string') throw new AppError('Missing Stripe signature', 400);
-    const event = stripe().webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET);
-    await handleWebhookEvent(event);
-    res.json({ received: true });
-  } catch (err) {
-    if (err instanceof AppError) { next(err); return; }
-    logger.error({ err }, 'Webhook signature verification failed');
-    res.status(400).json({ error: 'Webhook signature verification failed' });
-  }
-});
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res, next) => {
+    try {
+      const sig = req.headers['stripe-signature'];
+      if (!sig || typeof sig !== 'string') throw new AppError('Missing Stripe signature', 400);
+      const event = stripe().webhooks.constructEvent(req.body, sig, env.STRIPE_WEBHOOK_SECRET);
+      await handleWebhookEvent(event);
+      res.json({ received: true });
+    } catch (err) {
+      if (err instanceof AppError) {
+        next(err);
+        return;
+      }
+      logger.error({ err }, 'Webhook signature verification failed');
+      res.status(400).json({ error: 'Webhook signature verification failed' });
+    }
+  },
+);
 
 app.use(express.json({ limit: '1mb' }));
 
@@ -101,7 +108,8 @@ app.get('/api/transactions/export/csv', authMiddleware, async (req, res, next) =
       if (endDate && typeof endDate === 'string')
         (where.date as Prisma.DateTimeFilter).lte = new Date(endDate + 'T23:59:59.999Z');
     }
-    if (search && typeof search === 'string') where.description = { contains: search, mode: 'insensitive' };
+    if (search && typeof search === 'string')
+      where.description = { contains: search, mode: 'insensitive' };
 
     const transactions = await prisma.transaction.findMany({
       where,

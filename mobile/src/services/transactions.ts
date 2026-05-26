@@ -11,7 +11,12 @@ export async function getTransactions(filters: TransactionFilters) {
     startDate: filters.startDate || undefined,
     endDate: filters.endDate || undefined,
     search: filters.search || undefined,
-    sortBy: (filters.sortBy || undefined) as 'date' | 'amount' | 'description' | 'createdAt' | undefined,
+    sortBy: (filters.sortBy || undefined) as
+      | 'date'
+      | 'amount'
+      | 'description'
+      | 'createdAt'
+      | undefined,
     sortOrder: (filters.sortOrder || undefined) as 'asc' | 'desc' | undefined,
   });
 }

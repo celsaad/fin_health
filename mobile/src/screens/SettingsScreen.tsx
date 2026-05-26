@@ -17,8 +17,10 @@ import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { FontSize, Spacing, BorderRadius } from '../constants/theme';
+import { useRouter } from 'expo-router';
 
-export default function SettingsScreen({ navigation }: any) {
+export default function SettingsScreen() {
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { colors, preference, setPreference } = useTheme();
 
@@ -74,7 +76,7 @@ export default function SettingsScreen({ navigation }: any) {
             colors={colors}
           />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')}>
+          <TouchableOpacity onPress={() => router.push('/profile/change-password')}>
             <SettingsRow
               icon={<Lock size={18} color={colors.textSecondary} />}
               label="Change Password"
@@ -128,7 +130,7 @@ export default function SettingsScreen({ navigation }: any) {
         {/* Manage */}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>MANAGE</Text>
         <Card style={styles.sectionCard}>
-          <TouchableOpacity onPress={() => navigation.navigate('Categories')}>
+          <TouchableOpacity onPress={() => router.push('/profile/categories')}>
             <SettingsRow
               icon={<Grid3X3 size={18} color={colors.textSecondary} />}
               label="Categories"

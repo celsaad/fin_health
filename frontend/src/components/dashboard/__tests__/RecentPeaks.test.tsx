@@ -5,7 +5,9 @@ import { MemoryRouter } from 'react-router-dom';
 // Mock getCategoryIcon
 vi.mock('@/lib/categoryIcons', () => ({
   getCategoryIcon: () => ({
-    icon: ({ className }: { className?: string }) => <span data-testid="icon" className={className} />,
+    icon: ({ className }: { className?: string }) => (
+      <span data-testid="icon" className={className} />
+    ),
     color: 'text-orange-600',
     bgColor: 'bg-orange-100',
     darkBgColor: 'dark:bg-orange-950',

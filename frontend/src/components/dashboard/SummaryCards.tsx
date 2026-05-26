@@ -1,12 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import {
-  TrendingUp,
-  TrendingDown,
-  Landmark,
-  ArrowDown,
-  ArrowUp,
-  ListChecks,
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Landmark, ArrowDown, ArrowUp, ListChecks } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardSummary } from '@/hooks/useDashboard';
 import { formatCurrency } from '@fin-health/shared/format';

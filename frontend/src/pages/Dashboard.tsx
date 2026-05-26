@@ -9,12 +9,7 @@ import { ExpenseTreemap } from '@/components/dashboard/ExpenseTreemap';
 import { EditorialInsightCard } from '@/components/dashboard/EditorialInsightCard';
 import { RecentPeaks } from '@/components/dashboard/RecentPeaks';
 import { BudgetComplianceTable } from '@/components/dashboard/BudgetComplianceTable';
-import {
-  useSummary,
-  useCategoryBreakdown,
-  useTrend,
-  useRecentPeaks,
-} from '@/hooks/useDashboard';
+import { useSummary, useCategoryBreakdown, useTrend, useRecentPeaks } from '@/hooks/useDashboard';
 import { useBudgets } from '@/hooks/useBudgets';
 
 export default function Dashboard() {
@@ -106,19 +101,13 @@ export default function Dashboard() {
               ) : null}
             </div>
             <div className="col-span-12 xl:col-span-5">
-              <RecentPeaks
-                transactions={recentPeaks$.data}
-                isLoading={recentPeaks$.isLoading}
-              />
+              <RecentPeaks transactions={recentPeaks$.data} isLoading={recentPeaks$.isLoading} />
             </div>
           </section>
 
           {/* Row 4: Budget Compliance */}
           {categoryBreakdown$.data && budgets ? (
-            <BudgetComplianceTable
-              categories={categoryBreakdown$.data}
-              budgets={budgets}
-            />
+            <BudgetComplianceTable categories={categoryBreakdown$.data} budgets={budgets} />
           ) : null}
         </>
       )}

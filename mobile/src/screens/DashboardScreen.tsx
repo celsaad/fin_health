@@ -8,7 +8,13 @@ import { Bell } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../hooks/usePlan';
-import { getSummary, getBreakdown, getTrend, getInsights, getRecentPeaks } from '../services/dashboard';
+import {
+  getSummary,
+  getBreakdown,
+  getTrend,
+  getInsights,
+  getRecentPeaks,
+} from '../services/dashboard';
 import { getBudgets } from '../services/budgets';
 import MonthSelector from '../components/MonthSelector';
 import LoadingSkeleton from '../components/LoadingSkeleton';
@@ -106,7 +112,10 @@ export default function DashboardScreen() {
       <BlurView
         intensity={80}
         tint={isDark ? 'dark' : 'light'}
-        style={[styles.header, { backgroundColor: isDark ? 'rgba(15,23,41,0.7)' : 'rgba(255,255,255,0.7)' }]}
+        style={[
+          styles.header,
+          { backgroundColor: isDark ? 'rgba(15,23,41,0.7)' : 'rgba(255,255,255,0.7)' },
+        ]}
       >
         <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
           <Text style={styles.avatarText}>{initials}</Text>
@@ -123,13 +132,18 @@ export default function DashboardScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={summaryQuery.isFetching} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={summaryQuery.isFetching} onRefresh={onRefresh} />
+        }
         contentContainerStyle={[styles.scrollContent, { paddingTop: HEADER_HEIGHT + Spacing.md }]}
       >
         <MonthSelector
           selectedMonth={month}
           selectedYear={year}
-          onSelect={(m, y) => { setMonth(m); setYear(y); }}
+          onSelect={(m, y) => {
+            setMonth(m);
+            setYear(y);
+          }}
         />
 
         {isError ? (

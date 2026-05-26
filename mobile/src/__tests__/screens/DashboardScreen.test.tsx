@@ -5,7 +5,9 @@ import DashboardScreen from '../../screens/DashboardScreen';
 
 // Mock all service functions
 jest.mock('../../services/dashboard', () => ({
-  getSummary: jest.fn().mockResolvedValue({ totalIncome: 5000, totalExpenses: 3200, net: 1800, transactionCount: 42 }),
+  getSummary: jest
+    .fn()
+    .mockResolvedValue({ totalIncome: 5000, totalExpenses: 3200, net: 1800, transactionCount: 42 }),
   getBreakdown: jest.fn().mockResolvedValue({ breakdown: [] }),
   getTrend: jest.fn().mockResolvedValue({ trend: [] }),
   getInsights: jest.fn().mockResolvedValue({ insights: [] }),

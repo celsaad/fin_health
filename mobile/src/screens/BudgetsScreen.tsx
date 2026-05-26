@@ -32,8 +32,10 @@ import LoadingSkeleton from '../components/LoadingSkeleton';
 import QueryError from '../components/QueryError';
 import { FontSize, Spacing, BorderRadius } from '../constants/theme';
 import type { Category } from '@fin-health/shared/types';
+import { useRouter } from 'expo-router';
 
-export default function BudgetsScreen({ navigation }: any) {
+export default function BudgetsScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   const queryClient = useQueryClient();
   const now = new Date();
@@ -231,7 +233,7 @@ export default function BudgetsScreen({ navigation }: any) {
 
         <TouchableOpacity
           style={styles.recurringLink}
-          onPress={() => navigation.navigate('Recurring')}
+          onPress={() => router.push('/budget/recurring')}
         >
           <Text style={[styles.recurringText, { color: colors.primary }]}>
             Manage Recurring Transactions

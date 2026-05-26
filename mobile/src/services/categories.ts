@@ -4,7 +4,10 @@ export async function getCategories() {
   return trpcClient.categories.list.query();
 }
 
-export async function updateCategory(id: string, body: { name?: string; icon?: string; color?: string }) {
+export async function updateCategory(
+  id: string,
+  body: { name?: string; icon?: string; color?: string },
+) {
   const result = await trpcClient.categories.update.mutate({ id, ...body });
   return result.category;
 }
@@ -28,7 +31,11 @@ export async function createSubcategory(categoryId: string, name: string) {
 }
 
 export async function renameSubcategory(categoryId: string, subcategoryId: string, name: string) {
-  const result = await trpcClient.categories.renameSubcategory.mutate({ categoryId, subcategoryId, name });
+  const result = await trpcClient.categories.renameSubcategory.mutate({
+    categoryId,
+    subcategoryId,
+    name,
+  });
   return result.subcategory;
 }
 

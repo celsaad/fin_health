@@ -27,7 +27,9 @@ vi.mock('@/lib/trpc', () => ({
 
 // Mutation helper — returns a standard useMutation shape that calls callbacks synchronously
 function makeMutation(mutationFn: (...args: unknown[]) => unknown) {
-  return (options: { onSuccess?: (data: unknown) => void; onError?: (err: Error) => void } = {}) => ({
+  return (
+    options: { onSuccess?: (data: unknown) => void; onError?: (err: Error) => void } = {},
+  ) => ({
     mutate: async (input?: unknown) => {
       try {
         const result = await mutationFn(input);
@@ -62,7 +64,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
   // Default: no user, queries settled immediately
-  mockAuthMeUseQuery.mockReturnValue({ isSuccess: false, isError: false, data: undefined, refetch: vi.fn() });
+  mockAuthMeUseQuery.mockReturnValue({
+    isSuccess: false,
+    isError: false,
+    data: undefined,
+    refetch: vi.fn(),
+  });
   mockAuthLoginUseMutation.mockImplementation(makeMutation(vi.fn()));
   mockAuthSignupUseMutation.mockImplementation(makeMutation(vi.fn()));
   mockAuthLogoutUseMutation.mockImplementation(makeMutation(vi.fn()));

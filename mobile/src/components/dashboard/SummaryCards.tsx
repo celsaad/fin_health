@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Landmark, ArrowDown, ArrowUp, ListChecks, TrendingUp, TrendingDown } from 'lucide-react-native';
+import {
+  Landmark,
+  ArrowDown,
+  ArrowUp,
+  ListChecks,
+  TrendingUp,
+  TrendingDown,
+} from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import Card from '../Card';
@@ -29,12 +36,8 @@ export default function SummaryCards({ summary, netChangePercent }: SummaryCards
       >
         <View style={styles.decorativeCircle} />
         <Landmark size={32} color="rgba(255,255,255,0.3)" style={styles.bgIcon} />
-        <Text style={styles.netLabel}>
-          {t('dashboard.netBalance').toUpperCase()}
-        </Text>
-        <Text style={styles.netAmount}>
-          {formatCurrency(summary.net)}
-        </Text>
+        <Text style={styles.netLabel}>{t('dashboard.netBalance').toUpperCase()}</Text>
+        <Text style={styles.netAmount}>{formatCurrency(summary.net)}</Text>
         {netChangePercent !== null && (
           <View style={styles.momBadge}>
             {netChangePercent >= 0 ? (
@@ -158,8 +161,18 @@ const styles = StyleSheet.create({
   momText: { fontFamily: FontFamily.bodyMedium, fontSize: FontSize.caption, color: '#fff' },
   halfCard: { width: '48%', marginBottom: Spacing.md },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  iconBox: { width: 40, height: 40, borderRadius: BorderRadius.sm, justifyContent: 'center', alignItems: 'center' },
+  iconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cardLabel: { fontFamily: FontFamily.bodySemiBold, fontSize: 10, letterSpacing: 1.2 },
   cardAmount: { fontFamily: FontFamily.headline, fontSize: 22, marginTop: Spacing.md },
-  cardSubtitle: { fontFamily: FontFamily.bodyMedium, fontSize: FontSize.caption, marginTop: Spacing.xs },
+  cardSubtitle: {
+    fontFamily: FontFamily.bodyMedium,
+    fontSize: FontSize.caption,
+    marginTop: Spacing.xs,
+  },
 });

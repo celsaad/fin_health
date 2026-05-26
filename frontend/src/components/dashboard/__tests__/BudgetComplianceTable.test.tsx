@@ -11,8 +11,28 @@ const categories: CategorySpending[] = [
 ];
 
 const budgets: Budget[] = [
-  { id: 'b1', amount: 2000, month: 3, year: 2026, isRecurring: false, categoryId: 'c1', category: { id: 'c1', name: 'Housing', icon: null, color: null }, spent: 1800, remaining: 200 },
-  { id: 'b2', amount: 400, month: 3, year: 2026, isRecurring: false, categoryId: 'c2', category: { id: 'c2', name: 'Dining', icon: null, color: null }, spent: 600, remaining: -200 },
+  {
+    id: 'b1',
+    amount: 2000,
+    month: 3,
+    year: 2026,
+    isRecurring: false,
+    categoryId: 'c1',
+    category: { id: 'c1', name: 'Housing', icon: null, color: null },
+    spent: 1800,
+    remaining: 200,
+  },
+  {
+    id: 'b2',
+    amount: 400,
+    month: 3,
+    year: 2026,
+    isRecurring: false,
+    categoryId: 'c2',
+    category: { id: 'c2', name: 'Dining', icon: null, color: null },
+    spent: 600,
+    remaining: -200,
+  },
 ];
 
 function renderTable(props: { categories: CategorySpending[]; budgets: Budget[] }) {
@@ -49,7 +69,11 @@ describe('BudgetComplianceTable', () => {
 
   it('only shows categories that have budgets', () => {
     const extraCategory: CategorySpending = {
-      categoryId: 'c3', categoryName: 'Shopping', total: 300, percentage: 8, subcategories: [],
+      categoryId: 'c3',
+      categoryName: 'Shopping',
+      total: 300,
+      percentage: 8,
+      subcategories: [],
     };
     renderTable({ categories: [...categories, extraCategory], budgets });
     // Shopping should NOT appear (no budget set)

@@ -5,9 +5,7 @@ import type { CategorySpending } from '@/hooks/useDashboard';
 import type { Budget } from '@/hooks/useBudgets';
 import { formatCurrency } from '@fin-health/shared/format';
 
-const DOT_COLORS = [
-  '#6366f1', '#10b981', '#f59e0b', '#a855f6', '#f43f5e', '#0ea5e9', '#64748b',
-];
+const DOT_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#a855f6', '#f43f5e', '#0ea5e9', '#64748b'];
 
 interface BudgetComplianceRow {
   categoryId: string;
@@ -25,7 +23,11 @@ interface BudgetComplianceTableProps {
   className?: string;
 }
 
-export function BudgetComplianceTable({ categories, budgets, className }: BudgetComplianceTableProps) {
+export function BudgetComplianceTable({
+  categories,
+  budgets,
+  className,
+}: BudgetComplianceTableProps) {
   const { t } = useTranslation();
 
   // Build a lookup for category index in spending breakdown (for color dots)
@@ -94,10 +96,7 @@ export function BudgetComplianceTable({ categories, budgets, className }: Budget
               </thead>
               <tbody className="divide-y divide-surface-container">
                 {budgetRows.map((row) => (
-                  <tr
-                    key={row.categoryId}
-                    className="transition-colors hover:bg-background"
-                  >
+                  <tr key={row.categoryId} className="transition-colors hover:bg-background">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-2">
                         <span

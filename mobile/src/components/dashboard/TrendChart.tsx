@@ -17,19 +17,14 @@ export default function TrendChart({ trend }: TrendChartProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
 
-  const maxBar = Math.max(
-    ...trend.map((item) => Math.max(item.income || 0, item.expense || 0)),
-    1,
-  );
+  const maxBar = Math.max(...trend.map((item) => Math.max(item.income || 0, item.expense || 0)), 1);
 
   const lastIndex = trend.length - 1;
 
   return (
     <Card style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          {t('dashboard.cashFlowTrend')}
-        </Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('dashboard.cashFlowTrend')}</Text>
         <View style={styles.legendRow}>
           <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
           <Text style={[styles.legendLabel, { color: colors.textSecondary }]}>
@@ -44,9 +39,10 @@ export default function TrendChart({ trend }: TrendChartProps) {
 
       <View style={styles.barChart}>
         {trend.map((item, i) => {
-          const opacityIndex = trend.length <= 6
-            ? OPACITY_RAMP.length - trend.length + i
-            : Math.min(i, OPACITY_RAMP.length - 1);
+          const opacityIndex =
+            trend.length <= 6
+              ? OPACITY_RAMP.length - trend.length + i
+              : Math.min(i, OPACITY_RAMP.length - 1);
           const opacity = OPACITY_RAMP[opacityIndex] ?? 1;
           const isCurrent = i === lastIndex;
 

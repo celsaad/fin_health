@@ -50,10 +50,16 @@ beforeEach(() => vi.clearAllMocks());
 describe('useTransactions', () => {
   it('fetches transactions with filters', () => {
     const mockData = {
-      transactions: [{ id: '1', amount: 50, type: 'expense', description: 'Coffee', date: '2024-01-15' }],
+      transactions: [
+        { id: '1', amount: 50, type: 'expense', description: 'Coffee', date: '2024-01-15' },
+      ],
       pagination: { page: 1, totalPages: 1, limit: 20, total: 1 },
     };
-    mockTransactionsListUseQuery.mockReturnValue({ data: mockData, isSuccess: true, isError: false });
+    mockTransactionsListUseQuery.mockReturnValue({
+      data: mockData,
+      isSuccess: true,
+      isError: false,
+    });
 
     const { result } = renderHook(() => useTransactions({ page: 1, limit: 20 }), {
       wrapper: createWrapper(),
@@ -87,7 +93,11 @@ describe('useTransactions', () => {
   });
 
   it('reflects error state', () => {
-    mockTransactionsListUseQuery.mockReturnValue({ data: undefined, isSuccess: false, isError: true });
+    mockTransactionsListUseQuery.mockReturnValue({
+      data: undefined,
+      isSuccess: false,
+      isError: true,
+    });
 
     const { result } = renderHook(() => useTransactions(), { wrapper: createWrapper() });
 
@@ -117,10 +127,12 @@ describe('useCreateTransaction', () => {
   });
 
   it('shows error toast on failure', () => {
-    mockTransactionsCreateUseMutation.mockImplementation((options: { onError?: (err: Error) => void }) => ({
-      mutate: () => options?.onError?.(new Error('Server error')),
-      isSuccess: false,
-    }));
+    mockTransactionsCreateUseMutation.mockImplementation(
+      (options: { onError?: (err: Error) => void }) => ({
+        mutate: () => options?.onError?.(new Error('Server error')),
+        isSuccess: false,
+      }),
+    );
 
     const { result } = renderHook(() => useCreateTransaction(), { wrapper: createWrapper() });
     result.current.mutate({

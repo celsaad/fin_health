@@ -10,8 +10,10 @@ import { parseError } from '../services/api';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { FontSize, Spacing } from '../constants/theme';
+import { useRouter } from 'expo-router';
 
-export default function SignupScreen({ navigation }: any) {
+export default function SignupScreen() {
+  const router = useRouter();
   const { signup } = useAuth();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -106,7 +108,7 @@ export default function SignupScreen({ navigation }: any) {
           <Text style={[styles.footerText, { color: colors.textSecondary }]}>
             Already have an account?{' '}
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity onPress={() => router.back()}>
             <Text style={[styles.footerLink, { color: colors.primary }]}>Sign In</Text>
           </TouchableOpacity>
         </View>

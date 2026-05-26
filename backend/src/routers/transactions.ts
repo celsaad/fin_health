@@ -3,7 +3,11 @@ import { TRPCError } from '@trpc/server';
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import { router, protectedProcedure } from '../trpc';
-import { createTransactionSchema, updateTransactionSchema, bulkDeleteSchema } from '../validators/transaction';
+import {
+  createTransactionSchema,
+  updateTransactionSchema,
+  bulkDeleteSchema,
+} from '../validators/transaction';
 import { resolveCategory } from '../services/categoryResolver';
 
 function serializeTransaction<
@@ -43,7 +47,18 @@ const listInput = z.object({
 
 export const transactionsRouter = router({
   list: protectedProcedure.input(listInput).query(async ({ ctx, input }) => {
-    const { page, limit, type, categoryId, subcategoryId, startDate, endDate, search, sortBy, sortOrder } = input;
+    const {
+      page,
+      limit,
+      type,
+      categoryId,
+      subcategoryId,
+      startDate,
+      endDate,
+      search,
+      sortBy,
+      sortOrder,
+    } = input;
     const skip = (page - 1) * limit;
 
     const where: Prisma.TransactionWhereInput = { userId: ctx.userId, deletedAt: null };
@@ -52,7 +67,8 @@ export const transactionsRouter = router({
     if (subcategoryId) where.subcategoryId = subcategoryId;
     if (startDate || endDate) {
       where.date = {};
-      if (startDate) (where.date as Prisma.DateTimeFilter).gte = new Date(startDate + 'T00:00:00.000Z');
+      if (startDate)
+        (where.date as Prisma.DateTimeFilter).gte = new Date(startDate + 'T00:00:00.000Z');
       if (endDate) (where.date as Prisma.DateTimeFilter).lte = new Date(endDate + 'T23:59:59.999Z');
     }
     if (search) where.description = { contains: search, mode: 'insensitive' };
@@ -95,7 +111,12 @@ export const transactionsRouter = router({
   create: protectedProcedure.input(createTransactionSchema).mutation(async ({ ctx, input }) => {
     const { amount, type, description, date, categoryName, subcategoryName, notes } = input;
 
-    const { categoryId, subcategoryId } = await resolveCategory(ctx.userId, categoryName, type, subcategoryName);
+    const { categoryId, subcategoryId } = await resolveCategory(
+      ctx.userId,
+      categoryName,
+      type,
+      subcategoryName,
+    );
 
     const transaction = await prisma.transaction.create({
       data: {
@@ -137,7 +158,10 @@ export const transactionsRouter = router({
       if (categoryName) {
         const effectiveType = type ?? existing.type;
         const { categoryId, subcategoryId } = await resolveCategory(
-          ctx.userId, categoryName, effectiveType, subcategoryName ?? undefined,
+          ctx.userId,
+          categoryName,
+          effectiveType,
+          subcategoryName ?? undefined,
         );
         updateData.category = { connect: { id: categoryId } };
         if (subcategoryId) {

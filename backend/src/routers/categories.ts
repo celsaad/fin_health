@@ -35,7 +35,10 @@ export const categoriesRouter = router({
           where: { userId_name_type: { userId: ctx.userId, name, type: category.type } },
         });
         if (duplicate && duplicate.id !== id) {
-          throw new TRPCError({ code: 'CONFLICT', message: 'A category with this name already exists' });
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'A category with this name already exists',
+          });
         }
       }
 
@@ -60,7 +63,8 @@ export const categoriesRouter = router({
       if (category._count.transactions > 0) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Cannot delete category with existing transactions. Merge it into another category instead.',
+          message:
+            'Cannot delete category with existing transactions. Merge it into another category instead.',
         });
       }
 
@@ -74,7 +78,10 @@ export const categoriesRouter = router({
       const { id: sourceId, targetCategoryId } = input;
 
       if (sourceId === targetCategoryId) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot merge a category into itself' });
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Cannot merge a category into itself',
+        });
       }
 
       const [source, target] = await Promise.all([
@@ -135,7 +142,9 @@ export const categoriesRouter = router({
 
   renameSubcategory: protectedProcedure
     .input(
-      z.object({ categoryId: z.string(), subcategoryId: z.string() }).merge(renameSubcategorySchema),
+      z
+        .object({ categoryId: z.string(), subcategoryId: z.string() })
+        .merge(renameSubcategorySchema),
     )
     .mutation(async ({ ctx, input }) => {
       const category = await prisma.category.findFirst({

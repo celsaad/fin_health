@@ -43,7 +43,14 @@ describe('EditorialInsightCard', () => {
   it('shows insight content when pro and data loaded', () => {
     mockUsePlan.mockReturnValue({ isPro: true });
     mockUseInsights.mockReturnValue({
-      data: [{ type: 'pace', title: 'Great month!', description: 'You are saving more.', sentiment: 'positive' }],
+      data: [
+        {
+          type: 'pace',
+          title: 'Great month!',
+          description: 'You are saving more.',
+          sentiment: 'positive',
+        },
+      ],
       isLoading: false,
     });
 

@@ -25,9 +25,7 @@ export function EditorialInsightCard({ month, year, className }: EditorialInsigh
   const nextMonthName = getNextMonthName(month, year);
 
   return (
-    <Card
-      className={`overflow-hidden bg-indigo-900 text-white ${className ?? ''}`}
-    >
+    <Card className={`overflow-hidden bg-indigo-900 text-white ${className ?? ''}`}>
       <CardContent className="relative p-8">
         {/* Dot pattern overlay */}
         <div
@@ -62,7 +60,10 @@ export function EditorialInsightCard({ month, year, className }: EditorialInsigh
                 <div className="h-3 w-3/4 animate-pulse rounded bg-white/10" />
                 <div className="h-3 w-1/2 animate-pulse rounded bg-white/10" />
               </div>
-              <button type="button" className="mt-6 w-full rounded-lg bg-white py-3 font-bold text-indigo-900 transition-opacity hover:opacity-90">
+              <button
+                type="button"
+                className="mt-6 w-full rounded-lg bg-white py-3 font-bold text-indigo-900 transition-opacity hover:opacity-90"
+              >
                 {t('dashboard.upgradeToPro')}
               </button>
             </>
@@ -79,9 +80,7 @@ export function EditorialInsightCard({ month, year, className }: EditorialInsigh
           ) : insights$.data && insights$.data.length > 0 ? (
             /* Unlocked State */
             <>
-              <h3 className="mt-4 font-headline text-2xl font-bold">
-                {insights$.data[0].title}
-              </h3>
+              <h3 className="mt-4 font-headline text-2xl font-bold">{insights$.data[0].title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-indigo-200">
                 {insights$.data[0].description}
               </p>
