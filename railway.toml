@@ -1,0 +1,11 @@
+[build]
+  builder       = "DOCKERFILE"
+  dockerfilePath = "backend/Dockerfile"
+
+[deploy]
+  # Run migrations before each deployment goes live
+  releaseCommand   = "npx prisma migrate deploy --schema=./backend/prisma/schema.prisma"
+  healthcheckPath  = "/api/health"
+  healthcheckTimeout = 300
+  restartPolicyType      = "ON_FAILURE"
+  restartPolicyMaxRetries = 10
