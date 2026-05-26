@@ -14,6 +14,8 @@ const Budgets = lazy(() => import('@/pages/Budgets'));
 const RecurringTransactions = lazy(() => import('@/pages/RecurringTransactions'));
 const Spending = lazy(() => import('@/pages/Spending'));
 const Settings = lazy(() => import('@/pages/Settings'));
+const Privacy = lazy(() => import('@/pages/Privacy'));
+const Terms = lazy(() => import('@/pages/Terms'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function PageLoader() {
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<OnboardingGate />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />

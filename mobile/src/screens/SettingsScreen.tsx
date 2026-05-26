@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
@@ -11,6 +11,8 @@ import {
   DollarSign,
   ChevronRight,
   Grid3X3,
+  FileText,
+  Shield,
 } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -135,6 +137,28 @@ export default function SettingsScreen() {
               icon={<Grid3X3 size={18} color={colors.textSecondary} />}
               label="Categories"
               subtitle="Manage your categories"
+              colors={colors}
+              showChevron
+            />
+          </TouchableOpacity>
+        </Card>
+
+        {/* Legal */}
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>LEGAL</Text>
+        <Card style={styles.sectionCard}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://finhealth.app/terms')}>
+            <SettingsRow
+              icon={<FileText size={18} color={colors.textSecondary} />}
+              label="Terms of Service"
+              colors={colors}
+              showChevron
+            />
+          </TouchableOpacity>
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+          <TouchableOpacity onPress={() => Linking.openURL('https://finhealth.app/privacy')}>
+            <SettingsRow
+              icon={<Shield size={18} color={colors.textSecondary} />}
+              label="Privacy Policy"
               colors={colors}
               showChevron
             />

@@ -163,6 +163,18 @@ export default function Signup() {
             {t('auth.signIn')}
           </Link>
         </p>
+
+        <p className="text-center text-xs text-muted-foreground">
+          {t('legal.signupAgreement')}{' '}
+          <Link to="/terms" className="underline underline-offset-4 hover:text-foreground">
+            {t('legal.termsLink')}
+          </Link>{' '}
+          {t('legal.and')}{' '}
+          <Link to="/privacy" className="underline underline-offset-4 hover:text-foreground">
+            {t('legal.privacyLink')}
+          </Link>
+          .
+        </p>
       </div>
     </div>
   );

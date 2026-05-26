@@ -380,5 +380,16 @@
   },
   "errors": {
     "loadFailed": "Failed to load data. Please try again."
+  },
+  "legal": {
+    "back": "Back",
+    "privacyTitle": "Privacy Policy",
+    "privacyLastUpdated": "Last updated: May 2025",
+    "termsTitle": "Terms of Service",
+    "termsLastUpdated": "Last updated: May 2025",
+    "privacyLink": "Privacy Policy",
+    "termsLink": "Terms of Service",
+    "signupAgreement": "By creating an account you agree to our",
+    "and": "and"
   }
 }
