@@ -23,9 +23,14 @@ const app = express();
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 app.use(helmet());
 const allowedOrigins = new Set(env.CORS_ORIGIN.split(',').map((o) => o.trim()));
+logger.info({ corsOrigins: [...allowedOrigins] }, 'CORS allowed origins');
 app.use(
   cors({
-    origin: (origin, cb) => cb(null, !origin || allowedOrigins.has(origin)),
+    origin: (origin, cb) => {
+      const allowed = !origin || allowedOrigins.has(origin);
+      if (!allowed) logger.warn({ origin }, 'CORS rejected origin');
+      cb(null, allowed);
+    },
     credentials: true,
   }),
 );
