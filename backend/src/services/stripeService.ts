@@ -120,6 +120,10 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         update: {
           plan: 'pro',
           status: 'active',
+          stripeCustomerId:
+            typeof session.customer === 'string'
+              ? session.customer
+              : (session.customer?.id ?? null),
           stripeSubscriptionId: stripeSubscriptionId ?? null,
         },
       });

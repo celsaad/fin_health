@@ -7,6 +7,10 @@ export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'expired';
 
 // ── Plan ──
 
+export interface FeatureFlags {
+  billing: boolean;
+}
+
 export interface UserPlan {
   plan: PlanType;
   status: SubscriptionStatus;

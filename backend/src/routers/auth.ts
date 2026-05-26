@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import type { Subscription } from '@prisma/client';
-import type { UserPlan } from '@fin-health/shared/types';
+import type { UserPlan, FeatureFlags } from '@fin-health/shared/types';
 import prisma from '../lib/prisma';
+import { env } from '../lib/env';
 import { generateToken } from '../lib/jwt';
 import { hashPassword, comparePassword } from '../lib/password';
 import { createRefreshToken, revokeUserRefreshTokens } from '../lib/refreshToken';
@@ -18,6 +19,10 @@ const FREE_PLAN: UserPlan = {
   currentPeriodEnd: null,
   cancelAtPeriodEnd: false,
 };
+
+function featureFlags(): FeatureFlags {
+  return { billing: env.BILLING_ENABLED };
+}
 
 function derivePlan(subscription: Subscription | null | undefined): UserPlan {
   if (!subscription) return FREE_PLAN;
@@ -56,7 +61,7 @@ export const authRouter = router({
     const refreshToken = await createRefreshToken(user.id);
     const { subscription, ...userData } = user;
 
-    return { token, refreshToken, user: { ...userData, plan: derivePlan(subscription) } };
+    return { token, refreshToken, user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() };
   }),
 
   login: publicProcedure.input(loginSchema).mutation(async ({ input }) => {
@@ -87,6 +92,7 @@ export const authRouter = router({
       token,
       refreshToken,
       user: { ...userWithoutPassword, plan: derivePlan(subscription) },
+      featureFlags: featureFlags(),
     };
   }),
 
@@ -105,7 +111,7 @@ export const authRouter = router({
     if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
 
     const { subscription, ...userData } = user;
-    return { user: { ...userData, plan: derivePlan(subscription) } };
+    return { user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() };
   }),
 
   logout: protectedProcedure.mutation(async ({ ctx }) => {

@@ -1,7 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import type { Subscription } from '@prisma/client';
-import type { UserPlan } from '@fin-health/shared/types';
+import type { UserPlan, FeatureFlags } from '@fin-health/shared/types';
 import prisma from '../lib/prisma';
+import { env } from '../lib/env';
 import { generateToken } from '../lib/jwt';
 import { hashPassword, comparePassword } from '../lib/password';
 import {
@@ -23,6 +24,10 @@ const FREE_PLAN: UserPlan = {
   currentPeriodEnd: null,
   cancelAtPeriodEnd: false,
 };
+
+function featureFlags(): FeatureFlags {
+  return { billing: env.BILLING_ENABLED };
+}
 
 function derivePlan(subscription: Subscription | null | undefined): UserPlan {
   if (!subscription) return FREE_PLAN;
@@ -70,7 +75,7 @@ router.post(
 
       res
         .status(201)
-        .json({ token, refreshToken, user: { ...userData, plan: derivePlan(subscription) } });
+        .json({ token, refreshToken, user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() });
     } catch (err) {
       next(err);
     }
@@ -106,6 +111,7 @@ router.post(
         token,
         refreshToken,
         user: { ...userWithoutPassword, plan: derivePlan(subscription) },
+        featureFlags: featureFlags(),
       });
 
       // Generate any pending recurring transactions in background (non-blocking)
@@ -138,7 +144,7 @@ router.get('/me', authMiddleware, async (req: Request, res: Response, next: Next
     }
 
     const { subscription, ...userData } = user;
-    res.json({ user: { ...userData, plan: derivePlan(subscription) } });
+    res.json({ user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() });
   } catch (err) {
     next(err);
   }

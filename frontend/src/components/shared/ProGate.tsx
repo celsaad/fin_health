@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
 import { usePlan } from '@/hooks/usePlan';
 
 interface ProGateProps {
@@ -31,7 +32,10 @@ function UpgradePrompt() {
 }
 
 export function ProGate({ children, fallback }: ProGateProps) {
+  const { featureFlags } = useAuth();
   const { isPro } = usePlan();
+
+  if (!featureFlags.billing) return null;
 
   if (isPro) {
     return <>{children}</>;

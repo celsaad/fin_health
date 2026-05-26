@@ -7,7 +7,7 @@ import {
   setRefreshToken,
   removeRefreshToken,
 } from '../services/api';
-import type { UserPlan } from '@fin-health/shared/types';
+import type { UserPlan, FeatureFlags } from '@fin-health/shared/types';
 
 interface User {
   id: string;
@@ -17,8 +17,11 @@ interface User {
   plan: UserPlan;
 }
 
+const DEFAULT_FEATURE_FLAGS: FeatureFlags = { billing: true };
+
 interface AuthContextValue {
   user: User | null;
+  featureFlags: FeatureFlags;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -30,6 +33,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(DEFAULT_FEATURE_FLAGS);
   const [isLoading, setIsLoading] = useState(true);
 
   // Wire up the auth failure callback so the tRPC layer can force logout
@@ -55,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setCachedToken(token);
       const data = await trpcClient.auth.me.query();
       setUser(data.user as User);
+      if (data.featureFlags) setFeatureFlags(data.featureFlags as FeatureFlags);
     } catch {
       await removeToken();
       await removeRefreshToken();
@@ -70,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.refreshToken) await setRefreshToken(data.refreshToken);
     setCachedToken(data.token);
     setUser(data.user as User);
+    if (data.featureFlags) setFeatureFlags(data.featureFlags as FeatureFlags);
   }, []);
 
   const signup = useCallback(async (name: string, email: string, password: string) => {
@@ -78,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (data.refreshToken) await setRefreshToken(data.refreshToken);
     setCachedToken(data.token);
     setUser(data.user as User);
+    if (data.featureFlags) setFeatureFlags(data.featureFlags as FeatureFlags);
   }, []);
 
   const logout = useCallback(async () => {
@@ -94,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isAuthenticated: !!user, login, signup, logout }}
+      value={{ user, featureFlags, isLoading, isAuthenticated: !!user, login, signup, logout }}
     >
       {children}
     </AuthContext.Provider>

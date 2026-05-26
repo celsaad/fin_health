@@ -14,6 +14,7 @@ const envSchema = z.object({
   STRIPE_PRO_MONTHLY_PRICE_ID: z.string().default(''),
   STRIPE_PRO_YEARLY_PRICE_ID: z.string().default(''),
   CLIENT_URL: z.string().default('http://localhost:5173'),
+  BILLING_ENABLED: z.coerce.boolean().default(true),
 });
 
 export const env = envSchema.parse(process.env);

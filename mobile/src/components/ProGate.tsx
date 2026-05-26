@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router/react-navigation';
 import Button from './Button';
+import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../hooks/usePlan';
 import { useTheme } from '../contexts/ThemeContext';
 import { FontSize, Spacing, BorderRadius } from '../constants/theme';
@@ -47,7 +48,10 @@ function UpgradePrompt() {
 }
 
 export default function ProGate({ children, fallback }: ProGateProps) {
+  const { featureFlags } = useAuth();
   const { isPro } = usePlan();
+
+  if (!featureFlags.billing) return null;
 
   if (isPro) {
     return <>{children}</>;

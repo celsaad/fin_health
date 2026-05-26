@@ -25,7 +25,7 @@ import api, { parseError } from '@/lib/api';
 
 export default function Settings() {
   const { t } = useTranslation();
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, featureFlags } = useAuth();
   const { theme, setTheme } = useTheme();
   const { isPro, isFree, isTrialing, isCanceling, currentPeriodEnd, trialEndsAt } = usePlan();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -257,114 +257,118 @@ export default function Settings() {
       </Card>
 
       {/* Section: Subscription */}
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        {t('billing.sectionTitle')}
-      </p>
+      {featureFlags.billing && (
+        <>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {t('billing.sectionTitle')}
+          </p>
 
-      {/* Current plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Crown className="size-5" aria-hidden="true" />
-            {t('billing.currentPlan')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                isPro ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {isPro
-                ? t('billing.proBadge')
-                : isTrialing
-                  ? t('billing.trialBadge')
-                  : t('billing.freeBadge')}
-            </span>
-            {isCanceling && (
-              <span className="inline-flex items-center rounded-full bg-destructive/10 text-destructive px-2.5 py-0.5 text-xs font-semibold">
-                {t('billing.cancelingBadge')}
-              </span>
-            )}
-          </div>
-          {isTrialing && trialEndsAt && (
-            <p className="text-sm text-muted-foreground">
-              {t('billing.trialEndsOn', { date: new Date(trialEndsAt).toLocaleDateString() })}
-            </p>
-          )}
-          {isPro && currentPeriodEnd && (
-            <p className="text-sm text-muted-foreground">
-              {isCanceling
-                ? t('billing.endsOn', { date: new Date(currentPeriodEnd).toLocaleDateString() })
-                : t('billing.renewsOn', { date: new Date(currentPeriodEnd).toLocaleDateString() })}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Upgrade card (free users) */}
-      {isFree && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="size-5" aria-hidden="true" />
-              {t('billing.upgradeTitle')}
-            </CardTitle>
-            <CardDescription>{t('billing.upgradeDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="inline-flex rounded-lg border border-border p-1 gap-1">
-                {(
-                  [
-                    { value: 'monthly' as const, label: t('billing.monthly') },
-                    { value: 'yearly' as const, label: t('billing.yearly') },
-                  ] as const
-                ).map(({ value, label }) => (
-                  <button
-                    key={value}
-                    onClick={() => setBillingInterval(value)}
-                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                      billingInterval === value
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    {label}
-                    {value === 'yearly' && (
-                      <span className="ml-1 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                        {t('billing.yearlySavings')}
-                      </span>
-                    )}
-                  </button>
-                ))}
+          {/* Current plan */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="size-5" aria-hidden="true" />
+                {t('billing.currentPlan')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    isPro ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {isPro
+                    ? t('billing.proBadge')
+                    : isTrialing
+                      ? t('billing.trialBadge')
+                      : t('billing.freeBadge')}
+                </span>
+                {isCanceling && (
+                  <span className="inline-flex items-center rounded-full bg-destructive/10 text-destructive px-2.5 py-0.5 text-xs font-semibold">
+                    {t('billing.cancelingBadge')}
+                  </span>
+                )}
               </div>
-              <p className="text-2xl font-bold">
-                {billingInterval === 'monthly'
-                  ? t('billing.monthlyPrice')
-                  : t('billing.yearlyPrice')}
-              </p>
-            </div>
-            <Button onClick={handleUpgrade} disabled={upgrading} className="w-full sm:w-auto">
-              <CreditCard className="size-4" aria-hidden="true" />
-              {upgrading ? t('billing.upgrading') : t('billing.upgradeCta')}
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+              {isTrialing && trialEndsAt && (
+                <p className="text-sm text-muted-foreground">
+                  {t('billing.trialEndsOn', { date: new Date(trialEndsAt).toLocaleDateString() })}
+                </p>
+              )}
+              {isPro && currentPeriodEnd && (
+                <p className="text-sm text-muted-foreground">
+                  {isCanceling
+                    ? t('billing.endsOn', { date: new Date(currentPeriodEnd).toLocaleDateString() })
+                    : t('billing.renewsOn', { date: new Date(currentPeriodEnd).toLocaleDateString() })}
+                </p>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Manage subscription card (pro users) */}
-      {isPro && (
-        <Card>
-          <CardContent className="pt-6 space-y-3">
-            <p className="text-sm text-muted-foreground">{t('billing.manageDesc')}</p>
-            <Button variant="outline" onClick={handleManageBilling} disabled={managingBilling}>
-              <CreditCard className="size-4" aria-hidden="true" />
-              {managingBilling ? t('billing.managing') : t('billing.manageCta')}
-            </Button>
-          </CardContent>
-        </Card>
+          {/* Upgrade card (free users) */}
+          {isFree && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="size-5" aria-hidden="true" />
+                  {t('billing.upgradeTitle')}
+                </CardTitle>
+                <CardDescription>{t('billing.upgradeDesc')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="inline-flex rounded-lg border border-border p-1 gap-1">
+                    {(
+                      [
+                        { value: 'monthly' as const, label: t('billing.monthly') },
+                        { value: 'yearly' as const, label: t('billing.yearly') },
+                      ] as const
+                    ).map(({ value, label }) => (
+                      <button
+                        key={value}
+                        onClick={() => setBillingInterval(value)}
+                        className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                          billingInterval === value
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {label}
+                        {value === 'yearly' && (
+                          <span className="ml-1 rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            {t('billing.yearlySavings')}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-2xl font-bold">
+                    {billingInterval === 'monthly'
+                      ? t('billing.monthlyPrice')
+                      : t('billing.yearlyPrice')}
+                  </p>
+                </div>
+                <Button onClick={handleUpgrade} disabled={upgrading} className="w-full sm:w-auto">
+                  <CreditCard className="size-4" aria-hidden="true" />
+                  {upgrading ? t('billing.upgrading') : t('billing.upgradeCta')}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Manage subscription card (pro users) */}
+          {isPro && (
+            <Card>
+              <CardContent className="pt-6 space-y-3">
+                <p className="text-sm text-muted-foreground">{t('billing.manageDesc')}</p>
+                <Button variant="outline" onClick={handleManageBilling} disabled={managingBilling}>
+                  <CreditCard className="size-4" aria-hidden="true" />
+                  {managingBilling ? t('billing.managing') : t('billing.manageCta')}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
 
       {/* Section: Account Actions */}

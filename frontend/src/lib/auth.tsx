@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { UserPlan } from '@fin-health/shared/types';
+import type { UserPlan, FeatureFlags } from '@fin-health/shared/types';
 import { trpc, setTRPCAuthFailure } from '@/lib/trpc';
 
 interface User {
@@ -10,9 +10,12 @@ interface User {
   plan: UserPlan;
 }
 
+const DEFAULT_FEATURE_FLAGS: FeatureFlags = { billing: true };
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  featureFlags: FeatureFlags;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
@@ -25,6 +28,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(DEFAULT_FEATURE_FLAGS);
   const [hasToken, setHasToken] = useState(() => !!localStorage.getItem('token'));
   const [isLoading, setIsLoading] = useState(() => !!localStorage.getItem('token'));
 
@@ -45,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     if (meQuery.isSuccess) {
       setUser(meQuery.data.user as User);
+      if (meQuery.data.featureFlags) setFeatureFlags(meQuery.data.featureFlags as FeatureFlags);
       setIsLoading(false);
     } else if (meQuery.isError) {
       localStorage.removeItem('token');
@@ -72,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       setHasToken(true);
       setUser(data.user as User);
+      if (data.featureFlags) setFeatureFlags(data.featureFlags as FeatureFlags);
     },
     [loginMut],
   );
@@ -83,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       setHasToken(true);
       setUser(data.user as User);
+      if (data.featureFlags) setFeatureFlags(data.featureFlags as FeatureFlags);
     },
     [signupMut],
   );
@@ -105,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         token: hasToken ? localStorage.getItem('token') : null,
+        featureFlags,
         login,
         signup,
         logout,
