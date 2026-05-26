@@ -61,7 +61,12 @@ export const authRouter = router({
     const refreshToken = await createRefreshToken(user.id);
     const { subscription, ...userData } = user;
 
-    return { token, refreshToken, user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() };
+    return {
+      token,
+      refreshToken,
+      user: { ...userData, plan: derivePlan(subscription) },
+      featureFlags: featureFlags(),
+    };
   }),
 
   login: publicProcedure.input(loginSchema).mutation(async ({ input }) => {

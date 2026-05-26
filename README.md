@@ -84,7 +84,11 @@ All commands are run from the root directory.
 | `npm run dev` | Start backend + frontend dev servers in parallel |
 | `npm run build` | Build all packages (cached) |
 | `npm run typecheck` | Type-check all packages (cached) |
+| `npm run test` | Run all test suites |
 | `npm run lint` | Lint all packages (cached) |
+| `npm run lint:fix` | Lint and auto-fix all packages |
+| `npm run format` | Format all packages with Prettier |
+| `npm run format:check` | Check formatting without writing changes |
 | `npm run db:push` | Push Prisma schema to database |
 | `npm run db:seed` | Seed database with demo data |
 | `npm run db:studio` | Open Prisma Studio GUI |

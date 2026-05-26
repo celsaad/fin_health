@@ -17,6 +17,9 @@
     "format:check": {},
     "format": {
       "cache": false
+    },
+    "lint:fix": {
+      "cache": false
     }
   }
 }

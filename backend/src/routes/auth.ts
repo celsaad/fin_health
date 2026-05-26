@@ -73,9 +73,12 @@ router.post(
       const refreshToken = await createRefreshToken(user.id);
       const { subscription, ...userData } = user;
 
-      res
-        .status(201)
-        .json({ token, refreshToken, user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() });
+      res.status(201).json({
+        token,
+        refreshToken,
+        user: { ...userData, plan: derivePlan(subscription) },
+        featureFlags: featureFlags(),
+      });
     } catch (err) {
       next(err);
     }
@@ -144,7 +147,10 @@ router.get('/me', authMiddleware, async (req: Request, res: Response, next: Next
     }
 
     const { subscription, ...userData } = user;
-    res.json({ user: { ...userData, plan: derivePlan(subscription) }, featureFlags: featureFlags() });
+    res.json({
+      user: { ...userData, plan: derivePlan(subscription) },
+      featureFlags: featureFlags(),
+    });
   } catch (err) {
     next(err);
   }

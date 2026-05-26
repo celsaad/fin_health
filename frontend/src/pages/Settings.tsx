@@ -299,7 +299,9 @@ export default function Settings() {
                 <p className="text-sm text-muted-foreground">
                   {isCanceling
                     ? t('billing.endsOn', { date: new Date(currentPeriodEnd).toLocaleDateString() })
-                    : t('billing.renewsOn', { date: new Date(currentPeriodEnd).toLocaleDateString() })}
+                    : t('billing.renewsOn', {
+                        date: new Date(currentPeriodEnd).toLocaleDateString(),
+                      })}
                 </p>
               )}
             </CardContent>
