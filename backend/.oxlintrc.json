@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/crates/oxc_linter/schemas/oxlintrc.json",
+  "plugins": ["typescript"],
+  "env": {
+    "node": true
+  },
+  "rules": {
+    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-namespace": ["error", { "allowDeclarations": true }]
+  },
+  "ignorePatterns": ["dist"]
+}

@@ -5,6 +5,10 @@
 - All implementations must pass lint and tests before being considered complete.
 - Run the relevant linter and test suite after making changes to verify nothing is broken.
 
+## Committing Code
+
+- Before committing any code changes, always run `npm run lint:fix` and `npm run format` first.
+
 ## New Features
 
 - Every new feature must include corresponding tests.

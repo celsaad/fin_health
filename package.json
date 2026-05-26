@@ -21,9 +21,11 @@
     "db:migrate:dev": "npm run db:migrate:dev -w @fin-health/backend",
     "db:push": "npm run db:push -w @fin-health/backend",
     "db:seed": "npm run db:seed -w @fin-health/backend",
-    "db:studio": "npm run db:studio -w @fin-health/backend"
+    "db:studio": "npm run db:studio -w @fin-health/backend",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "playwright": "^1.58.2",
     "turbo": "^2"
   },
