@@ -6,7 +6,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  CORS_ORIGIN: z.string().default('http://localhost:5173,http://localhost:5174'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   SENTRY_DSN: z.string().default(''),
   STRIPE_SECRET_KEY: z.string().default(''),

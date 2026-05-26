@@ -22,7 +22,13 @@ const app = express();
 
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+const allowedOrigins = new Set(env.CORS_ORIGIN.split(',').map((o) => o.trim()));
+app.use(
+  cors({
+    origin: (origin, cb) => cb(null, !origin || allowedOrigins.has(origin)),
+    credentials: true,
+  }),
+);
 
 // Stripe webhook needs raw body — must be registered before express.json()
 app.post(
