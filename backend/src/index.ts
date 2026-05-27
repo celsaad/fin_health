@@ -29,3 +29,18 @@ function shutdown(signal: string) {
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
+
+process.on('uncaughtException', (err) => {
+  logger.fatal({ err }, 'Uncaught exception');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  logger.fatal({ reason }, 'Unhandled rejection');
+  process.exit(1);
+});
+
+prisma
+  .$connect()
+  .then(() => logger.info('Database connected'))
+  .catch((err) => logger.error({ err }, 'Database connection failed'));
