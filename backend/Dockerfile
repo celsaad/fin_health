@@ -31,4 +31,4 @@ COPY backend/package.json ./backend/
 
 USER app
 EXPOSE 3001
-CMD ["node", "backend/dist/index.js"]
+CMD ["sh", "-c", "cd backend && npx prisma migrate deploy && cd .. && node backend/dist/index.js"]
