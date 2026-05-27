@@ -44,3 +44,11 @@ prisma
   .$connect()
   .then(() => logger.info('Database connected'))
   .catch((err) => logger.error({ err }, 'Database connection failed'));
+
+setInterval(() => {
+  const { heapUsed, rss } = process.memoryUsage();
+  logger.info(
+    { heapUsedMb: Math.round(heapUsed / 1024 / 1024), rssMb: Math.round(rss / 1024 / 1024) },
+    'Heartbeat',
+  );
+}, 60_000).unref();
