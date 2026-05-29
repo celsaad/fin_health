@@ -14,6 +14,7 @@ import { X } from 'lucide-react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createTransactionSchema, updateTransactionSchema } from '@fin-health/shared/validators';
+import i18n from '../lib/i18n';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useTheme } from '../contexts/ThemeContext';
@@ -21,6 +22,7 @@ import { createTransaction, updateTransaction } from '../services/transactions';
 import { getCategories } from '../services/categories';
 import { parseError } from '../services/api';
 import Input from './Input';
+import CurrencyInput from './CurrencyInput';
 import Button from './Button';
 import SegmentedControl from './SegmentedControl';
 import { BorderRadius, FontSize, Spacing } from '../constants/theme';
@@ -49,8 +51,9 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
   } = useForm({
     resolver: zodResolver(schema),
     defaultValues: {
-      amount: '',
+      amount: 0,
       type: 'expense' as const,
+      currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
       description: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       categoryName: '',
@@ -77,8 +80,9 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
   useEffect(() => {
     if (transaction && visible) {
       reset({
-        amount: String(transaction.amount),
+        amount: transaction.amount,
         type: transaction.type,
+        currency: transaction.currency || (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
         description: transaction.description,
         date: transaction.date.split('T')[0],
         categoryName: transaction.category.name,
@@ -87,8 +91,9 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
       });
     } else if (!transaction && visible) {
       reset({
-        amount: '',
+        amount: 0,
         type: 'expense',
+        currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
         description: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         categoryName: '',
@@ -147,12 +152,10 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
               control={control}
               name="amount"
               render={({ field: { onChange, value } }) => (
-                <Input
+                <CurrencyInput
                   label="Amount"
-                  placeholder="0.00"
-                  keyboardType="decimal-pad"
-                  value={String(value ?? '')}
-                  onChangeText={onChange}
+                  value={Number(value) || 0}
+                  onChange={onChange}
                   error={errors.amount?.message as string}
                 />
               )}
@@ -166,6 +169,25 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
                 onSelect={(i) => setValue('type', i === 0 ? 'expense' : 'income')}
               />
             </View>
+
+            <Controller
+              control={control}
+              name="currency"
+              render={({ field: { onChange, value } }) => (
+                <View style={{ marginBottom: Spacing.lg }}>
+                  <Text style={[styles.label, { color: colors.text }]}>Currency</Text>
+                  <SegmentedControl
+                    options={['BRL', 'USD', 'EUR']}
+                    selectedIndex={
+                      ['BRL', 'USD', 'EUR'].indexOf(value) >= 0
+                        ? ['BRL', 'USD', 'EUR'].indexOf(value)
+                        : 0
+                    }
+                    onSelect={(i) => onChange(['BRL', 'USD', 'EUR'][i])}
+                  />
+                </View>
+              )}
+            />
 
             <Controller
               control={control}

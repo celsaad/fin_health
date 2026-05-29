@@ -20,7 +20,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { getBudgets, upsertBudget, deleteBudget, copyPreviousBudgets } from '../services/budgets';
 import { getCategories } from '../services/categories';
 import { parseError } from '../services/api';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '../hooks/useFormatters';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -37,6 +37,7 @@ import { useRouter } from 'expo-router';
 export default function BudgetsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { formatCurrency } = useFormatters();
   const queryClient = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);

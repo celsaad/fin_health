@@ -13,7 +13,7 @@ import {
   useBulkDeleteTransactions,
   type Transaction,
 } from '@/hooks/useTransactions';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -37,6 +37,7 @@ function groupByDate(transactions: Transaction[]) {
 
 export function TransactionList({ transactions }: TransactionListProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);

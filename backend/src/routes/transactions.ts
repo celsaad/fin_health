@@ -10,6 +10,7 @@ import {
   bulkDeleteSchema,
 } from '../validators/transaction';
 import { resolveCategory } from '../services/categoryResolver';
+import { toUsd } from '../services/exchangeRate';
 import { getPagination } from '../utils/pagination';
 import { AppError } from '../middleware/errorHandler';
 
@@ -168,7 +169,16 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.userId!;
-      const { amount, type, description, date, categoryName, subcategoryName, notes } = req.body;
+      const {
+        amount,
+        currency = 'USD',
+        type,
+        description,
+        date,
+        categoryName,
+        subcategoryName,
+        notes,
+      } = req.body;
 
       const { categoryId, subcategoryId } = await resolveCategory(
         userId,
@@ -177,9 +187,15 @@ router.post(
         subcategoryName,
       );
 
+      const rawAmount = parseFloat(amount);
+      const { amountUsd, exchangeRate } = await toUsd(rawAmount, currency.toUpperCase());
+
       const transaction = await prisma.transaction.create({
         data: {
-          amount,
+          amount: rawAmount,
+          currency: currency.toUpperCase(),
+          amountUsd,
+          exchangeRate,
           type,
           description,
           date: new Date(date + 'T12:00:00.000Z'),
@@ -267,11 +283,22 @@ router.put(
         throw new AppError('Transaction not found', 404);
       }
 
-      const { amount, type, description, date, categoryName, subcategoryName, notes } = req.body;
+      const { amount, currency, type, description, date, categoryName, subcategoryName, notes } =
+        req.body;
 
       const updateData: Prisma.TransactionUpdateInput = {};
 
-      if (amount !== undefined) updateData.amount = amount;
+      if (amount !== undefined || currency !== undefined) {
+        const newAmount =
+          amount !== undefined ? parseFloat(amount) : parseFloat(existing.amount.toString());
+        const newCurrency = currency !== undefined ? currency.toUpperCase() : existing.currency;
+        const { amountUsd, exchangeRate } = await toUsd(newAmount, newCurrency);
+        if (amount !== undefined) updateData.amount = newAmount;
+        updateData.currency = newCurrency;
+        updateData.amountUsd = amountUsd;
+        updateData.exchangeRate = exchangeRate;
+      }
+
       if (type !== undefined) updateData.type = type;
       if (description !== undefined) updateData.description = description;
       if (date !== undefined) updateData.date = new Date(date + 'T12:00:00.000Z');

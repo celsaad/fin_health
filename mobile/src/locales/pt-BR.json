@@ -1,0 +1,55 @@
+{
+  "common": {
+    "retry": "Tentar novamente",
+    "loading": "Carregando..."
+  },
+  "dashboard": {
+    "title": "Painel",
+    "greeting": "Olá, {{name}}",
+    "notifications": "Notificações",
+    "netBalance": "Saldo Líquido",
+    "vsLastMonth": "vs mês passado",
+    "income": "Receita",
+    "expenses": "Despesas",
+    "earnedThisMonth": "Ganho neste mês",
+    "spentThisMonth": "Gasto neste mês",
+    "transactionCount": "Transações",
+    "totalTransactions": "Total de transações",
+    "cashFlowTrend": "Tendência de Fluxo de Caixa",
+    "incomeLabel": "Receita",
+    "expenseLabel": "Despesa",
+    "editorialInsight": "Insights Financeiros",
+    "seeAllInsights": "Ver todos os {{count}} insights",
+    "upgradeToPro": "Upgrade para Pro",
+    "spendingAllocation": "Alocação de Gastos",
+    "noExpenses": "Sem despesas neste mês",
+    "recentSpendingPeaks": "Picos de Gastos Recentes",
+    "noTransactions": "Sem transações neste mês",
+    "budgetCompliance": "Conformidade com Orçamento",
+    "onTrack": "Em dia",
+    "overBudget": "Acima do Orçamento",
+    "category": "Categoria",
+    "progress": "Progresso",
+    "status": "Status",
+    "noData": "Nenhum dado disponível",
+    "summary": "Resumo",
+    "trend": "Tendência",
+    "insights": "Insights",
+    "breakdown": "Detalhamento",
+    "monthlyOverview": "Visão Mensal"
+  },
+  "plan": {
+    "upgradeTitle": "Upgrade para Pro",
+    "upgradeDescription": "Este recurso está disponível no plano Pro. Faça upgrade para desbloquear insights e mais.",
+    "upgradeCta": "Fazer Upgrade Agora"
+  },
+  "errors": {
+    "loadFailed": "Falha ao carregar dados. Por favor, tente novamente."
+  },
+  "settings": {
+    "language": "Idioma",
+    "languageEn": "English",
+    "languagePtBR": "Português (BR)",
+    "languageSaved": "Preferência de idioma salva"
+  }
+}

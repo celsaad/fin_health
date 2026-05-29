@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -12,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -23,7 +25,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCategories } from '@/hooks/useCategories';
 import { useUpsertBudget } from '@/hooks/useBudgets';
-import { getMonthName } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 const budgetSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
@@ -43,11 +45,6 @@ interface BudgetFormProps {
   existingCategoryIds?: string[];
 }
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => ({
-  value: String(i + 1),
-  label: getMonthName(i + 1),
-}));
-
 export function BudgetForm({
   open,
   onOpenChange,
@@ -56,12 +53,19 @@ export function BudgetForm({
   existingCategoryIds = [],
 }: BudgetFormProps) {
   const { t } = useTranslation();
+  const { getMonthName } = useFormatters();
+  const MONTHS = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: getMonthName(i + 1) })),
+    [getMonthName],
+  );
   const { data: categories } = useCategories();
   const upsertBudget = useUpsertBudget();
 
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     reset,
@@ -109,15 +113,19 @@ export function BudgetForm({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="amount">{t('budgets.amount')}</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              aria-invalid={!!errors.amount}
-              aria-describedby={errors.amount ? 'budget-amount-error' : undefined}
-              required
-              {...register('amount')}
+            <Controller
+              control={control}
+              name="amount"
+              render={({ field }) => (
+                <CurrencyInput
+                  id="amount"
+                  value={field.value || 0}
+                  onChange={field.onChange}
+                  aria-invalid={!!errors.amount}
+                  aria-describedby={errors.amount ? 'budget-amount-error' : undefined}
+                  required
+                />
+              )}
             />
             {errors.amount && (
               <p id="budget-amount-error" className="text-sm text-destructive">

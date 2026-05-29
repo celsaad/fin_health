@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import Card from '../Card';
-import { getShortMonthName } from '@fin-health/shared/format';
+import { useFormatters } from '../../hooks/useFormatters';
 import { FontFamily, FontSize, Spacing } from '../../constants/theme';
 import type { TrendItem } from '../../types/dashboard';
 
@@ -16,6 +16,7 @@ const OPACITY_RAMP = [0.25, 0.4, 0.55, 0.7, 0.85, 1.0];
 export default function TrendChart({ trend }: TrendChartProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { getShortMonthName } = useFormatters();
 
   const maxBar = Math.max(...trend.map((item) => Math.max(item.income || 0, item.expense || 0)), 1);
 

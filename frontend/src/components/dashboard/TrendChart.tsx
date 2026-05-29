@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import type { TrendData } from '@/hooks/useDashboard';
-import { formatCurrency, getShortMonthName } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface TrendChartProps {
   trend: TrendData[];
@@ -24,6 +24,7 @@ function CustomTooltip({
   payload?: TooltipPayloadItem[];
   label?: string;
 }) {
+  const { formatCurrency } = useFormatters();
   if (active && payload && payload.length > 0) {
     return (
       <div className="rounded-lg bg-white/70 p-3 shadow-xl backdrop-blur-xl dark:bg-card/70">
@@ -44,6 +45,7 @@ const EXPENSE_COLOR = '#f87171';
 
 export function TrendChart({ trend, className }: TrendChartProps) {
   const { t } = useTranslation();
+  const { getShortMonthName } = useFormatters();
 
   const chartData = trend.map((item, index) => ({
     ...item,

@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import { getMonthName, getShortMonthName } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface DateRangeSelectorProps {
   month: number;
@@ -20,6 +20,7 @@ function getNextMonth(m: number, y: number) {
 }
 
 export function DateRangeSelector({ month, year, onChange }: DateRangeSelectorProps) {
+  const { getMonthName, getShortMonthName } = useFormatters();
   const [dir, setDir] = useState<'left' | 'right'>('right');
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);

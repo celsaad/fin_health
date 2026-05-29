@@ -7,6 +7,7 @@ export const createTransactionSchema = z.object({
     .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
       message: 'Amount must be a positive number',
     }),
+  currency: z.string().length(3).toUpperCase().default('USD'),
   type: z.enum(['expense', 'income']),
   description: z.string().min(1, 'Description is required').max(255),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), {
@@ -25,6 +26,7 @@ export const updateTransactionSchema = z.object({
       message: 'Amount must be a positive number',
     })
     .optional(),
+  currency: z.string().length(3).toUpperCase().optional(),
   type: z.enum(['expense', 'income']).optional(),
   description: z.string().min(1).max(255).optional(),
   date: z

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import Card from '../Card';
-import { formatCurrency, formatPercent } from '@fin-health/shared/format';
+import { useFormatters } from '../../hooks/useFormatters';
 import { CategoryColors, FontFamily, FontSize, Spacing } from '../../constants/theme';
 import type { BreakdownItem } from '../../types/dashboard';
 
@@ -14,6 +14,7 @@ interface SpendingAllocationProps {
 export default function SpendingAllocation({ breakdown }: SpendingAllocationProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { formatCurrency, formatPercent } = useFormatters();
   const totalSpent = breakdown.reduce((sum, b) => sum + b.total, 0);
 
   return (

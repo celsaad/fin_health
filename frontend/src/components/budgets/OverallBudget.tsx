@@ -3,7 +3,7 @@ import { Info } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { BudgetProgressBar } from '@/components/budgets/BudgetProgressBar';
 import type { Budget } from '@/hooks/useBudgets';
-import { formatCurrency, getMonthName } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface OverallBudgetProps {
   budgets: Budget[];
@@ -11,6 +11,7 @@ interface OverallBudgetProps {
 
 export function OverallBudget({ budgets }: OverallBudgetProps) {
   const { t } = useTranslation();
+  const { formatCurrency, getMonthName } = useFormatters();
   const overallBudget = budgets.find((b) => b.categoryId === null);
   const categoryBudgets = budgets.filter((b) => b.categoryId !== null);
 

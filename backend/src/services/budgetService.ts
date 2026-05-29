@@ -1,5 +1,6 @@
 import { Decimal } from '@prisma/client/runtime/library';
 import prisma from '../lib/prisma';
+import { getRatePerUsd } from './exchangeRate';
 
 interface BudgetWithSpent {
   id: string;
@@ -18,6 +19,7 @@ export async function getBudgetsWithSpent(
   userId: string,
   month: number,
   year: number,
+  userCurrency: string,
 ): Promise<BudgetWithSpent[]> {
   // Get budgets matching the requested month/year OR recurring budgets (month=0, year=0)
   const budgets = await prisma.budget.findMany({
@@ -57,27 +59,34 @@ export async function getBudgetsWithSpent(
       deletedAt: null,
       date: { gte: startDate, lte: endDate },
     },
-    _sum: { amount: true },
+    _sum: { amountUsd: true },
   });
 
   const expensesByCategory = new Map<string, Decimal>();
   let overallSpent = new Decimal(0);
   for (const e of expenses) {
-    if (e._sum.amount) {
-      expensesByCategory.set(e.categoryId, e._sum.amount);
-      overallSpent = overallSpent.add(e._sum.amount);
+    if (e._sum.amountUsd) {
+      expensesByCategory.set(e.categoryId, e._sum.amountUsd);
+      overallSpent = overallSpent.add(e._sum.amountUsd);
     }
   }
+
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
+  const toDisplay = (d: Decimal) => d.mul(rate);
+  const displayByCategory = new Map<string, Decimal>(
+    [...expensesByCategory.entries()].map(([k, v]) => [k, toDisplay(v)]),
+  );
+  const displayOverall = toDisplay(overallSpent);
 
   return mergedBudgets.map((budget) => {
     let spent: Decimal;
 
     if (budget.categoryId) {
       // Category-specific budget
-      spent = expensesByCategory.get(budget.categoryId) || new Decimal(0);
+      spent = displayByCategory.get(budget.categoryId) || new Decimal(0);
     } else {
       // Overall budget
-      spent = overallSpent;
+      spent = displayOverall;
     }
 
     const remaining = budget.amount.sub(spent);

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { useSearchParams } from 'react-router-dom';
 import {
   LogOut,
@@ -29,9 +31,8 @@ export default function Settings() {
   const { theme, setTheme } = useTheme();
   const { isPro, isFree, isTrialing, isCanceling, currentPeriodEnd, trialEndsAt } = usePlan();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [currency, setCurrency] = useState(
-    () => localStorage.getItem('preferredCurrency') || 'USD',
-  );
+  const [language, setLanguage] = useState(() => i18n.language);
+  const { setCurrency: saveAndBroadcastCurrency } = useUserPreferences();
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('yearly');
   const [upgrading, setUpgrading] = useState(false);
   const [managingBilling, setManagingBilling] = useState(false);
@@ -106,9 +107,16 @@ export default function Settings() {
     }
   };
 
-  const handleSaveCurrency = () => {
-    localStorage.setItem('preferredCurrency', currency);
-    toast.success(t('settings.currencySaved'));
+  const handleLanguageChange = (lang: string) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem('preferredLanguage', lang);
+    setLanguage(lang);
+    const localeCurrency = lang.startsWith('pt') ? 'BRL' : 'USD';
+    saveAndBroadcastCurrency(localeCurrency);
+    api.patch('/auth/me', { currency: localeCurrency }).catch(() => {
+      /* best-effort */
+    });
+    toast.success(t('settings.languageSaved'));
   };
 
   const initial = user?.name?.charAt(0).toUpperCase() ?? '?';
@@ -240,18 +248,25 @@ export default function Settings() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="currency">{t('settings.currency')}</Label>
-            <div className="flex gap-2">
-              <Input
-                id="currency"
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value)}
-                placeholder="USD"
-                className="max-w-[120px]"
-              />
-              <Button onClick={handleSaveCurrency}>{t('common.save')}</Button>
+            <Label>{t('settings.language')}</Label>
+            <div className="inline-flex rounded-lg border border-border p-1 gap-1">
+              {[
+                { value: 'en', label: t('settings.languageEn') },
+                { value: 'pt-BR', label: t('settings.languagePtBR') },
+              ].map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => handleLanguageChange(value)}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    language === value
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground">{t('settings.currencyHint')}</p>
           </div>
         </CardContent>
       </Card>

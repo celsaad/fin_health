@@ -99,12 +99,15 @@ model Subcategory {
 }
 
 model Transaction {
-  id          String       @id @default(cuid())
-  amount      Decimal      @db.Decimal(12, 2)
-  type        CategoryType
-  description String
-  date        DateTime
-  notes       String?
+  id           String       @id @default(cuid())
+  amount       Decimal      @db.Decimal(12, 2)
+  currency     String       @default("USD")
+  amountUsd    Decimal      @default(0) @db.Decimal(12, 4)
+  exchangeRate Decimal      @default(1) @db.Decimal(12, 6)
+  type         CategoryType
+  description  String
+  date         DateTime
+  notes        String?
 
   categoryId    String
   category      Category     @relation(fields: [categoryId], references: [id])

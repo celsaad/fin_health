@@ -16,7 +16,8 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../contexts/ThemeContext';
 import { getTransactions, deleteTransaction } from '../services/transactions';
 import { getCategories } from '../services/categories';
-import { formatAmount, formatDateGroupHeader } from '@fin-health/shared/format';
+import { formatDateGroupHeader } from '@fin-health/shared/format';
+import { useFormatters } from '../hooks/useFormatters';
 import CategoryIcon from '../components/CategoryIcon';
 import Badge from '../components/Badge';
 import Card from '../components/Card';
@@ -29,6 +30,7 @@ import type { Transaction, CategoryType } from '@fin-health/shared/types';
 
 export default function TransactionsScreen() {
   const { colors } = useTheme();
+  const { formatAmount } = useFormatters();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<CategoryType | ''>('');

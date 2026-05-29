@@ -1,0 +1,9 @@
+{
+  "notFound": "Registro não encontrado",
+  "validationFailed": "Falha na validação",
+  "duplicateRecord": "Um registro com este(s) {{fields}} já existe",
+  "relatedNotFound": "Registro relacionado não encontrado",
+  "databaseError": "Erro de banco de dados",
+  "invalidData": "Dados inválidos fornecidos",
+  "internalError": "Erro interno do servidor"
+}

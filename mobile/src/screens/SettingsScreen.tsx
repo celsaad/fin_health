@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
+import i18n from '../lib/i18n';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   User,
@@ -23,8 +26,16 @@ import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const { colors, preference, setPreference } = useTheme();
+  const [language, setLanguage] = useState(i18n.language);
+
+  function handleLanguageChange(lang: string) {
+    i18n.changeLanguage(lang);
+    AsyncStorage.setItem('preferredLanguage', lang);
+    setLanguage(lang);
+  }
 
   const initials =
     user?.name
@@ -110,6 +121,34 @@ export default function SettingsScreen() {
                   onPress={() => setPreference(key)}
                 >
                   <Icon size={16} color={isActive ? '#fff' : colors.textSecondary} />
+                  <Text
+                    style={[styles.themeLabel, { color: isActive ? '#fff' : colors.textSecondary }]}
+                  >
+                    {label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border, marginVertical: 12 }]} />
+
+          <Text style={[styles.prefLabel, { color: colors.text }]}>{t('settings.language')}</Text>
+          <View style={[styles.themeSelector, { marginBottom: Spacing.lg }]}>
+            {[
+              { key: 'en', label: t('settings.languageEn') },
+              { key: 'pt-BR', label: t('settings.languagePtBR') },
+            ].map(({ key, label }) => {
+              const isActive = language === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  style={[
+                    styles.themeOption,
+                    { backgroundColor: isActive ? colors.primary : 'transparent' },
+                  ]}
+                  onPress={() => handleLanguageChange(key)}
+                >
                   <Text
                     style={[styles.themeLabel, { color: isActive ? '#fff' : colors.textSecondary }]}
                   >

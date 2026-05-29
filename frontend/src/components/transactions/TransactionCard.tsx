@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { Transaction } from '@/hooks/useTransactions';
-import { formatCurrency, formatDateGroupHeader } from '@fin-health/shared/format';
+import { formatDateGroupHeader } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 import { useTranslation } from 'react-i18next';
 
 interface TransactionCardProps {
@@ -18,6 +19,7 @@ export const TransactionCard = memo(function TransactionCard({
   onEdit,
   onDelete,
 }: TransactionCardProps) {
+  const { formatCurrency } = useFormatters();
   const config = getCategoryIcon(
     transaction.category.name,
     transaction.category.icon,

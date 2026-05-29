@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import type { CategorySpending } from '@/hooks/useDashboard';
 import type { Budget } from '@/hooks/useBudgets';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 const DOT_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#a855f6', '#f43f5e', '#0ea5e9', '#64748b'];
 
@@ -29,6 +29,7 @@ export function BudgetComplianceTable({
   className,
 }: BudgetComplianceTableProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
 
   // Build a lookup for category index in spending breakdown (for color dots)
   const sortedCategories = [...categories].sort((a, b) => b.total - a.total);

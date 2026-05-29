@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
-import { getShortMonthName } from '@fin-health/shared/format';
+import { useFormatters } from '../hooks/useFormatters';
 import { FontSize, Spacing } from '../constants/theme';
 
 interface MonthSelectorProps {
@@ -16,6 +16,7 @@ export default function MonthSelector({
   onSelect,
 }: MonthSelectorProps) {
   const { colors } = useTheme();
+  const { getShortMonthName } = useFormatters();
   const scrollRef = useRef<ScrollView>(null);
   const now = new Date();
   const currentMonth = now.getMonth() + 1;

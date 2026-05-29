@@ -12,6 +12,7 @@ import { AuthProvider } from '@/lib/auth';
 import { ThemeProvider } from '@/lib/theme';
 import { ToastProvider } from '@/providers/ToastProvider';
 import { TransactionFormProvider } from '@/providers/TransactionFormProvider';
+import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
 
 initSentry();
 
@@ -25,12 +26,14 @@ createRoot(document.getElementById('root')!, {
       <BrowserRouter>
         <QueryProvider>
           <ThemeProvider>
-            <AuthProvider>
-              <TransactionFormProvider>
-                <App />
-                <ToastProvider />
-              </TransactionFormProvider>
-            </AuthProvider>
+            <UserPreferencesProvider>
+              <AuthProvider>
+                <TransactionFormProvider>
+                  <App />
+                  <ToastProvider />
+                </TransactionFormProvider>
+              </AuthProvider>
+            </UserPreferencesProvider>
           </ThemeProvider>
         </QueryProvider>
       </BrowserRouter>

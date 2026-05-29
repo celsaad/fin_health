@@ -6,7 +6,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import Card from '../Card';
 import CategoryIcon from '../CategoryIcon';
 import LoadingSkeleton from '../LoadingSkeleton';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '../../hooks/useFormatters';
 import { FontFamily, FontSize, Spacing } from '../../constants/theme';
 import type { Transaction } from '@fin-health/shared/types';
 
@@ -18,6 +18,7 @@ interface RecentPeaksProps {
 export default function RecentPeaks({ transactions, isLoading }: RecentPeaksProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
 
   return (
     <Card style={styles.container}>
