@@ -14,6 +14,8 @@ import { toUsd } from '../services/exchangeRate';
 function serializeTransaction<
   T extends {
     amount: { toString(): string };
+    amountUsd: { toString(): string };
+    exchangeRate: { toString(): string };
     date: Date;
     createdAt: Date;
     updatedAt: Date;
@@ -23,6 +25,8 @@ function serializeTransaction<
   return {
     ...t,
     amount: Number(t.amount),
+    amountUsd: Number(t.amountUsd),
+    exchangeRate: Number(t.exchangeRate),
     date: t.date.toISOString().split('T')[0],
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),

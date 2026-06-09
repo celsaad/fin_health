@@ -179,8 +179,8 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
                   <SegmentedControl
                     options={['BRL', 'USD', 'EUR']}
                     selectedIndex={
-                      ['BRL', 'USD', 'EUR'].indexOf(value) >= 0
-                        ? ['BRL', 'USD', 'EUR'].indexOf(value)
+                      ['BRL', 'USD', 'EUR'].indexOf(value ?? 'USD') >= 0
+                        ? ['BRL', 'USD', 'EUR'].indexOf(value ?? 'USD')
                         : 0
                     }
                     onSelect={(i) => onChange(['BRL', 'USD', 'EUR'][i])}
