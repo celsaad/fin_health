@@ -47,10 +47,22 @@ const transactionSchema = z.object({
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
+interface PrefillData {
+  amount?: string;
+  currency?: string;
+  type?: 'expense' | 'income';
+  description?: string;
+  date?: string;
+  categoryName?: string;
+  subcategoryName?: string;
+  notes?: string;
+}
+
 interface TransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction?: Transaction;
+  prefillData?: PrefillData;
   onSuccess?: () => void;
 }
 
@@ -58,6 +70,7 @@ export function TransactionForm({
   open,
   onOpenChange,
   transaction,
+  prefillData,
   onSuccess,
 }: TransactionFormProps) {
   const { t } = useTranslation();
@@ -104,6 +117,17 @@ export function TransactionForm({
         subcategoryName: transaction.subcategory?.name ?? '',
         notes: transaction.notes ?? '',
       });
+    } else if (open && !transaction && prefillData) {
+      reset({
+        amount: prefillData.amount ? parseFloat(prefillData.amount) : 0,
+        type: prefillData.type ?? 'expense',
+        currency: prefillData.currency ?? (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
+        description: prefillData.description ?? '',
+        date: prefillData.date ?? format(new Date(), 'yyyy-MM-dd'),
+        categoryName: prefillData.categoryName ?? '',
+        subcategoryName: prefillData.subcategoryName ?? '',
+        notes: prefillData.notes ?? '',
+      });
     } else if (open && !transaction) {
       reset({
         amount: 0,
@@ -116,7 +140,7 @@ export function TransactionForm({
         notes: '',
       });
     }
-  }, [open, transaction, reset]);
+  }, [open, transaction, prefillData, reset]);
 
   const categoryNames = useMemo(() => {
     return categories.filter((c) => !selectedType || c.type === selectedType).map((c) => c.name);

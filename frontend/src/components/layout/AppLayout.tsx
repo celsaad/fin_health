@@ -9,7 +9,7 @@ import { useTransactionForm } from '@/providers/TransactionFormProvider';
 
 export function AppLayout() {
   const { t } = useTranslation();
-  const { isOpen, closeForm } = useTransactionForm();
+  const { isOpen, prefillData, closeForm } = useTransactionForm();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -28,7 +28,11 @@ export function AppLayout() {
       </div>
       <BottomNav />
       <AddTransactionFAB />
-      <TransactionForm open={isOpen} onOpenChange={closeForm} />
+      <TransactionForm
+        open={isOpen}
+        onOpenChange={closeForm}
+        prefillData={prefillData ?? undefined}
+      />
     </div>
   );
 }

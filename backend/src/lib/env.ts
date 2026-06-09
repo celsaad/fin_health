@@ -18,6 +18,10 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  RECEIPT_PROVIDER: z.enum(['anthropic', 'openai', 'qwen']).default('anthropic'),
+  ANTHROPIC_API_KEY: z.string().default(''),
+  OPENAI_API_KEY: z.string().default(''),
+  DASHSCOPE_API_KEY: z.string().default(''),
 });
 
 export const env = envSchema.parse(process.env);
