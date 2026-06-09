@@ -10,7 +10,7 @@ interface User {
   plan: UserPlan;
 }
 
-const DEFAULT_FEATURE_FLAGS: FeatureFlags = { billing: true };
+const DEFAULT_FEATURE_FLAGS: FeatureFlags = { billing: true, receiptScanning: false };
 
 interface AuthContextType {
   user: User | null;

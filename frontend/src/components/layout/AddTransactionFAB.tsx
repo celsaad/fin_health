@@ -4,24 +4,28 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useTransactionForm } from '@/providers/TransactionFormProvider';
 import { ReceiptScanner } from '@/components/transactions/ReceiptScanner';
+import { useAuth } from '@/lib/auth';
 
 export function AddTransactionFAB() {
   const { t } = useTranslation();
   const { openForm } = useTransactionForm();
+  const { featureFlags } = useAuth();
   const [scannerOpen, setScannerOpen] = useState(false);
 
   return (
     <>
       <div className="fixed bottom-24 right-6 flex flex-col items-end gap-2 lg:bottom-6">
-        <Button
-          onClick={() => setScannerOpen(true)}
-          size="icon"
-          variant="secondary"
-          className="rounded-full shadow-md size-11"
-          aria-label="Scan receipt"
-        >
-          <Camera className="size-4" />
-        </Button>
+        {featureFlags.receiptScanning && (
+          <Button
+            onClick={() => setScannerOpen(true)}
+            size="icon"
+            variant="secondary"
+            className="rounded-full shadow-md size-11"
+            aria-label="Scan receipt"
+          >
+            <Camera className="size-4" />
+          </Button>
+        )}
         <Button
           onClick={openForm}
           size="lg"
@@ -32,7 +36,9 @@ export function AddTransactionFAB() {
         </Button>
       </div>
 
-      <ReceiptScanner open={scannerOpen} onOpenChange={setScannerOpen} />
+      {featureFlags.receiptScanning && (
+        <ReceiptScanner open={scannerOpen} onOpenChange={setScannerOpen} />
+      )}
     </>
   );
 }

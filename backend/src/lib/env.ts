@@ -18,6 +18,7 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  FEATURE_RECEIPT_SCANNING: z.coerce.boolean().default(false),
   RECEIPT_PROVIDER: z.enum(['anthropic', 'openai', 'qwen']).default('anthropic'),
   ANTHROPIC_API_KEY: z.string().default(''),
   OPENAI_API_KEY: z.string().default(''),

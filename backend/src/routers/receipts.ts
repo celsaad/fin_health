@@ -6,6 +6,10 @@ import { env } from '../lib/env';
 
 export const receiptsRouter = router({
   scan: proProcedure.input(scanReceiptInputSchema).mutation(async ({ input }) => {
+    if (!env.FEATURE_RECEIPT_SCANNING) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'RECEIPT_SCANNING_DISABLED' });
+    }
+
     const hasKey =
       (env.RECEIPT_PROVIDER === 'anthropic' && env.ANTHROPIC_API_KEY) ||
       (env.RECEIPT_PROVIDER === 'openai' && env.OPENAI_API_KEY) ||

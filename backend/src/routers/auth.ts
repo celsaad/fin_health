@@ -21,7 +21,7 @@ const FREE_PLAN: UserPlan = {
 };
 
 function featureFlags(): FeatureFlags {
-  return { billing: env.BILLING_ENABLED };
+  return { billing: env.BILLING_ENABLED, receiptScanning: env.FEATURE_RECEIPT_SCANNING };
 }
 
 // Precomputed bcrypt hash (cost 12) of an arbitrary password, used to run a
