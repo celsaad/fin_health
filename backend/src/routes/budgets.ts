@@ -22,7 +22,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       throw new AppError('Valid month (1-12) and year are required', 400);
     }
 
-    const budgets = await getBudgetsWithSpent(userId, month, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+    const budgets = await getBudgetsWithSpent(userId, month, year, userCurrency);
 
     res.json({ budgets });
   } catch (err) {

@@ -1,11 +1,13 @@
 import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import type { Budget } from '@fin-health/shared/types';
 
 export type { Budget };
 
 export function useBudgets(month: number, year: number) {
-  const result = trpc.budgets.list.useQuery({ month, year });
+  const { currency } = useUserPreferences();
+  const result = trpc.budgets.list.useQuery({ month, year, currency });
   return { ...result, data: result.data?.budgets };
 }
 

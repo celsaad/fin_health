@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BreakdownItem } from '@/hooks/useDashboard';
-import { formatCurrency, formatPercent } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 const COLORS = [
   '#6366f1',
@@ -24,6 +24,7 @@ interface TooltipPayloadItem {
 }
 
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayloadItem[] }) {
+  const { formatCurrency, formatPercent } = useFormatters();
   if (active && payload && payload.length > 0) {
     const data = payload[0].payload;
     return (
@@ -44,6 +45,7 @@ interface ExpensePieChartProps {
 
 export function ExpensePieChart({ breakdown }: ExpensePieChartProps) {
   const { t } = useTranslation();
+  const { formatCurrency, formatPercent } = useFormatters();
 
   if (breakdown.length === 0) {
     return (

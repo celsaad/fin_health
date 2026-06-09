@@ -156,6 +156,25 @@ router.get('/me', authMiddleware, async (req: Request, res: Response, next: Next
   }
 });
 
+// PATCH /api/auth/me — update user profile preferences
+router.patch('/me', authMiddleware, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+    const { currency } = req.body;
+
+    if (currency && typeof currency === 'string' && /^[A-Z]{3}$/.test(currency)) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { currency: currency.toUpperCase() },
+      });
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/auth/refresh
 router.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
   try {

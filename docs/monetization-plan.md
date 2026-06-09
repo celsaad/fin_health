@@ -1,8 +1,16 @@
+---
+title: FinHealth Monetization Plan
+tags: [monetization, business, freemium, stripe, revenuecat, planning]
+type: plan
+---
+
 # FinHealth Monetization Plan
 
 ## Executive Summary
 
 FinHealth is a manual expense tracker with web and mobile clients. The Spending Insights feature establishes the first clear value differentiation between free and paid usage. This document outlines a phased monetization strategy starting with a freemium model, progressing toward subscription revenue, and identifies the implementation work required at each stage.
+
+> [!NOTE] Related: [launch-plan](./launch-plan.md) for deployment steps, [backend — Subscription & Billing](./backend.md#subscription--billing) for the technical billing implementation.
 
 ---
 
@@ -146,6 +154,8 @@ The backend needs a way to know what a user can access.
 
 ## 4. What NOT to Do
 
+> [!WARNING] Anti-patterns that kill finance apps
+
 - **Don't gate basic tracking.** The free tier must be genuinely useful for expense logging. Users who can't track won't generate data, and without data there's nothing to upsell.
 - **Don't show ads.** Ads in a finance app destroy trust. The data is sensitive.
 - **Don't limit transaction count.** Artificial limits feel punitive and push users to competitors.
@@ -179,11 +189,11 @@ Assumptions: $4.99/month average (mix of monthly and annual), 5% monthly churn, 
 
 ## 7. Technical Dependencies
 
-| Dependency | Purpose | Cost |
-|------------|---------|------|
-| Stripe | Web payments | 2.9% + $0.30 per transaction |
-| RevenueCat | Mobile IAP management | Free up to $2,500 MTR, then 1% |
-| SendGrid | Transactional email (trial reminders, digests) | Free up to 100/day |
-| Vercel / Railway | Hosting (already in place) | Existing cost |
+| Dependency       | Purpose                                        | Cost                           |
+| ---------------- | ---------------------------------------------- | ------------------------------ |
+| Stripe           | Web payments                                   | 2.9% + $0.30 per transaction   |
+| RevenueCat       | Mobile IAP management                          | Free up to $2,500 MTR, then 1% |
+| SendGrid         | Transactional email (trial reminders, digests) | Free up to 100/day             |
+| Vercel / Railway | Hosting (already in place)                     | Existing cost                  |
 
 No new backend dependencies for Phase 1 (entitlements). Stripe SDK and RevenueCat SDK are the only additions.

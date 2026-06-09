@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { BudgetProgressBar } from '@/components/budgets/BudgetProgressBar';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import { useDeleteBudget, type Budget } from '@/hooks/useBudgets';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface BudgetCardProps {
   budget: Budget;
@@ -16,6 +16,7 @@ interface BudgetCardProps {
 
 export const BudgetCard = memo(function BudgetCard({ budget }: BudgetCardProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteBudget = useDeleteBudget();
 

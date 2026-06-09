@@ -18,9 +18,20 @@ function serializeBudget<
 
 export const budgetsRouter = router({
   list: protectedProcedure
-    .input(z.object({ month: z.number().int().min(1).max(12), year: z.number().int() }))
+    .input(
+      z.object({
+        month: z.number().int().min(1).max(12),
+        year: z.number().int(),
+        currency: z.string().length(3).toUpperCase().default('USD'),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      const budgets = await getBudgetsWithSpent(ctx.userId, input.month, input.year);
+      const budgets = await getBudgetsWithSpent(
+        ctx.userId,
+        input.month,
+        input.year,
+        input.currency,
+      );
       return { budgets: budgets.map(serializeBudget) };
     }),
 

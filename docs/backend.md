@@ -1,3 +1,9 @@
+---
+title: FinHealth Backend — Technical Documentation
+tags: [backend, architecture, api, trpc, prisma, documentation]
+type: reference
+---
+
 # FinHealth Backend — Technical Documentation
 
 ## Table of Contents
@@ -609,6 +615,8 @@ Produces up to 5 rule-based insights for the requested month:
 | Dashboard | Yes | Yes |
 | AI Insights | No | **Yes** |
 
+> [!NOTE] See [monetization-plan](./monetization-plan.md) for the full pricing strategy and phased rollout plan.
+
 ### Stripe Integration Flow
 
 ```mermaid
@@ -781,3 +789,5 @@ flowchart TD
 ### Health Check
 
 `GET /api/health` runs a lightweight `SELECT 1` via Prisma. Returns `200 {"status":"ok"}` on success or `503 {"status":"unhealthy","error":"..."}` if the database is unreachable. Use this as the liveness/readiness probe in any container orchestrator.
+
+> [!TIP] See [launch-plan](./launch-plan.md) for full deployment steps on Vercel + Railway.

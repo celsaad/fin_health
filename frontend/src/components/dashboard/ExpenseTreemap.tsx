@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent } from '@/components/ui/card';
 import type { CategorySpending } from '@/hooks/useDashboard';
-import { formatCurrency, formatPercent } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 const COLORS = [
   'bg-indigo-500',
@@ -22,6 +22,7 @@ interface ExpenseTreemapProps {
 
 export function ExpenseTreemap({ categories, className }: ExpenseTreemapProps) {
   const { t } = useTranslation();
+  const { formatCurrency, formatPercent } = useFormatters();
 
   if (categories.length === 0) {
     return (

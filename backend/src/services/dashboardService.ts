@@ -1,5 +1,6 @@
 import { Decimal } from '@prisma/client/runtime/library';
 import prisma from '../lib/prisma';
+import { getRatePerUsd } from './exchangeRate';
 
 interface MonthlySummary {
   totalIncome: string;
@@ -36,6 +37,7 @@ export async function getSummary(
   userId: string,
   month: number,
   year: number,
+  userCurrency: string,
 ): Promise<MonthlySummary> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -49,23 +51,26 @@ export async function getSummary(
   const [incomeAgg, expenseAgg, count] = await Promise.all([
     prisma.transaction.aggregate({
       where: { ...baseWhere, type: 'income' },
-      _sum: { amount: true },
+      _sum: { amountUsd: true },
     }),
     prisma.transaction.aggregate({
       where: { ...baseWhere, type: 'expense' },
-      _sum: { amount: true },
+      _sum: { amountUsd: true },
     }),
     prisma.transaction.count({ where: baseWhere }),
   ]);
 
-  const totalIncome = incomeAgg._sum.amount || new Decimal(0);
-  const totalExpenses = expenseAgg._sum.amount || new Decimal(0);
+  const totalIncome = incomeAgg._sum.amountUsd || new Decimal(0);
+  const totalExpenses = expenseAgg._sum.amountUsd || new Decimal(0);
   const net = totalIncome.sub(totalExpenses);
 
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
+  const toDisplay = (d: Decimal) => d.mul(rate).toDecimalPlaces(2).toString();
+
   return {
-    totalIncome: totalIncome.toString(),
-    totalExpenses: totalExpenses.toString(),
-    net: net.toString(),
+    totalIncome: toDisplay(totalIncome),
+    totalExpenses: toDisplay(totalExpenses),
+    net: toDisplay(net),
     transactionCount: count,
   };
 }
@@ -74,6 +79,7 @@ export async function getMonthlyBreakdown(
   userId: string,
   month: number,
   year: number,
+  userCurrency: string,
 ): Promise<CategoryBreakdown[]> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -86,8 +92,8 @@ export async function getMonthlyBreakdown(
       deletedAt: null,
       date: { gte: startDate, lte: endDate },
     },
-    _sum: { amount: true },
-    orderBy: { _sum: { amount: 'desc' } },
+    _sum: { amountUsd: true },
+    orderBy: { _sum: { amountUsd: 'desc' } },
   });
 
   // Get category names and appearance
@@ -98,14 +104,16 @@ export async function getMonthlyBreakdown(
   });
   const categoryMap = new Map(categories.map((c) => [c.id, c]));
 
-  // Calculate total for percentages
+  // Calculate total for percentages (in USD — ratios don't need conversion)
   const total = expenses.reduce(
-    (sum, e) => sum.add(e._sum.amount || new Decimal(0)),
+    (sum, e) => sum.add(e._sum.amountUsd || new Decimal(0)),
     new Decimal(0),
   );
 
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
+
   return expenses.map((e) => {
-    const amount = e._sum.amount || new Decimal(0);
+    const amount = e._sum.amountUsd || new Decimal(0);
     const percentage = total.isZero() ? 0 : parseFloat(amount.div(total).mul(100).toFixed(1));
     const cat = categoryMap.get(e.categoryId);
 
@@ -114,13 +122,17 @@ export async function getMonthlyBreakdown(
       categoryName: cat?.name || 'Unknown',
       icon: cat?.icon ?? null,
       color: cat?.color ?? null,
-      total: parseFloat(amount.toString()),
+      total: parseFloat(amount.mul(rate).toString()),
       percentage,
     };
   });
 }
 
-export async function getYearlyOverview(userId: string, year: number): Promise<MonthlyTotal[]> {
+export async function getYearlyOverview(
+  userId: string,
+  year: number,
+  userCurrency: string,
+): Promise<MonthlyTotal[]> {
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
 
@@ -128,7 +140,7 @@ export async function getYearlyOverview(userId: string, year: number): Promise<M
     SELECT
       EXTRACT(MONTH FROM "date")::int AS "month",
       "type"::text AS "type",
-      COALESCE(SUM("amount"), 0) AS "total"
+      COALESCE(SUM("amountUsd"), 0) AS "total"
     FROM "Transaction"
     WHERE "userId" = ${userId}
       AND "deletedAt" IS NULL
@@ -165,7 +177,13 @@ export async function getYearlyOverview(userId: string, year: number): Promise<M
     });
   }
 
-  return months;
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
+  return months.map((m) => ({
+    ...m,
+    income: new Decimal(m.income).mul(rate).toDecimalPlaces(2).toString(),
+    expenses: new Decimal(m.expenses).mul(rate).toDecimalPlaces(2).toString(),
+    net: new Decimal(m.net).mul(rate).toDecimalPlaces(2).toString(),
+  }));
 }
 
 interface SubcategoryBreakdown {
@@ -187,6 +205,7 @@ export async function getCategoryBreakdown(
   userId: string,
   month: number,
   year: number,
+  userCurrency: string,
 ): Promise<CategorySpending[]> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
@@ -199,7 +218,7 @@ export async function getCategoryBreakdown(
       deletedAt: null,
       date: { gte: startDate, lte: endDate },
     },
-    _sum: { amount: true },
+    _sum: { amountUsd: true },
   });
 
   if (expenses.length === 0) return [];
@@ -227,9 +246,9 @@ export async function getCategoryBreakdown(
   const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
   const subcategoryMap = new Map(subcategories.map((s) => [s.id, s.name]));
 
-  // Overall total
+  // Overall total (in USD — used only for percentage ratios)
   const overallTotal = expenses.reduce(
-    (sum, e) => sum.add(e._sum.amount || new Decimal(0)),
+    (sum, e) => sum.add(e._sum.amountUsd || new Decimal(0)),
     new Decimal(0),
   );
 
@@ -240,7 +259,7 @@ export async function getCategoryBreakdown(
   >();
 
   for (const e of expenses) {
-    const amount = e._sum.amount || new Decimal(0);
+    const amount = e._sum.amountUsd || new Decimal(0);
     let group = categoryGroups.get(e.categoryId);
     if (!group) {
       group = { total: new Decimal(0), subs: [] };
@@ -249,6 +268,8 @@ export async function getCategoryBreakdown(
     group.total = group.total.add(amount);
     group.subs.push({ subcategoryId: e.subcategoryId, total: amount });
   }
+
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
 
   // Build result sorted by category total descending
   const result: CategorySpending[] = [...categoryGroups.entries()]
@@ -265,7 +286,7 @@ export async function getCategoryBreakdown(
           subcategoryName: sub.subcategoryId
             ? subcategoryMap.get(sub.subcategoryId) || 'Unknown'
             : 'Uncategorized',
-          total: parseFloat(sub.total.toString()),
+          total: parseFloat(sub.total.mul(rate).toString()),
           percentage: group.total.isZero()
             ? 0
             : parseFloat(sub.total.div(group.total).mul(100).toFixed(1)),
@@ -274,7 +295,7 @@ export async function getCategoryBreakdown(
       return {
         categoryId,
         categoryName: categoryMap.get(categoryId) || 'Unknown',
-        total: parseFloat(group.total.toString()),
+        total: parseFloat(group.total.mul(rate).toString()),
         percentage: categoryPercentage,
         subcategories: subcats,
       };
@@ -294,7 +315,12 @@ export interface Insight {
   metadata?: Record<string, unknown>;
 }
 
-export async function getInsights(userId: string, month: number, year: number): Promise<Insight[]> {
+export async function getInsights(
+  userId: string,
+  month: number,
+  year: number,
+  _userCurrency: string,
+): Promise<Insight[]> {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -315,17 +341,17 @@ export async function getInsights(userId: string, month: number, year: number): 
     prisma.transaction.groupBy({
       by: ['categoryId'],
       where: { ...baseWhere, date: { gte: startDate, lte: endDate } },
-      _sum: { amount: true },
+      _sum: { amountUsd: true },
     }),
     prisma.transaction.groupBy({
       by: ['categoryId'],
       where: { ...baseWhere, date: { gte: prevStartDate, lte: prevEndDate } },
-      _sum: { amount: true },
+      _sum: { amountUsd: true },
     }),
     prisma.transaction.groupBy({
       by: ['categoryId'],
       where: { ...baseWhere, date: { gte: rolling3Start, lte: rolling3End } },
-      _sum: { amount: true },
+      _sum: { amountUsd: true },
     }),
     prisma.budget.findMany({
       where: {
@@ -355,13 +381,13 @@ export async function getInsights(userId: string, month: number, year: number): 
   // Build lookup maps
   const toAmount = (d: Decimal | null) => parseFloat((d || new Decimal(0)).toString());
   const currentMap = new Map<string, number>(
-    currentExpenses.map((e) => [e.categoryId, toAmount(e._sum.amount)]),
+    currentExpenses.map((e) => [e.categoryId, toAmount(e._sum.amountUsd)]),
   );
   const prevMap = new Map<string, number>(
-    prevExpenses.map((e) => [e.categoryId, toAmount(e._sum.amount)]),
+    prevExpenses.map((e) => [e.categoryId, toAmount(e._sum.amountUsd)]),
   );
   const rollingMap = new Map<string, number>(
-    rollingExpenses.map((e) => [e.categoryId, toAmount(e._sum.amount) / 3]),
+    rollingExpenses.map((e) => [e.categoryId, toAmount(e._sum.amountUsd) / 3]),
   );
 
   // Budget lookup: categoryId → amount (null categoryId = overall budget)
@@ -514,7 +540,11 @@ export async function getInsights(userId: string, month: number, year: number): 
   return insights;
 }
 
-export async function getTrend(userId: string, months: number): Promise<TrendPoint[]> {
+export async function getTrend(
+  userId: string,
+  months: number,
+  userCurrency: string,
+): Promise<TrendPoint[]> {
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
   const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -526,7 +556,7 @@ export async function getTrend(userId: string, months: number): Promise<TrendPoi
       EXTRACT(MONTH FROM "date")::int AS "month",
       EXTRACT(YEAR FROM "date")::int AS "year",
       "type"::text AS "type",
-      COALESCE(SUM("amount"), 0) AS "total"
+      COALESCE(SUM("amountUsd"), 0) AS "total"
     FROM "Transaction"
     WHERE "userId" = ${userId}
       AND "deletedAt" IS NULL
@@ -585,5 +615,10 @@ export async function getTrend(userId: string, months: number): Promise<TrendPoi
     });
   }
 
-  return points;
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
+  return points.map((p) => ({
+    ...p,
+    income: new Decimal(p.income).mul(rate).toDecimalPlaces(2).toString(),
+    expenses: new Decimal(p.expenses).mul(rate).toDecimalPlaces(2).toString(),
+  }));
 }

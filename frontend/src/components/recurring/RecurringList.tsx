@@ -21,7 +21,7 @@ import {
   useToggleRecurring,
   type RecurringTransaction,
 } from '@/hooks/useRecurring';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface RecurringListProps {
   transactions: RecurringTransaction[];
@@ -30,6 +30,7 @@ interface RecurringListProps {
 
 export function RecurringList({ transactions, onEdit }: RecurringListProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteRecurring = useDeleteRecurring();
   const toggleRecurring = useToggleRecurring();

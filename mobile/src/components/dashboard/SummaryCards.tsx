@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import Card from '../Card';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '../../hooks/useFormatters';
 import { FontFamily, FontSize, Spacing, BorderRadius } from '../../constants/theme';
 import type { DashboardSummary } from '../../types/dashboard';
 
@@ -24,6 +24,7 @@ interface SummaryCardsProps {
 export default function SummaryCards({ summary, netChangePercent }: SummaryCardsProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
 
   return (
     <View style={styles.grid}>

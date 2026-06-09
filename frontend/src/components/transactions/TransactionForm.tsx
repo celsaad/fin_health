@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import i18n from '@/lib/i18n';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -35,6 +37,7 @@ const transactionSchema = z.object({
   type: z.enum(['expense', 'income'], {
     required_error: 'Type is required',
   }),
+  currency: z.string().length(3),
   description: z.string().min(1, 'Description is required'),
   date: z.string().min(1, 'Date is required'),
   categoryName: z.string().min(1, 'Category is required'),
@@ -67,6 +70,7 @@ export function TransactionForm({
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     watch,
     reset,
@@ -76,6 +80,7 @@ export function TransactionForm({
     defaultValues: {
       amount: 0,
       type: 'expense',
+      currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
       description: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       categoryName: '',
@@ -92,6 +97,7 @@ export function TransactionForm({
       reset({
         amount: transaction.amount,
         type: transaction.type,
+        currency: transaction.currency || (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
         description: transaction.description,
         date: format(new Date(transaction.date), 'yyyy-MM-dd'),
         categoryName: transaction.category.name,
@@ -102,6 +108,7 @@ export function TransactionForm({
       reset({
         amount: 0,
         type: 'expense',
+        currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
         description: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         categoryName: '',
@@ -150,25 +157,43 @@ export function TransactionForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="amount">{t('transactions.amount')}</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                aria-invalid={!!errors.amount}
-                aria-describedby={errors.amount ? 'amount-error' : undefined}
-                required
-                {...register('amount')}
+              <Controller
+                control={control}
+                name="amount"
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="amount"
+                    value={field.value || 0}
+                    onChange={field.onChange}
+                    aria-invalid={!!errors.amount}
+                    aria-describedby={errors.amount ? 'amount-error' : undefined}
+                    required
+                  />
+                )}
               />
               {errors.amount && (
                 <p id="amount-error" className="text-xs text-destructive">
                   {errors.amount.message}
                 </p>
               )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="currency">{t('transactions.currency')}</Label>
+              <Select value={watch('currency')} onValueChange={(val) => setValue('currency', val)}>
+                <SelectTrigger id="currency" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="USD">USD</SelectItem>
+                  <SelectItem value="BRL">BRL</SelectItem>
+                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="GBP">GBP</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">

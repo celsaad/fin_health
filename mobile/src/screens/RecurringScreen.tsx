@@ -26,7 +26,7 @@ import {
   deleteRecurring,
 } from '../services/recurring';
 import { parseError } from '../services/api';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '../hooks/useFormatters';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Input from '../components/Input';
@@ -38,6 +38,7 @@ import { FontSize, Spacing } from '../constants/theme';
 
 export default function RecurringScreen() {
   const { colors } = useTheme();
+  const { formatCurrency } = useFormatters();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState(0); // 0 = Active, 1 = Paused
   const [showAdd, setShowAdd] = useState(false);

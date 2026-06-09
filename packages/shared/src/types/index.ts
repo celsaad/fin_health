@@ -51,6 +51,9 @@ export interface Category {
 export interface Transaction {
   id: string;
   amount: number;
+  currency: string;
+  amountUsd: number;
+  exchangeRate: number;
   type: CategoryType;
   description: string;
   date: string;

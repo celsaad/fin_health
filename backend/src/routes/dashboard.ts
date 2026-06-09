@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { authMiddleware } from '../middleware/auth';
 import { requirePro } from '../middleware/requirePro';
 import { AppError } from '../middleware/errorHandler';
+import prisma from '../lib/prisma';
 import {
   getSummary,
   getMonthlyBreakdown,
@@ -27,7 +28,13 @@ router.get('/summary', async (req: Request, res: Response, next: NextFunction) =
       throw new AppError('Valid month (1-12) and year are required', 400);
     }
 
-    const summary = await getSummary(userId, month, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+
+    const summary = await getSummary(userId, month, year, userCurrency);
     res.json(summary);
   } catch (err) {
     next(err);
@@ -45,7 +52,13 @@ router.get('/breakdown', async (req: Request, res: Response, next: NextFunction)
       throw new AppError('Valid month (1-12) and year are required', 400);
     }
 
-    const breakdown = await getMonthlyBreakdown(userId, month, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+
+    const breakdown = await getMonthlyBreakdown(userId, month, year, userCurrency);
     res.json({ breakdown });
   } catch (err) {
     next(err);
@@ -63,7 +76,13 @@ router.get('/category-breakdown', async (req: Request, res: Response, next: Next
       throw new AppError('Valid month (1-12) and year are required', 400);
     }
 
-    const categories = await getCategoryBreakdown(userId, month, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+
+    const categories = await getCategoryBreakdown(userId, month, year, userCurrency);
     res.json({ categories });
   } catch (err) {
     next(err);
@@ -80,7 +99,13 @@ router.get('/yearly', async (req: Request, res: Response, next: NextFunction) =>
       throw new AppError('Year is required', 400);
     }
 
-    const overview = await getYearlyOverview(userId, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+
+    const overview = await getYearlyOverview(userId, year, userCurrency);
     res.json({ months: overview });
   } catch (err) {
     next(err);
@@ -97,7 +122,13 @@ router.get('/trend', async (req: Request, res: Response, next: NextFunction) => 
       throw new AppError('Months must be between 1 and 24', 400);
     }
 
-    const trend = await getTrend(userId, months);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+
+    const trend = await getTrend(userId, months, userCurrency);
     res.json({ trend });
   } catch (err) {
     next(err);
@@ -115,7 +146,13 @@ router.get('/insights', requirePro, async (req: Request, res: Response, next: Ne
       throw new AppError('Valid month (1-12) and year are required', 400);
     }
 
-    const insights = await getInsights(userId, month, year);
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { currency: true },
+    });
+    const userCurrency = user?.currency || 'USD';
+
+    const insights = await getInsights(userId, month, year, userCurrency);
     res.json({ insights });
   } catch (err) {
     next(err);

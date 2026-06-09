@@ -1,5 +1,6 @@
 import { trpc } from '@/lib/trpc';
 import { useTransactions } from '@/hooks/useTransactions';
+import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import { endOfMonth, format } from 'date-fns';
 
 export interface DashboardSummary {
@@ -57,31 +58,37 @@ export interface Insight {
 }
 
 export function useSummary(month: number, year: number) {
-  return trpc.dashboard.summary.useQuery({ month, year });
+  const { currency } = useUserPreferences();
+  return trpc.dashboard.summary.useQuery({ month, year, currency });
 }
 
 export function useBreakdown(month: number, year: number) {
-  const result = trpc.dashboard.breakdown.useQuery({ month, year });
+  const { currency } = useUserPreferences();
+  const result = trpc.dashboard.breakdown.useQuery({ month, year, currency });
   return { ...result, data: result.data?.breakdown };
 }
 
 export function useYearlyOverview(year: number) {
-  const result = trpc.dashboard.yearly.useQuery({ year });
+  const { currency } = useUserPreferences();
+  const result = trpc.dashboard.yearly.useQuery({ year, currency });
   return { ...result, data: result.data?.months };
 }
 
 export function useCategoryBreakdown(month: number, year: number) {
-  const result = trpc.dashboard.categoryBreakdown.useQuery({ month, year });
+  const { currency } = useUserPreferences();
+  const result = trpc.dashboard.categoryBreakdown.useQuery({ month, year, currency });
   return { ...result, data: result.data?.categories };
 }
 
 export function useTrend(months: number = 6) {
-  const result = trpc.dashboard.trend.useQuery({ months });
+  const { currency } = useUserPreferences();
+  const result = trpc.dashboard.trend.useQuery({ months, currency });
   return { ...result, data: result.data?.trend };
 }
 
 export function useInsights(month: number, year: number, enabled = true) {
-  const result = trpc.dashboard.insights.useQuery({ month, year }, { enabled });
+  const { currency } = useUserPreferences();
+  const result = trpc.dashboard.insights.useQuery({ month, year, currency }, { enabled });
   return { ...result, data: result.data?.insights };
 }
 

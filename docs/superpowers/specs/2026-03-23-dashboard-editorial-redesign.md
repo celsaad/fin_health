@@ -1,4 +1,15 @@
+---
+title: Dashboard Editorial Redesign — Web Spec
+tags: [frontend, dashboard, redesign, spec, web, tailwind, recharts]
+type: spec
+date: 2026-03-23
+related:
+  - "[Mobile Spec](./2026-03-23-mobile-dashboard-editorial-redesign.md)"
+---
+
 # Dashboard Editorial Redesign
+
+> [!TIP] Mobile counterpart: [Mobile Dashboard Editorial Redesign — Design Spec](./2026-03-23-mobile-dashboard-editorial-redesign.md)
 
 ## Overview
 
@@ -99,7 +110,7 @@ Replace generic shadows with primary-tinted shadows:
 
 ### 1.6 Primary Container Color
 
-Included in the token table above (Section 1.2). `--color-primary-container: hsl(239 82% 66%)` for gradient endpoints. Used in the Net Balance card gradient and primary CTAs.
+Included in the token table above ([1.2 Surface Hierarchy](#12-surface-hierarchy)). `--color-primary-container: hsl(239 82% 66%)` for gradient endpoints. Used in the Net Balance card gradient and primary CTAs.
 
 ---
 
@@ -197,7 +208,7 @@ INCOME VS EXPENSES ANALYSIS
 
 Same `useTrend(6)` hook. No changes.
 
-**Note:** `useTrend` always returns the most recent 6 calendar months regardless of the selected month/year in `DateRangeSelector`. This is intentional — the trend chart shows the "bigger picture" trajectory, not a window aligned to the selected period. The last element in the returned array is always the most recent month (full opacity), and the first is the oldest (lowest opacity).
+> [!NOTE] `useTrend` always returns the most recent 6 calendar months regardless of the selected month/year in `DateRangeSelector`. This is intentional — the trend chart shows the "bigger picture" trajectory, not a window aligned to the selected period. The last element in the returned array is always the most recent month (full opacity), and the first is the oldest (lowest opacity).
 
 ---
 
@@ -353,10 +364,10 @@ export function useRecentPeaks(month: number, year: number) {
 }
 ```
 
-**Important notes:**
-- `useTransactions` returns `PaginatedResponse<Transaction>` (shape: `{ transactions: Transaction[], pagination: {...} }`). The hook unwraps `.transactions` for the component.
-- The `Transaction` type has `category: { id: string, name: string }` — **not** a flat `categoryName`. The component accesses `transaction.category.name`.
-- Date construction uses `date-fns` (already a project dependency) for `endOfMonth` + `format` to produce ISO date strings. The month start is constructed manually via `new Date(year, month - 1, 1)`.
+> [!NOTE] **Important notes:**
+> - `useTransactions` returns `PaginatedResponse<Transaction>` (shape: `{ transactions: Transaction[], pagination: {...} }`). The hook unwraps `.transactions` for the component.
+> - The `Transaction` type has `category: { id: string, name: string }` — **not** a flat `categoryName`. The component accesses `transaction.category.name`.
+> - Date construction uses `date-fns` (already a project dependency) for `endOfMonth` + `format` to produce ISO date strings.
 
 ### 6.7 Error Handling
 

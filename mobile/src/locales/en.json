@@ -45,5 +45,11 @@
   },
   "errors": {
     "loadFailed": "Failed to load data. Please try again."
+  },
+  "settings": {
+    "language": "Language",
+    "languageEn": "English",
+    "languagePtBR": "Português (BR)",
+    "languageSaved": "Language preference saved"
   }
 }

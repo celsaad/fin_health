@@ -1,6 +1,18 @@
+---
+title: Mobile Dashboard Editorial Redesign — Design Spec
+tags: [mobile, dashboard, redesign, spec, react-native, expo]
+type: spec
+date: 2026-03-23
+related:
+  - "[Web Spec](./2026-03-23-dashboard-editorial-redesign.md)"
+  - "[Implementation Plan](../plans/2026-03-23-mobile-dashboard-editorial-redesign.md)"
+---
+
 # Mobile Dashboard Editorial Redesign — Design Spec
 
 > Adapts the web editorial finance dashboard (completed 2026-03-23) to the React Native / Expo mobile app with full visual parity, single-column scrollable layout, and extracted component architecture.
+
+> [!TIP] See also: [Web Dashboard Editorial Redesign](./2026-03-23-dashboard-editorial-redesign.md) · [Implementation Plan](../plans/2026-03-23-mobile-dashboard-editorial-redesign.md)
 
 **Platform:** React Native 0.83.2 · Expo SDK 55 · React 19 · TanStack Query v5
 
@@ -129,7 +141,7 @@ This matches the shape returned by `getSummary()`. If other components also need
 
 ### Income / Expenses / Transactions (half-width each)
 
-- Standard `Card` (borderless with shadow from §3)
+- Standard `Card` (borderless with shadow from [3. Foundation: Card No-Line Rule](#3-foundation-card-no-line-rule))
 - 40×40 rounded-lg icon container with tinted background (emerald / red / blue)
 - Label: uppercase tracking-wide, `FontFamily.bodySemiBold`, `textSecondary`
 - Amount: `FontFamily.headline`, ~22px

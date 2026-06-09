@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { FrequencyBadge } from '@/components/recurring/FrequencyBadge';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import { useToggleRecurring, type RecurringTransaction } from '@/hooks/useRecurring';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface RecurringCardProps {
   transaction: RecurringTransaction;
@@ -22,6 +22,7 @@ export const RecurringCard = memo(function RecurringCard({
   onDelete,
 }: RecurringCardProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
   const toggleRecurring = useToggleRecurring();
   const categoryName = transaction.category?.name ?? '';
   const config = getCategoryIcon(

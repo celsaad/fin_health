@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import type { Transaction } from '@fin-health/shared/types';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 import { format } from 'date-fns';
 
 interface RecentPeaksProps {
@@ -27,6 +27,7 @@ function SkeletonRow() {
 
 export function RecentPeaks({ transactions, isLoading, className }: RecentPeaksProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
 
   return (
     <Card className={className}>

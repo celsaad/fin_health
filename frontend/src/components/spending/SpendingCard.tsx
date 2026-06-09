@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { getCategoryIcon } from '@/lib/categoryIcons';
-import { formatCurrency, formatPercent } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 export const CATEGORY_COLORS = [
   '#6366f1',
@@ -33,6 +33,7 @@ export function SpendingCard({
   selected,
   onClick,
 }: SpendingCardProps) {
+  const { formatCurrency, formatPercent } = useFormatters();
   const color = CATEGORY_COLORS[colorIndex % CATEGORY_COLORS.length];
   const config = getCategoryIcon(categoryName);
   const Icon = config.icon;

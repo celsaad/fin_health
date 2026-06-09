@@ -184,7 +184,8 @@
     "deleteTransactionAriaLabel": "Delete transaction",
     "filters": "Filters",
     "openFilters": "Open filters",
-    "clearFilters": "Clear all"
+    "clearFilters": "Clear all",
+    "currency": "Currency"
   },
   "recurring": {
     "title": "Recurring Transactions",
@@ -290,7 +291,11 @@
     "currencyHint": "Enter a currency code (e.g., USD, EUR, GBP)",
     "currencySaved": "Currency preference saved",
     "accountActionsSection": "Account Actions",
-    "accountActionsTitle": "Account Actions"
+    "accountActionsTitle": "Account Actions",
+    "language": "Language",
+    "languageEn": "English",
+    "languagePtBR": "Português (BR)",
+    "languageSaved": "Language preference saved"
   },
   "nav": {
     "dashboard": "Dashboard",

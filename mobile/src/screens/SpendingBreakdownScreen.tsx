@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp, TrendingDown } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../contexts/ThemeContext';
 import { getCategoryBreakdown } from '../services/dashboard';
-import { formatCurrency, formatDate } from '@fin-health/shared/format';
+import { useFormatters } from '../hooks/useFormatters';
 import Card from '../components/Card';
 import MonthSelector from '../components/MonthSelector';
 import CategoryIcon from '../components/CategoryIcon';
@@ -15,6 +15,7 @@ import { FontSize, Spacing, BorderRadius, CategoryColors } from '../constants/th
 
 export default function SpendingBreakdownScreen() {
   const { colors } = useTheme();
+  const { formatCurrency, formatDate } = useFormatters();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());

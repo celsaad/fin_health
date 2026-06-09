@@ -83,6 +83,9 @@ async function main() {
   const now = new Date();
   const transactions: {
     amount: number;
+    currency: string;
+    amountUsd: number;
+    exchangeRate: number;
     type: CategoryType;
     description: string;
     date: Date;
@@ -135,8 +138,12 @@ async function main() {
     for (const day of [1, 15]) {
       const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
       if (date <= now) {
+        const salaryAmount = salaryTemplate.amount + Math.round(Math.random() * 100);
         transactions.push({
-          amount: salaryTemplate.amount + Math.round(Math.random() * 100),
+          amount: salaryAmount,
+          currency: 'USD',
+          amountUsd: salaryAmount,
+          exchangeRate: 1,
           type: 'income',
           description: salaryTemplate.desc,
           date,
@@ -153,6 +160,9 @@ async function main() {
     if (rentDate <= now) {
       transactions.push({
         amount: rentTemplate.amount,
+        currency: 'USD',
+        amountUsd: rentTemplate.amount,
+        exchangeRate: 1,
         type: 'expense',
         description: rentTemplate.desc,
         date: rentDate,
@@ -171,8 +181,12 @@ async function main() {
       const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
       if (date <= now) {
         const variance = 0.8 + Math.random() * 0.4;
+        const expenseAmount = Math.round(template.amount * variance * 100) / 100;
         transactions.push({
-          amount: Math.round(template.amount * variance * 100) / 100,
+          amount: expenseAmount,
+          currency: 'USD',
+          amountUsd: expenseAmount,
+          exchangeRate: 1,
           type: 'expense',
           description: template.desc,
           date,
@@ -190,8 +204,12 @@ async function main() {
       const day = 5 + Math.floor(Math.random() * 20);
       const date = new Date(monthDate.getFullYear(), monthDate.getMonth(), day);
       if (date <= now) {
+        const freelanceAmount = template.amount + Math.round(Math.random() * 200);
         transactions.push({
-          amount: template.amount + Math.round(Math.random() * 200),
+          amount: freelanceAmount,
+          currency: 'USD',
+          amountUsd: freelanceAmount,
+          exchangeRate: 1,
           type: 'income',
           description: template.desc,
           date,

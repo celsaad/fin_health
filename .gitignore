@@ -165,3 +165,6 @@ scripts/screenshots/
 
 # macOS
 .DS_Store
+
+# Obsidian workspace state
+.obsidian/

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { getCategoryIcon } from '@/lib/categoryIcons';
 import { useCategoryBreakdown, useTrend } from '@/hooks/useDashboard';
 import type { CategorySpending } from '@/hooks/useDashboard';
-import { formatCurrency, formatPercent } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 function DetailPanel({
   category,
@@ -23,6 +23,7 @@ function DetailPanel({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
+  const { formatCurrency, formatPercent } = useFormatters();
   const color = CATEGORY_COLORS[colorIndex % CATEGORY_COLORS.length];
   const config = getCategoryIcon(category.categoryName);
   const Icon = config.icon;
@@ -86,6 +87,7 @@ function DetailPanel({
 
 export default function Spending() {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());

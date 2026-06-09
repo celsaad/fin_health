@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, Landmark, ArrowDown, ArrowUp, ListChecks } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DashboardSummary } from '@/hooks/useDashboard';
-import { formatCurrency } from '@fin-health/shared/format';
+import { useFormatters } from '@/hooks/useFormatters';
 
 interface SummaryCardsProps {
   summary: DashboardSummary;
@@ -11,6 +11,7 @@ interface SummaryCardsProps {
 
 export function SummaryCards({ summary, netChangePercent }: SummaryCardsProps) {
   const { t } = useTranslation();
+  const { formatCurrency } = useFormatters();
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
