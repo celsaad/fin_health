@@ -1,3 +1,9 @@
+---
+title: FinHealth Launch Plan
+tags: [launch, planning, deployment, stripe, app-store]
+type: plan
+---
+
 # FinHealth Launch Plan
 
 ## What We're Shipping
@@ -7,6 +13,8 @@
 - Mobile app (Expo / React Native — iOS + Android)
 - Payments (Stripe web + RevenueCat mobile IAP)
 
+> [!NOTE] See [monetization-plan](./monetization-plan.md) for the full pricing strategy, upgrade flows, and revenue projections.
+
 ---
 
 ## Phase 0 — Pre-launch Housekeeping (1–2 days)
@@ -14,7 +22,7 @@
 Before touching hosting, close these gaps:
 
 1. **Finish the entitlements flow** — `requirePro` middleware and `ProGate.tsx` exist in both web and mobile, but verify the billing webhook handler actually activates `plan: "pro"` on the user record after a successful Stripe event.
-2. **Privacy policy + Terms of Service** — required for App Store and Play Store (both will reject without them). Use a generator like [Termly](https://termly.io) or [Iubenda](https://www.iubenda.com), host them at your domain (e.g. `yourapp.com/privacy`, `yourapp.com/terms`).
+2. **Privacy policy + Terms of Service** — required for App Store and Play Store (both will reject without them). Use a generator like Termly or Iubenda, host them at your domain (e.g. `yourapp.com/privacy`, `yourapp.com/terms`).
 3. **App icons + splash screens** — Expo needs properly sized assets before a production build.
 4. **`app.json` review** — set `bundleIdentifier` (iOS), `package` (Android), `version`, and `buildNumber` correctly before the first EAS build.
 
@@ -49,6 +57,8 @@ Free tier covers launch traffic comfortably.
 | `STRIPE_PRO_MONTHLY_PRICE_ID` | From Stripe product dashboard |
 | `STRIPE_PRO_YEARLY_PRICE_ID` | From Stripe product dashboard |
 | `SENTRY_DSN` | From Sentry project settings |
+
+> [!TIP] Full list of backend env vars: [backend — Configuration](./backend.md#configuration)
 
 ### Domain
 
@@ -133,18 +143,18 @@ Key events to track from day one: `signup`, `login`, `transaction_created`, `upg
 
 ### Uptime Monitoring
 
-Set up [Better Uptime](https://betteruptime.com) or [UptimeRobot](https://uptimerobot.com) (both have free tiers) pointing at `https://api.yourdomain.com/health`. You'll get an email/SMS alert if the Railway service goes down.
+Set up Better Uptime or UptimeRobot (both have free tiers) pointing at `https://api.yourdomain.com/health`. You'll get an email/SMS alert if the Railway service goes down.
 
 ---
 
-## Phase 5 — Trial & Upgrade Flow (per monetization plan)
+## Phase 5 — Trial & Upgrade Flow
 
-These are high-impact conversion features to build before or shortly after launch:
+> [!NOTE] These are high-impact conversion features to build before or shortly after launch. Full details in [monetization-plan](./monetization-plan.md).
 
 - **14-day Pro trial on signup** — set `trialEndsAt = now + 14 days` at registration; no credit card required
 - **Trial banner on dashboard** — show days remaining, link to upgrade
 - **Reminder emails at day 10 + day 13** — use SendGrid (free up to 100 emails/day)
-- **Contextual upgrade prompts** — see `docs/monetization-plan.md` for the full trigger list
+- **Contextual upgrade prompts** — see [monetization-plan](./monetization-plan.md) for the full trigger list
 
 ---
 
