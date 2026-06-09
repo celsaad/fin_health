@@ -27,6 +27,10 @@ vi.mock('sonner', () => ({
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 
+vi.mock('@/contexts/UserPreferencesContext', () => ({
+  useUserPreferences: () => ({ currency: 'USD' }),
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -48,7 +52,7 @@ describe('useBudgets', () => {
     const { result } = renderHook(() => useBudgets(3, 2024), { wrapper: createWrapper() });
 
     expect(result.current.data).toEqual(mockBudgets);
-    expect(mockBudgetsListUseQuery).toHaveBeenCalledWith({ month: 3, year: 2024 });
+    expect(mockBudgetsListUseQuery).toHaveBeenCalledWith({ month: 3, year: 2024, currency: 'USD' });
   });
 
   it('handles error', () => {
