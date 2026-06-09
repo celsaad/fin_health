@@ -16,6 +16,8 @@ export function useFormatters() {
 
   return {
     formatCurrency: (amount: number) => _formatCurrency(amount, currency, locale),
+    formatWithCurrency: (amount: number, txCurrency: string) =>
+      _formatCurrency(amount, txCurrency, locale),
     formatAmount: (amount: number, type: string) => _formatAmount(amount, type, currency, locale),
     formatDate: (dateStr: string) => _formatDate(dateStr, locale),
     formatPercent: (value: number, decimals?: number) => _formatPercent(value, decimals, locale),

@@ -9,6 +9,7 @@ import {
   bulkDeleteSchema,
 } from '../validators/transaction';
 import { resolveCategory } from '../services/categoryResolver';
+import { toUsd } from '../services/exchangeRate';
 
 function serializeTransaction<
   T extends {
@@ -109,7 +110,16 @@ export const transactionsRouter = router({
   }),
 
   create: protectedProcedure.input(createTransactionSchema).mutation(async ({ ctx, input }) => {
-    const { amount, type, description, date, categoryName, subcategoryName, notes } = input;
+    const {
+      amount,
+      currency = 'USD',
+      type,
+      description,
+      date,
+      categoryName,
+      subcategoryName,
+      notes,
+    } = input;
 
     const { categoryId, subcategoryId } = await resolveCategory(
       ctx.userId,
@@ -118,9 +128,15 @@ export const transactionsRouter = router({
       subcategoryName,
     );
 
+    const rawAmount = parseFloat(amount);
+    const { amountUsd, exchangeRate } = await toUsd(rawAmount, currency.toUpperCase());
+
     const transaction = await prisma.transaction.create({
       data: {
-        amount,
+        amount: rawAmount,
+        currency: currency.toUpperCase(),
+        amountUsd,
+        exchangeRate,
         type,
         description,
         date: new Date(date + 'T12:00:00.000Z'),
@@ -141,7 +157,17 @@ export const transactionsRouter = router({
   update: protectedProcedure
     .input(z.object({ id: z.string() }).merge(updateTransactionSchema))
     .mutation(async ({ ctx, input }) => {
-      const { id, amount, type, description, date, categoryName, subcategoryName, notes } = input;
+      const {
+        id,
+        amount,
+        currency,
+        type,
+        description,
+        date,
+        categoryName,
+        subcategoryName,
+        notes,
+      } = input;
 
       const existing = await prisma.transaction.findFirst({
         where: { id, userId: ctx.userId, deletedAt: null },
@@ -149,7 +175,18 @@ export const transactionsRouter = router({
       if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Transaction not found' });
 
       const updateData: Prisma.TransactionUpdateInput = {};
-      if (amount !== undefined) updateData.amount = amount;
+
+      if (amount !== undefined || currency !== undefined) {
+        const newAmount =
+          amount !== undefined ? parseFloat(amount) : parseFloat(existing.amount.toString());
+        const newCurrency = currency !== undefined ? currency.toUpperCase() : existing.currency;
+        const { amountUsd, exchangeRate } = await toUsd(newAmount, newCurrency);
+        if (amount !== undefined) updateData.amount = newAmount;
+        updateData.currency = newCurrency;
+        updateData.amountUsd = amountUsd;
+        updateData.exchangeRate = exchangeRate;
+      }
+
       if (type !== undefined) updateData.type = type;
       if (description !== undefined) updateData.description = description;
       if (date !== undefined) updateData.date = new Date(date + 'T12:00:00.000Z');

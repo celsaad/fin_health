@@ -19,7 +19,7 @@ export const TransactionCard = memo(function TransactionCard({
   onEdit,
   onDelete,
 }: TransactionCardProps) {
-  const { formatCurrency } = useFormatters();
+  const { formatWithCurrency } = useFormatters();
   const config = getCategoryIcon(
     transaction.category.name,
     transaction.category.icon,
@@ -60,7 +60,7 @@ export const TransactionCard = memo(function TransactionCard({
           }`}
         >
           {isIncome ? '+' : '-'}
-          {formatCurrency(transaction.amount)}
+          {formatWithCurrency(transaction.amount, transaction.currency ?? 'USD')}
         </span>
         <div className="flex items-center gap-0.5">
           <Button
