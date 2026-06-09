@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import prisma from '../lib/prisma';
 import { router, protectedProcedure } from '../trpc';
 import { upsertBudgetSchema, copyBudgetsSchema } from '../validators/budget';
 import { getBudgetsWithSpent } from '../services/budgetService';
