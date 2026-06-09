@@ -33,7 +33,7 @@ import { format } from 'date-fns';
 const recurringSchema = z.object({
   amount: z.coerce.number().positive('Amount must be positive'),
   type: z.enum(['expense', 'income']),
-  currency: z.string().length(3).default('USD'),
+  currency: z.string().length(3),
   description: z.string().min(1, 'Description is required'),
   frequency: z.enum(['weekly', 'biweekly', 'monthly', 'yearly']),
   startDate: z.string().min(1, 'Start date is required'),

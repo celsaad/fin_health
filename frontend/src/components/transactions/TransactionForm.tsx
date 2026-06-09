@@ -37,7 +37,7 @@ const transactionSchema = z.object({
   type: z.enum(['expense', 'income'], {
     required_error: 'Type is required',
   }),
-  currency: z.string().length(3).default('USD'),
+  currency: z.string().length(3),
   description: z.string().min(1, 'Description is required'),
   date: z.string().min(1, 'Date is required'),
   categoryName: z.string().min(1, 'Category is required'),
