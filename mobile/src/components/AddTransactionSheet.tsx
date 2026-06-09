@@ -29,13 +29,25 @@ import { BorderRadius, FontSize, Spacing } from '../constants/theme';
 import Toast from 'react-native-toast-message';
 import type { Transaction, Category } from '@fin-health/shared/types';
 
+interface PrefillData {
+  amount?: string;
+  currency?: string;
+  type?: 'expense' | 'income';
+  description?: string;
+  date?: string;
+  categoryName?: string;
+  subcategoryName?: string;
+  notes?: string;
+}
+
 interface Props {
   visible: boolean;
   onClose: () => void;
   transaction?: Transaction | null;
+  prefillData?: PrefillData | null;
 }
 
-export default function AddTransactionSheet({ visible, onClose, transaction }: Props) {
+export default function AddTransactionSheet({ visible, onClose, transaction, prefillData }: Props) {
   const { colors } = useTheme();
   const queryClient = useQueryClient();
   const isEditing = !!transaction;
@@ -89,6 +101,17 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
         subcategoryName: transaction.subcategory?.name ?? '',
         notes: transaction.notes ?? '',
       });
+    } else if (!transaction && visible && prefillData) {
+      reset({
+        amount: prefillData.amount ? parseFloat(prefillData.amount) : 0,
+        type: prefillData.type ?? 'expense',
+        currency: prefillData.currency ?? (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
+        description: prefillData.description ?? '',
+        date: prefillData.date ?? format(new Date(), 'yyyy-MM-dd'),
+        categoryName: prefillData.categoryName ?? '',
+        subcategoryName: prefillData.subcategoryName ?? '',
+        notes: prefillData.notes ?? '',
+      });
     } else if (!transaction && visible) {
       reset({
         amount: 0,
@@ -101,7 +124,7 @@ export default function AddTransactionSheet({ visible, onClose, transaction }: P
         notes: '',
       });
     }
-  }, [transaction, visible, reset]);
+  }, [transaction, visible, prefillData, reset]);
 
   const mutation = useMutation({
     mutationFn: async (data: any) => {

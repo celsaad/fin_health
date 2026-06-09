@@ -1,45 +1,52 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AddTransactionFAB } from '@/components/layout/AddTransactionFAB';
 import { TransactionFormProvider } from '@/providers/TransactionFormProvider';
 
-describe('AddTransactionFAB', () => {
-  it('renders the add transaction button', () => {
-    render(
-      <TransactionFormProvider>
-        <AddTransactionFAB />
-      </TransactionFormProvider>,
-    );
+const mockFlags = { billing: true, receiptScanning: false };
 
-    const button = screen.getByRole('button', { name: /add transaction|add a transaction/i });
-    expect(button).toBeInTheDocument();
+vi.mock('@/lib/auth', () => ({
+  useAuth: () => ({ featureFlags: mockFlags }),
+}));
+
+vi.mock('@/components/transactions/ReceiptScanner', () => ({
+  ReceiptScanner: () => null,
+}));
+
+function renderFAB() {
+  return render(
+    <TransactionFormProvider>
+      <AddTransactionFAB />
+    </TransactionFormProvider>,
+  );
+}
+
+describe('AddTransactionFAB', () => {
+  beforeEach(() => {
+    mockFlags.receiptScanning = false;
+  });
+
+  it('renders the add transaction button', () => {
+    renderFAB();
+    expect(screen.getByRole('button', { name: /add transaction/i })).toBeInTheDocument();
   });
 
   it('calls openForm when clicked', async () => {
     const user = userEvent.setup();
-
-    render(
-      <TransactionFormProvider>
-        <AddTransactionFAB />
-      </TransactionFormProvider>,
-    );
-
-    const button = screen.getByRole('button', { name: /add transaction|add a transaction/i });
-    await user.click(button);
-
-    // Button should still be visible
-    expect(button).toBeInTheDocument();
+    renderFAB();
+    await user.click(screen.getByRole('button', { name: /add transaction/i }));
+    expect(screen.getByRole('button', { name: /add transaction/i })).toBeInTheDocument();
   });
 
-  it('has correct styling classes for floating position', () => {
-    render(
-      <TransactionFormProvider>
-        <AddTransactionFAB />
-      </TransactionFormProvider>,
-    );
+  it('does not show scan receipt button when receiptScanning flag is off', () => {
+    renderFAB();
+    expect(screen.queryByRole('button', { name: /scan receipt/i })).not.toBeInTheDocument();
+  });
 
-    const button = screen.getByRole('button', { name: /add transaction|add a transaction/i });
-    expect(button).toHaveClass('fixed', 'bottom-24', 'right-6', 'rounded-full', 'shadow-lg');
+  it('shows scan receipt button when receiptScanning flag is on', () => {
+    mockFlags.receiptScanning = true;
+    renderFAB();
+    expect(screen.getByRole('button', { name: /scan receipt/i })).toBeInTheDocument();
   });
 });

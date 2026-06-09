@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, ArrowLeftRight, PieChart, Settings, Plus } from 'lucide-react-native';
+import { Home, ArrowLeftRight, PieChart, Settings, Plus, Camera } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import DashboardScreen from '../screens/DashboardScreen';
 import SpendingBreakdownScreen from '../screens/SpendingBreakdownScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
@@ -13,6 +14,8 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import AddTransactionSheet from '../components/AddTransactionSheet';
+import ReceiptScannerSheet from '../components/ReceiptScannerSheet';
+import type { ReceiptScanResult } from '@fin-health/shared';
 import type {
   MainTabParamList,
   HomeStackParamList,
@@ -127,9 +130,29 @@ function EmptyScreen() {
   return null;
 }
 
+type PrefillData = Pick<
+  ReceiptScanResult,
+  | 'amount'
+  | 'currency'
+  | 'type'
+  | 'description'
+  | 'date'
+  | 'categoryName'
+  | 'subcategoryName'
+  | 'notes'
+>;
+
 export function MainTabNavigator() {
   const { colors } = useTheme();
+  const { featureFlags } = useAuth();
   const [showAddSheet, setShowAddSheet] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [prefillData, setPrefillData] = useState<Partial<PrefillData> | null>(null);
+
+  function handleScanComplete(data: Partial<PrefillData>) {
+    setPrefillData(data);
+    setShowAddSheet(true);
+  }
 
   return (
     <>
@@ -171,15 +194,30 @@ export function MainTabNavigator() {
             tabBarLabel: '',
             tabBarIcon: () => null,
             tabBarButton: (_props) => (
-              <TouchableOpacity
-                style={styles.fabContainer}
-                onPress={() => setShowAddSheet(true)}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.fab, { backgroundColor: colors.primary }]}>
+              <View style={styles.fabContainer}>
+                {featureFlags.receiptScanning && (
+                  <TouchableOpacity
+                    style={[
+                      styles.scanBtn,
+                      { backgroundColor: colors.card, borderColor: colors.border },
+                    ]}
+                    onPress={() => setShowScanner(true)}
+                    activeOpacity={0.8}
+                  >
+                    <Camera size={18} color={colors.primary} />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={[styles.fab, { backgroundColor: colors.primary }]}
+                  onPress={() => {
+                    setPrefillData(null);
+                    setShowAddSheet(true);
+                  }}
+                  activeOpacity={0.8}
+                >
                   <Plus size={28} color="#ffffff" strokeWidth={2.5} />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </View>
             ),
           }}
         />
@@ -200,7 +238,21 @@ export function MainTabNavigator() {
           }}
         />
       </Tab.Navigator>
-      <AddTransactionSheet visible={showAddSheet} onClose={() => setShowAddSheet(false)} />
+      <AddTransactionSheet
+        visible={showAddSheet}
+        onClose={() => {
+          setShowAddSheet(false);
+          setPrefillData(null);
+        }}
+        prefillData={prefillData}
+      />
+      {featureFlags.receiptScanning && (
+        <ReceiptScannerSheet
+          visible={showScanner}
+          onClose={() => setShowScanner(false)}
+          onScanComplete={handleScanComplete}
+        />
+      )}
     </>
   );
 }
@@ -211,6 +263,20 @@ const styles = StyleSheet.create({
     top: -20,
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 6,
+  },
+  scanBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   fab: {
     width: 56,
