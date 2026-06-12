@@ -1,7 +1,7 @@
 import { trpcClient } from '../lib/trpc';
 
-export async function getBudgets(month: number, year: number) {
-  return trpcClient.budgets.list.query({ month, year });
+export async function getBudgets(month: number, year: number, currency = 'USD') {
+  return trpcClient.budgets.list.query({ month, year, currency });
 }
 
 export async function upsertBudget(body: {

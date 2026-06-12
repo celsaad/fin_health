@@ -18,7 +18,7 @@ interface RecentPeaksProps {
 export default function RecentPeaks({ transactions, isLoading }: RecentPeaksProps) {
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const { formatCurrency } = useFormatters();
+  const { formatWithCurrency } = useFormatters();
 
   return (
     <Card style={styles.container}>
@@ -58,7 +58,7 @@ export default function RecentPeaks({ transactions, isLoading }: RecentPeaksProp
               </View>
               <View style={styles.right}>
                 <Text style={[styles.amount, { color: colors.expense }]}>
-                  {formatCurrency(tx.amount)}
+                  {formatWithCurrency(tx.amount, tx.currency ?? 'USD')}
                 </Text>
                 <Text style={[styles.date, { color: colors.textSecondary }]}>
                   {format(new Date(tx.date), 'MMM d')}

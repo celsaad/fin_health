@@ -30,7 +30,7 @@ import type { Transaction, CategoryType } from '@fin-health/shared/types';
 
 export default function TransactionsScreen() {
   const { colors } = useTheme();
-  const { formatAmount } = useFormatters();
+  const { formatAmountWithCurrency } = useFormatters();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<CategoryType | ''>('');
@@ -85,16 +85,20 @@ export default function TransactionsScreen() {
   // Group by date
   const grouped = groupByDate(allTransactions);
 
-  function confirmDelete(id: string) {
-    Alert.alert('Delete Transaction', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => deleteMutation.mutate(id),
-      },
-    ]);
-  }
+  const { mutate: deleteTx } = deleteMutation;
+  const confirmDelete = useCallback(
+    (id: string) => {
+      Alert.alert('Delete Transaction', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteTx(id),
+        },
+      ]);
+    },
+    [deleteTx],
+  );
 
   const renderTransaction = useCallback(
     ({ item }: { item: Transaction }) => {
@@ -130,13 +134,13 @@ export default function TransactionsScreen() {
                 { color: item.type === 'income' ? colors.income : colors.expense },
               ]}
             >
-              {formatAmount(item.amount, item.type)}
+              {formatAmountWithCurrency(item.amount, item.type, item.currency ?? 'USD')}
             </Text>
           </Card>
         </TouchableOpacity>
       );
     },
-    [colors],
+    [colors, formatAmountWithCurrency, confirmDelete],
   );
 
   const typeOptions = ['All', 'Income', 'Expense'];
