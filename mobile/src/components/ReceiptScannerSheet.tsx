@@ -6,23 +6,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import { trpcClient } from '../lib/trpc';
 import { BorderRadius, FontSize, Spacing } from '../constants/theme';
 import Button from './Button';
-import type { ReceiptScanResult } from '@fin-health/shared';
-
-interface PrefillData {
-  amount?: string;
-  currency?: string;
-  type?: 'expense' | 'income';
-  description?: string;
-  date?: string;
-  categoryName?: string;
-  subcategoryName?: string;
-  notes?: string;
-}
+import type { ReceiptScanResult, TransactionPrefillData } from '@fin-health/shared';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
-  onScanComplete: (data: PrefillData) => void;
+  onScanComplete: (data: TransactionPrefillData) => void;
 }
 
 const CONFIDENCE_COLORS = {
@@ -31,11 +20,14 @@ const CONFIDENCE_COLORS = {
   low: '#dc2626',
 };
 
+const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+type AcceptedMimeType = (typeof ACCEPTED_MIME_TYPES)[number];
+
 export default function ReceiptScannerSheet({ visible, onClose, onScanComplete }: Props) {
   const { colors } = useTheme();
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
-  const [mimeType, setMimeType] = useState<'image/jpeg' | 'image/png' | 'image/webp'>('image/jpeg');
+  const [mimeType, setMimeType] = useState<AcceptedMimeType>('image/jpeg');
   const [scanResult, setScanResult] = useState<ReceiptScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
 
@@ -63,8 +55,11 @@ export default function ReceiptScannerSheet({ visible, onClose, onScanComplete }
       const asset = result.assets[0];
       setImageUri(asset.uri);
       setImageBase64(asset.base64 ?? null);
-      const type = asset.mimeType as typeof mimeType;
-      setMimeType(type && type.startsWith('image/') ? type : 'image/jpeg');
+      setMimeType(
+        ACCEPTED_MIME_TYPES.includes(asset.mimeType as AcceptedMimeType)
+          ? (asset.mimeType as AcceptedMimeType)
+          : 'image/jpeg',
+      );
       setScanResult(null);
     }
   }

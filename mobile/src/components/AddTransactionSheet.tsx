@@ -28,23 +28,13 @@ import SegmentedControl from './SegmentedControl';
 import { BorderRadius, FontSize, Spacing } from '../constants/theme';
 import Toast from 'react-native-toast-message';
 import type { Transaction, Category } from '@fin-health/shared/types';
-
-interface PrefillData {
-  amount?: string;
-  currency?: string;
-  type?: 'expense' | 'income';
-  description?: string;
-  date?: string;
-  categoryName?: string;
-  subcategoryName?: string;
-  notes?: string;
-}
+import type { TransactionPrefillData } from '@fin-health/shared';
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   transaction?: Transaction | null;
-  prefillData?: PrefillData | null;
+  prefillData?: TransactionPrefillData | null;
 }
 
 export default function AddTransactionSheet({ visible, onClose, transaction, prefillData }: Props) {

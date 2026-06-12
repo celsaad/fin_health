@@ -15,7 +15,7 @@ import CategoriesScreen from '../screens/CategoriesScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import AddTransactionSheet from '../components/AddTransactionSheet';
 import ReceiptScannerSheet from '../components/ReceiptScannerSheet';
-import type { ReceiptScanResult } from '@fin-health/shared';
+import type { TransactionPrefillData } from '@fin-health/shared';
 import type {
   MainTabParamList,
   HomeStackParamList,
@@ -130,26 +130,14 @@ function EmptyScreen() {
   return null;
 }
 
-type PrefillData = Pick<
-  ReceiptScanResult,
-  | 'amount'
-  | 'currency'
-  | 'type'
-  | 'description'
-  | 'date'
-  | 'categoryName'
-  | 'subcategoryName'
-  | 'notes'
->;
-
 export function MainTabNavigator() {
   const { colors } = useTheme();
   const { featureFlags } = useAuth();
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
-  const [prefillData, setPrefillData] = useState<Partial<PrefillData> | null>(null);
+  const [prefillData, setPrefillData] = useState<TransactionPrefillData | null>(null);
 
-  function handleScanComplete(data: Partial<PrefillData>) {
+  function handleScanComplete(data: TransactionPrefillData) {
     setPrefillData(data);
     setShowAddSheet(true);
   }

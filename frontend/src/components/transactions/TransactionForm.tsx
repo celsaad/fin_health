@@ -31,6 +31,7 @@ import {
   type Transaction,
 } from '@/hooks/useTransactions';
 import { format } from 'date-fns';
+import type { TransactionPrefillData } from '@fin-health/shared';
 
 const transactionSchema = z.object({
   amount: z.coerce.number({ message: 'Amount is required' }).positive('Amount must be positive'),
@@ -47,22 +48,11 @@ const transactionSchema = z.object({
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
-interface PrefillData {
-  amount?: string;
-  currency?: string;
-  type?: 'expense' | 'income';
-  description?: string;
-  date?: string;
-  categoryName?: string;
-  subcategoryName?: string;
-  notes?: string;
-}
-
 interface TransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction?: Transaction;
-  prefillData?: PrefillData;
+  prefillData?: TransactionPrefillData;
   onSuccess?: () => void;
 }
 

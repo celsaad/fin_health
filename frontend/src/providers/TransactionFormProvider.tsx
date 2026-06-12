@@ -1,23 +1,11 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import type { ReceiptScanResult } from '@fin-health/shared';
-
-type PrefillData = Pick<
-  ReceiptScanResult,
-  | 'amount'
-  | 'currency'
-  | 'type'
-  | 'description'
-  | 'date'
-  | 'categoryName'
-  | 'subcategoryName'
-  | 'notes'
->;
+import type { TransactionPrefillData } from '@fin-health/shared';
 
 interface TransactionFormContextType {
   isOpen: boolean;
-  prefillData: Partial<PrefillData> | null;
+  prefillData: TransactionPrefillData | null;
   openForm: () => void;
-  openFormWithData: (data: Partial<PrefillData>) => void;
+  openFormWithData: (data: TransactionPrefillData) => void;
   closeForm: () => void;
 }
 
@@ -25,14 +13,14 @@ const TransactionFormContext = createContext<TransactionFormContextType | undefi
 
 export function TransactionFormProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [prefillData, setPrefillData] = useState<Partial<PrefillData> | null>(null);
+  const [prefillData, setPrefillData] = useState<TransactionPrefillData | null>(null);
 
   const openForm = () => {
     setPrefillData(null);
     setIsOpen(true);
   };
 
-  const openFormWithData = (data: Partial<PrefillData>) => {
+  const openFormWithData = (data: TransactionPrefillData) => {
     setPrefillData(data);
     setIsOpen(true);
   };
