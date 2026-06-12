@@ -158,6 +158,7 @@ model RecurringTransaction {
   endDate     DateTime?
   isActive    Boolean             @default(true)
   notes       String?
+  currency    String              @default("USD")
 
   lastGenerated DateTime?
 

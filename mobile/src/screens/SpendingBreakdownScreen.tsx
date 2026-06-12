@@ -15,15 +15,15 @@ import { FontSize, Spacing, BorderRadius, CategoryColors } from '../constants/th
 
 export default function SpendingBreakdownScreen() {
   const { colors } = useTheme();
-  const { formatCurrency, formatDate } = useFormatters();
+  const { formatCurrency, formatDate, currency } = useFormatters();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const query = useQuery({
-    queryKey: ['dashboard', 'category-breakdown', month, year],
-    queryFn: () => getCategoryBreakdown(month, year),
+    queryKey: ['dashboard', 'category-breakdown', month, year, currency],
+    queryFn: () => getCategoryBreakdown(month, year, currency),
   });
 
   const categories = query.data?.categories ?? [];

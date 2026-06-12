@@ -37,7 +37,7 @@ import { useRouter } from 'expo-router';
 export default function BudgetsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { formatCurrency } = useFormatters();
+  const { formatCurrency, currency } = useFormatters();
   const queryClient = useQueryClient();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -45,8 +45,8 @@ export default function BudgetsScreen() {
   const [showAdd, setShowAdd] = useState(false);
 
   const budgetsQuery = useQuery({
-    queryKey: ['budgets', month, year],
-    queryFn: () => getBudgets(month, year),
+    queryKey: ['budgets', month, year, currency],
+    queryFn: () => getBudgets(month, year, currency),
   });
 
   const categoriesQuery = useQuery({

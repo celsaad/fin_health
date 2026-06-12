@@ -22,7 +22,7 @@ export const RecurringCard = memo(function RecurringCard({
   onDelete,
 }: RecurringCardProps) {
   const { t } = useTranslation();
-  const { formatCurrency } = useFormatters();
+  const { formatWithCurrency } = useFormatters();
   const toggleRecurring = useToggleRecurring();
   const categoryName = transaction.category?.name ?? '';
   const config = getCategoryIcon(
@@ -64,7 +64,7 @@ export const RecurringCard = memo(function RecurringCard({
             isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
           }`}
         >
-          {formatCurrency(transaction.amount)}
+          {formatWithCurrency(transaction.amount, transaction.currency ?? 'USD')}
         </span>
         <Switch
           checked={transaction.isActive}

@@ -6,6 +6,7 @@ export type { RecurringTransaction };
 
 export interface CreateRecurringPayload {
   amount: number;
+  currency: string;
   type: string;
   description: string;
   frequency: string;

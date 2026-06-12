@@ -8,6 +8,7 @@ import { Bell } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { usePlan } from '../hooks/usePlan';
+import { useFormatters } from '../hooks/useFormatters';
 import {
   getSummary,
   getBreakdown,
@@ -35,6 +36,7 @@ export default function DashboardScreen() {
   const { user } = useAuth();
   const { isPro } = usePlan();
   const { t } = useTranslation();
+  const { currency } = useFormatters();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -44,32 +46,32 @@ export default function DashboardScreen() {
 
   // Queries
   const summaryQuery = useQuery({
-    queryKey: ['dashboard', 'summary', month, year],
-    queryFn: () => getSummary(month, year),
+    queryKey: ['dashboard', 'summary', month, year, currency],
+    queryFn: () => getSummary(month, year, currency),
   });
   const prevSummaryQuery = useQuery({
-    queryKey: ['dashboard', 'summary', prevMonth, prevYear],
-    queryFn: () => getSummary(prevMonth, prevYear),
+    queryKey: ['dashboard', 'summary', prevMonth, prevYear, currency],
+    queryFn: () => getSummary(prevMonth, prevYear, currency),
   });
   const breakdownQuery = useQuery({
-    queryKey: ['dashboard', 'breakdown', month, year],
-    queryFn: () => getBreakdown(month, year),
+    queryKey: ['dashboard', 'breakdown', month, year, currency],
+    queryFn: () => getBreakdown(month, year, currency),
   });
   const trendQuery = useQuery({
-    queryKey: ['dashboard', 'trend'],
-    queryFn: () => getTrend(6),
+    queryKey: ['dashboard', 'trend', currency],
+    queryFn: () => getTrend(6, currency),
   });
   const insightsQuery = useQuery({
-    queryKey: ['dashboard', 'insights', month, year],
-    queryFn: () => getInsights(month, year),
+    queryKey: ['dashboard', 'insights', month, year, currency],
+    queryFn: () => getInsights(month, year, currency),
   });
   const recentPeaksQuery = useQuery({
     queryKey: ['dashboard', 'recentPeaks', month, year],
     queryFn: () => getRecentPeaks(month, year),
   });
   const budgetsQuery = useQuery({
-    queryKey: ['budgets', month, year],
-    queryFn: () => getBudgets(month, year),
+    queryKey: ['budgets', month, year, currency],
+    queryFn: () => getBudgets(month, year, currency),
   });
 
   const summary = summaryQuery.data;

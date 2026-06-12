@@ -37,7 +37,7 @@ function groupByDate(transactions: Transaction[]) {
 
 export function TransactionList({ transactions }: TransactionListProps) {
   const { t } = useTranslation();
-  const { formatCurrency } = useFormatters();
+  const { formatWithCurrency } = useFormatters();
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -190,7 +190,7 @@ export function TransactionList({ transactions }: TransactionListProps) {
                     }`}
                   >
                     {transaction.type === 'income' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
+                    {formatWithCurrency(transaction.amount, transaction.currency ?? 'USD')}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
