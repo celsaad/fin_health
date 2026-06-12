@@ -187,6 +187,26 @@
     "clearFilters": "Limpar todos",
     "currency": "Moeda"
   },
+  "receiptScanner": {
+    "title": "Digitalizar Recibo",
+    "dialogDescription": "Envie uma foto do seu recibo para preencher automaticamente os detalhes da transação.",
+    "tapToSelect": "Toque para selecionar uma imagem do recibo",
+    "supportedFormats": "JPEG, PNG, WebP suportados",
+    "removeImage": "Remover imagem",
+    "confidenceHigh": "Alta confiança",
+    "confidenceMedium": "Confiança média",
+    "confidenceLow": "Baixa confiança — verifique os dados",
+    "merchant": "Estabelecimento",
+    "amount": "Valor",
+    "date": "Data",
+    "category": "Categoria",
+    "description": "Descrição",
+    "scanning": "Digitalizando...",
+    "scanReceipt": "Digitalizar Recibo",
+    "rescan": "Digitalizar novamente",
+    "useThisData": "Usar estes dados",
+    "scanReceiptAriaLabel": "Digitalizar recibo"
+  },
   "recurring": {
     "title": "Transações Recorrentes",
     "subtitle": "Gerencie seus modelos de receitas e despesas recorrentes",

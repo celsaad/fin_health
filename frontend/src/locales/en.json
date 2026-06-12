@@ -187,6 +187,26 @@
     "clearFilters": "Clear all",
     "currency": "Currency"
   },
+  "receiptScanner": {
+    "title": "Scan Receipt",
+    "dialogDescription": "Upload a photo of your receipt to automatically fill in transaction details.",
+    "tapToSelect": "Tap to select a receipt image",
+    "supportedFormats": "JPEG, PNG, WebP supported",
+    "removeImage": "Remove image",
+    "confidenceHigh": "High confidence",
+    "confidenceMedium": "Medium confidence",
+    "confidenceLow": "Low confidence — please verify",
+    "merchant": "Merchant",
+    "amount": "Amount",
+    "date": "Date",
+    "category": "Category",
+    "description": "Description",
+    "scanning": "Scanning...",
+    "scanReceipt": "Scan Receipt",
+    "rescan": "Re-scan",
+    "useThisData": "Use this data",
+    "scanReceiptAriaLabel": "Scan receipt"
+  },
   "recurring": {
     "title": "Recurring Transactions",
     "subtitle": "Manage your recurring income and expense templates",

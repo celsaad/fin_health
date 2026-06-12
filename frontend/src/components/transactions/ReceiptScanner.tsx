@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Camera, Upload, X, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -21,10 +22,10 @@ interface ReceiptScannerProps {
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
 type AcceptedMimeType = (typeof ACCEPTED_TYPES)[number];
 
-const CONFIDENCE_LABELS: Record<ReceiptScanResult['confidence'], string> = {
-  high: 'High confidence',
-  medium: 'Medium confidence',
-  low: 'Low confidence — please verify',
+const CONFIDENCE_LABEL_KEYS: Record<ReceiptScanResult['confidence'], string> = {
+  high: 'receiptScanner.confidenceHigh',
+  medium: 'receiptScanner.confidenceMedium',
+  low: 'receiptScanner.confidenceLow',
 };
 
 const CONFIDENCE_COLORS: Record<ReceiptScanResult['confidence'], string> = {
@@ -34,6 +35,7 @@ const CONFIDENCE_COLORS: Record<ReceiptScanResult['confidence'], string> = {
 };
 
 export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -75,8 +77,12 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
 
   async function handleScan() {
     if (!imageBase64) return;
-    const { result } = await scanMutation.mutateAsync({ imageBase64, mimeType });
-    setScanResult(result);
+    try {
+      const { result } = await scanMutation.mutateAsync({ imageBase64, mimeType });
+      setScanResult(result);
+    } catch {
+      // handled by scanMutation.isError / onError toast
+    }
   }
 
   function handleUseData() {
@@ -102,11 +108,9 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Camera className="size-5" />
-            Scan Receipt
+            {t('receiptScanner.title')}
           </DialogTitle>
-          <DialogDescription>
-            Upload a photo of your receipt to automatically fill in transaction details.
-          </DialogDescription>
+          <DialogDescription>{t('receiptScanner.dialogDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
@@ -118,8 +122,8 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
               className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border p-10 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
             >
               <Upload className="size-8" />
-              <span className="text-sm font-medium">Tap to select a receipt image</span>
-              <span className="text-xs">JPEG, PNG, WebP supported</span>
+              <span className="text-sm font-medium">{t('receiptScanner.tapToSelect')}</span>
+              <span className="text-xs">{t('receiptScanner.supportedFormats')}</span>
             </button>
           )}
 
@@ -149,7 +153,7 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
                     if (fileInputRef.current) fileInputRef.current.value = '';
                   }}
                   className="absolute right-2 top-2 rounded-full bg-background/80 p-1 text-foreground shadow"
-                  aria-label="Remove image"
+                  aria-label={t('receiptScanner.removeImage')}
                 >
                   <X className="size-4" />
                 </button>
@@ -168,20 +172,20 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
                 ) : (
                   <AlertCircle className="size-4" />
                 )}
-                {CONFIDENCE_LABELS[scanResult.confidence]}
+                {t(CONFIDENCE_LABEL_KEYS[scanResult.confidence])}
               </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                <dt className="text-muted-foreground">Merchant</dt>
+                <dt className="text-muted-foreground">{t('receiptScanner.merchant')}</dt>
                 <dd className="font-medium">{scanResult.merchant}</dd>
-                <dt className="text-muted-foreground">Amount</dt>
+                <dt className="text-muted-foreground">{t('receiptScanner.amount')}</dt>
                 <dd className="font-medium">
                   {scanResult.amount} {scanResult.currency}
                 </dd>
-                <dt className="text-muted-foreground">Date</dt>
+                <dt className="text-muted-foreground">{t('receiptScanner.date')}</dt>
                 <dd className="font-medium">{scanResult.date}</dd>
-                <dt className="text-muted-foreground">Category</dt>
+                <dt className="text-muted-foreground">{t('receiptScanner.category')}</dt>
                 <dd className="font-medium">{scanResult.categoryName}</dd>
-                <dt className="text-muted-foreground">Description</dt>
+                <dt className="text-muted-foreground">{t('receiptScanner.description')}</dt>
                 <dd className="font-medium col-span-2 mt-0.5">{scanResult.description}</dd>
               </dl>
             </div>
@@ -195,17 +199,17 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button type="button" variant="outline" onClick={handleClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           {!scanResult ? (
             <Button type="button" onClick={handleScan} disabled={!imageBase64 || isScanning}>
               {isScanning ? (
                 <>
                   <Loader2 className="mr-2 size-4 animate-spin" />
-                  Scanning...
+                  {t('receiptScanner.scanning')}
                 </>
               ) : (
-                'Scan Receipt'
+                t('receiptScanner.scanReceipt')
               )}
             </Button>
           ) : (
@@ -218,10 +222,10 @@ export function ReceiptScanner({ open, onOpenChange }: ReceiptScannerProps) {
                   scanMutation.reset();
                 }}
               >
-                Re-scan
+                {t('receiptScanner.rescan')}
               </Button>
               <Button type="button" onClick={handleUseData}>
-                Use this data
+                {t('receiptScanner.useThisData')}
               </Button>
             </>
           )}

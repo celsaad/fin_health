@@ -21,7 +21,7 @@ export function AddTransactionFAB() {
             size="icon"
             variant="secondary"
             className="rounded-full shadow-md size-11"
-            aria-label="Scan receipt"
+            aria-label={t('receiptScanner.scanReceiptAriaLabel')}
           >
             <Camera className="size-4" />
           </Button>
