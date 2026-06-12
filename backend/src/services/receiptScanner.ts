@@ -27,6 +27,12 @@ Rules:
 - "date" must be the transaction date on the receipt, not today's date.
 - "amount" is the grand total including tax, as a plain number string.`;
 
+export function parseReceiptJson(text: string): unknown {
+  const trimmed = text.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return JSON.parse(fenced ? fenced[1] : trimmed);
+}
+
 export async function getReceiptProvider(): Promise<ReceiptProvider> {
   switch (env.RECEIPT_PROVIDER) {
     case 'openai': {

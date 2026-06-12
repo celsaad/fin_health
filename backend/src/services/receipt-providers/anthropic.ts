@@ -2,7 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { receiptScanResultSchema, type ReceiptScanResult } from '@fin-health/shared';
 import { env } from '../../lib/env';
 import type { ReceiptProvider } from '../receiptScanner';
-import { RECEIPT_PROMPT } from '../receiptScanner';
+import { RECEIPT_PROMPT, parseReceiptJson } from '../receiptScanner';
 
 export class AnthropicReceiptProvider implements ReceiptProvider {
   private client: Anthropic;
@@ -37,6 +37,6 @@ export class AnthropicReceiptProvider implements ReceiptProvider {
     });
 
     const text = response.content.find((b) => b.type === 'text')?.text ?? '';
-    return receiptScanResultSchema.parse(JSON.parse(text));
+    return receiptScanResultSchema.parse(parseReceiptJson(text));
   }
 }

@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { receiptScanResultSchema, type ReceiptScanResult } from '@fin-health/shared';
 import { env } from '../../lib/env';
 import type { ReceiptProvider } from '../receiptScanner';
-import { RECEIPT_PROMPT } from '../receiptScanner';
+import { RECEIPT_PROMPT, parseReceiptJson } from '../receiptScanner';
 
 export class QwenReceiptProvider implements ReceiptProvider {
   private client: OpenAI;
@@ -36,6 +36,6 @@ export class QwenReceiptProvider implements ReceiptProvider {
     });
 
     const text = response.choices[0]?.message?.content ?? '';
-    return receiptScanResultSchema.parse(JSON.parse(text));
+    return receiptScanResultSchema.parse(parseReceiptJson(text));
   }
 }
