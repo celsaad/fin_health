@@ -10,20 +10,18 @@ export const receiptsRouter = router({
       throw new TRPCError({ code: 'FORBIDDEN', message: 'RECEIPT_SCANNING_DISABLED' });
     }
 
-    const hasKey =
-      (env.RECEIPT_PROVIDER === 'anthropic' && env.ANTHROPIC_API_KEY) ||
-      (env.RECEIPT_PROVIDER === 'openai' && env.OPENAI_API_KEY) ||
-      (env.RECEIPT_PROVIDER === 'qwen' && env.DASHSCOPE_API_KEY);
-
-    if (!hasKey) {
+    let provider;
+    try {
+      provider = await getReceiptProvider();
+    } catch (err) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Receipt scanning is not configured',
+        cause: err,
       });
     }
 
     try {
-      const provider = await getReceiptProvider();
       const result = await provider.scan(input.imageBase64, input.mimeType);
       return { result };
     } catch (err) {
