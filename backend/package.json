@@ -24,11 +24,11 @@
     "./trpc": "./src/routers/index.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.102.0",
     "@fin-health/shared": "*",
-    "@trpc/server": "^11.0.0",
-    "superjson": "^1.13.3",
     "@prisma/client": "^6.4.1",
     "@sentry/node": "^10.42.0",
+    "@trpc/server": "^11.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "csv-stringify": "^6.5.2",
@@ -39,9 +39,11 @@
     "helmet": "^8.0.0",
     "i18next": "^25.8.14",
     "jsonwebtoken": "^9.0.2",
+    "openai": "^6.42.0",
     "pino": "^10.3.1",
     "pino-http": "^11.0.0",
     "stripe": "^20.4.1",
+    "superjson": "^1.13.3",
     "zod": "^3.24.2"
   },
   "devDependencies": {

@@ -9,6 +9,7 @@ export type SubscriptionStatus = 'active' | 'trialing' | 'canceled' | 'expired';
 
 export interface FeatureFlags {
   billing: boolean;
+  receiptScanning: boolean;
 }
 
 export interface UserPlan {
