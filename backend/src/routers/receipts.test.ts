@@ -1,24 +1,33 @@
 import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest';
 import { createTestUser, callerFor, cleanupUser, type TestUser } from '../test/helpers';
 import prisma from '../lib/prisma';
+import { env } from '../lib/env';
 
-// Mutable env object — individual tests flip FEATURE_RECEIPT_SCANNING as needed
-const mockEnv = {
-  FEATURE_RECEIPT_SCANNING: true,
-  RECEIPT_PROVIDER: 'anthropic' as const,
-  ANTHROPIC_API_KEY: 'test-key',
-  OPENAI_API_KEY: '',
-  DASHSCOPE_API_KEY: '',
-  // passthrough fields the router doesn't use but env module exports
-  BILLING_ENABLED: true,
-};
+const { envOverrides, mockScan } = vi.hoisted(() => ({
+  envOverrides: {
+    FEATURE_RECEIPT_SCANNING: true,
+    RECEIPT_PROVIDER: 'anthropic' as const,
+    ANTHROPIC_API_KEY: 'test-key',
+    OPENAI_API_KEY: '',
+    DASHSCOPE_API_KEY: '',
+  },
+  mockScan: vi.fn(),
+}));
 
-vi.mock('../lib/env', () => ({ env: mockEnv }));
-
-const mockScan = vi.fn();
+vi.mock('../lib/env', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/env')>();
+  return { env: Object.assign(actual.env, envOverrides) };
+});
 
 vi.mock('../services/receiptScanner', () => ({
-  getReceiptProvider: vi.fn().mockResolvedValue({ scan: mockScan }),
+  getReceiptProvider: vi.fn().mockImplementation(() => {
+    if (!envOverrides.ANTHROPIC_API_KEY) {
+      return Promise.reject(
+        new Error('ANTHROPIC_API_KEY is required for the anthropic receipt provider'),
+      );
+    }
+    return Promise.resolve({ scan: mockScan });
+  }),
   RECEIPT_PROMPT: 'test prompt',
 }));
 
@@ -70,13 +79,14 @@ describe('receipts.scan', () => {
   });
 
   beforeEach(() => {
-    mockEnv.FEATURE_RECEIPT_SCANNING = true;
-    mockEnv.ANTHROPIC_API_KEY = 'test-key';
+    (env as any).FEATURE_RECEIPT_SCANNING = true;
+    (env as any).ANTHROPIC_API_KEY = 'test-key';
+    envOverrides.ANTHROPIC_API_KEY = 'test-key';
     mockScan.mockReset();
   });
 
   it('throws FORBIDDEN when feature flag is off', async () => {
-    mockEnv.FEATURE_RECEIPT_SCANNING = false;
+    (env as any).FEATURE_RECEIPT_SCANNING = false;
     const caller = await callerFor(proUser);
 
     await expect(caller.receipts.scan(VALID_INPUT)).rejects.toMatchObject({
@@ -104,7 +114,8 @@ describe('receipts.scan', () => {
   });
 
   it('throws INTERNAL_SERVER_ERROR when no API key is configured', async () => {
-    mockEnv.ANTHROPIC_API_KEY = '';
+    (env as any).ANTHROPIC_API_KEY = '';
+    envOverrides.ANTHROPIC_API_KEY = '';
     const caller = await callerFor(proUser);
 
     await expect(caller.receipts.scan(VALID_INPUT)).rejects.toMatchObject({
