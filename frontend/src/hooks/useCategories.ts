@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import i18n from '@/lib/i18n';
 import { trpc } from '@/lib/trpc';
 import type { Category, Subcategory } from '@fin-health/shared/types';
 
@@ -15,7 +16,7 @@ export function useCreateSubcategory() {
   return trpc.categories.createSubcategory.useMutation({
     onSuccess: () => {
       utils.categories.list.invalidate();
-      toast.success('Subcategory created successfully');
+      toast.success(i18n.t('toasts.subcategoryCreated'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -29,7 +30,7 @@ export function useRenameCategory() {
   return trpc.categories.update.useMutation({
     onSuccess: () => {
       utils.categories.list.invalidate();
-      toast.success('Category renamed successfully');
+      toast.success(i18n.t('toasts.categoryRenamed'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -43,7 +44,7 @@ export function useRenameSubcategory() {
   return trpc.categories.renameSubcategory.useMutation({
     onSuccess: () => {
       utils.categories.list.invalidate();
-      toast.success('Subcategory renamed successfully');
+      toast.success(i18n.t('toasts.subcategoryRenamed'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -57,7 +58,7 @@ export function useDeleteCategory() {
   return trpc.categories.delete.useMutation({
     onSuccess: () => {
       utils.categories.list.invalidate();
-      toast.success('Category deleted successfully');
+      toast.success(i18n.t('toasts.categoryDeleted'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -71,7 +72,7 @@ export function useDeleteSubcategory() {
   return trpc.categories.deleteSubcategory.useMutation({
     onSuccess: () => {
       utils.categories.list.invalidate();
-      toast.success('Subcategory deleted successfully');
+      toast.success(i18n.t('toasts.subcategoryDeleted'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -102,7 +103,7 @@ export function useMergeCategory() {
     onSuccess: () => {
       utils.categories.list.invalidate();
       utils.transactions.list.invalidate();
-      toast.success('Categories merged successfully');
+      toast.success(i18n.t('toasts.categoriesMerged'));
     },
     onError: (error) => {
       toast.error(error.message);

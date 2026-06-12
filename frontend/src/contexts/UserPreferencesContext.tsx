@@ -1,11 +1,7 @@
 import { createContext, useContext, useState } from 'react';
+import { localeCurrency } from '@/lib/currency';
 
 const CURRENCY_KEY = 'preferredCurrency';
-
-function localeCurrency(lang: string): string {
-  if (lang.startsWith('pt')) return 'BRL';
-  return 'USD';
-}
 
 function initialCurrency(): string {
   const saved = localStorage.getItem(CURRENCY_KEY);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -12,19 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-const signupSchema = z
-  .object({
-    name: z.string().min(1, 'Name is required'),
-    email: z.string().email('Please enter a valid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-type SignupFormData = z.infer<typeof signupSchema>;
+interface SignupFormData {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
 
 export default function Signup() {
   const { t } = useTranslation();
@@ -32,6 +25,22 @@ export default function Signup() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const signupSchema = useMemo(
+    () =>
+      z
+        .object({
+          name: z.string().min(1, t('validation.required', { field: t('auth.name') })),
+          email: z.string().email(t('validation.invalidEmail')),
+          password: z.string().min(6, t('validation.passwordMin')),
+          confirmPassword: z.string().min(1, t('validation.confirmPassword')),
+        })
+        .refine((data) => data.password === data.confirmPassword, {
+          message: t('validation.passwordsNoMatch'),
+          path: ['confirmPassword'],
+        }),
+    [t],
+  );
 
   const {
     register,

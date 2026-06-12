@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import i18n from '@/lib/i18n';
 import { trpc } from '@/lib/trpc';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
 import type { Budget } from '@fin-health/shared/types';
@@ -17,7 +18,7 @@ export function useUpsertBudget() {
   return trpc.budgets.upsert.useMutation({
     onSuccess: () => {
       utils.budgets.list.invalidate();
-      toast.success('Budget saved successfully');
+      toast.success(i18n.t('toasts.budgetSaved'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -32,9 +33,9 @@ export function useCopyPreviousMonthBudgets() {
     onSuccess: (data) => {
       utils.budgets.list.invalidate();
       if (data.copied > 0) {
-        toast.success(`Copied ${data.copied} budget(s) from last month`);
+        toast.success(i18n.t('toasts.budgetsCopied', { count: data.copied }));
       } else {
-        toast.info('No budgets to copy from last month');
+        toast.info(i18n.t('toasts.budgetsCopyNoResults'));
       }
     },
     onError: (error) => {
@@ -49,7 +50,7 @@ export function useDeleteBudget() {
   return trpc.budgets.delete.useMutation({
     onSuccess: () => {
       utils.budgets.list.invalidate();
-      toast.success('Budget deleted successfully');
+      toast.success(i18n.t('toasts.budgetDeleted'));
     },
     onError: (error) => {
       toast.error(error.message);

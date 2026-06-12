@@ -113,13 +113,13 @@ describe('useAuth', () => {
     expect(result.current.token).toBe('existing-token');
   });
 
-  it('clears token if fetching user fails', async () => {
+  it('clears token if fetching user fails with UNAUTHORIZED', async () => {
     localStorage.setItem('token', 'bad-token');
     mockAuthMeUseQuery.mockReturnValue({
       isSuccess: false,
       isError: true,
       data: undefined,
-      error: new Error('Unauthorized'),
+      error: { data: { code: 'UNAUTHORIZED' } },
       refetch: vi.fn(),
     });
 
@@ -132,6 +132,26 @@ describe('useAuth', () => {
     expect(result.current.user).toBeNull();
     expect(result.current.token).toBeNull();
     expect(localStorage.getItem('token')).toBeNull();
+  });
+
+  it('keeps token if fetching user fails with a non-auth error', async () => {
+    localStorage.setItem('token', 'good-token');
+    mockAuthMeUseQuery.mockReturnValue({
+      isSuccess: false,
+      isError: true,
+      data: undefined,
+      error: new Error('Network request failed'),
+      refetch: vi.fn(),
+    });
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.user).toBeNull();
+    expect(localStorage.getItem('token')).toBe('good-token');
   });
 
   it('login stores token and sets user', async () => {

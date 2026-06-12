@@ -1,6 +1,6 @@
 import type { FeatureFlags, UserPlan, PlanType, SubscriptionStatus } from '../types/index';
 
-const FREE_STATE = {
+const DISABLED_STATE = {
   plan: 'free' as PlanType,
   status: 'active' as SubscriptionStatus,
   isPro: false,
@@ -9,10 +9,11 @@ const FREE_STATE = {
   isCanceling: false,
   trialEndsAt: null as string | null,
   currentPeriodEnd: null as string | null,
+  isDisabled: true,
 };
 
 export function derivePlanState(plan: UserPlan | null | undefined, flags: FeatureFlags) {
-  if (!flags.billing) return FREE_STATE;
+  if (!flags.billing) return DISABLED_STATE;
 
   const p: UserPlan = plan ?? {
     plan: 'free',
@@ -31,5 +32,6 @@ export function derivePlanState(plan: UserPlan | null | undefined, flags: Featur
     isCanceling: p.cancelAtPeriodEnd,
     trialEndsAt: p.trialEndsAt,
     currentPeriodEnd: p.currentPeriodEnd,
+    isDisabled: false,
   };
 }

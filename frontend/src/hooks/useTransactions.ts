@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import i18n from '@/lib/i18n';
 import { trpc } from '@/lib/trpc';
 import api, { parseError } from '@/lib/api';
 import type { Transaction, TransactionFilters } from '@fin-health/shared/types';
@@ -42,7 +43,7 @@ export function useCreateTransaction() {
     onSuccess: () => {
       utils.transactions.list.invalidate();
       utils.categories.list.invalidate();
-      toast.success('Transaction created successfully');
+      toast.success(i18n.t('toasts.transactionCreated'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -57,7 +58,7 @@ export function useUpdateTransaction() {
     onSuccess: () => {
       utils.transactions.list.invalidate();
       utils.categories.list.invalidate();
-      toast.success('Transaction updated successfully');
+      toast.success(i18n.t('toasts.transactionUpdated'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -72,7 +73,7 @@ export function useDeleteTransaction() {
     onSuccess: () => {
       utils.transactions.list.invalidate();
       utils.categories.list.invalidate();
-      toast.success('Transaction deleted successfully');
+      toast.success(i18n.t('toasts.transactionDeleted'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -87,7 +88,7 @@ export function useBulkDeleteTransactions() {
     onSuccess: () => {
       utils.transactions.list.invalidate();
       utils.categories.list.invalidate();
-      toast.success('Transactions deleted successfully');
+      toast.success(i18n.t('toasts.transactionsDeleted'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -118,7 +119,7 @@ export async function exportTransactions(filters: TransactionFilters = {}): Prom
     link.remove();
     window.URL.revokeObjectURL(url);
 
-    toast.success('Transactions exported successfully');
+    toast.success(i18n.t('toasts.transactionsExported'));
   } catch (error) {
     toast.error(parseError(error).message);
   }
