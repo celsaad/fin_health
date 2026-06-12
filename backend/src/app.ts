@@ -17,8 +17,17 @@ import { createContext } from './context';
 import { generateToken } from './lib/jwt';
 import { consumeRefreshToken, createRefreshToken } from './lib/refreshToken';
 import { handleWebhookEvent, stripe } from './services/stripeService';
+import { generateRecurringTransactions } from './services/recurringGenerator';
+
+// Prefix cell values that could be interpreted as spreadsheet formulas
+// (CSV/Excel formula injection) with a single quote so they're treated as text.
+function escapeCsvFormula(value: string): string {
+  if (/^[=+\-@]/.test(value)) return `'${value}`;
+  return value;
+}
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/health' } }));
 app.use(helmet());
@@ -97,6 +106,11 @@ app.post('/api/auth/refresh', async (req, res, next) => {
     }
     const token = generateToken(record.userId);
     const newRefreshToken = await createRefreshToken(record.userId);
+
+    generateRecurringTransactions(record.userId).catch((err) => {
+      logger.error({ err, userId: record.userId }, 'Failed to generate recurring transactions');
+    });
+
     res.json({ token, refreshToken: newRefreshToken });
   } catch (err) {
     next(err);
@@ -122,15 +136,6 @@ app.get('/api/transactions/export/csv', authMiddleware, async (req, res, next) =
     if (search && typeof search === 'string')
       where.description = { contains: search, mode: 'insensitive' };
 
-    const transactions = await prisma.transaction.findMany({
-      where,
-      include: {
-        category: { select: { name: true } },
-        subcategory: { select: { name: true } },
-      },
-      orderBy: { date: 'desc' },
-    });
-
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="transactions.csv"');
 
@@ -140,17 +145,39 @@ app.get('/api/transactions/export/csv', authMiddleware, async (req, res, next) =
     });
     stringifier.pipe(res);
 
-    for (const t of transactions) {
-      stringifier.write([
-        new Date(t.date).toISOString().split('T')[0],
-        t.type,
-        t.description,
-        t.amount.toString(),
-        t.category.name,
-        t.subcategory?.name || '',
-        t.notes || '',
-      ]);
+    const PAGE_SIZE = 1000;
+    let cursor: string | undefined;
+
+    for (;;) {
+      const page = await prisma.transaction.findMany({
+        where,
+        include: {
+          category: { select: { name: true } },
+          subcategory: { select: { name: true } },
+        },
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
+        take: PAGE_SIZE,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+
+      if (page.length === 0) break;
+
+      for (const t of page) {
+        stringifier.write([
+          new Date(t.date).toISOString().split('T')[0],
+          t.type,
+          escapeCsvFormula(t.description),
+          t.amount.toString(),
+          escapeCsvFormula(t.category.name),
+          escapeCsvFormula(t.subcategory?.name || ''),
+          escapeCsvFormula(t.notes || ''),
+        ]);
+      }
+
+      if (page.length < PAGE_SIZE) break;
+      cursor = page[page.length - 1].id;
     }
+
     stringifier.end();
   } catch (err) {
     next(err);

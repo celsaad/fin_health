@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 import prisma from './prisma';
 
 const REFRESH_TOKEN_TTL_DAYS = 30;
@@ -7,27 +8,37 @@ export function generateRefreshTokenValue(): string {
   return crypto.randomBytes(64).toString('base64url');
 }
 
+function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 export async function createRefreshToken(userId: string): Promise<string> {
   const token = generateRefreshTokenValue();
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
 
   await prisma.refreshToken.create({
-    data: { token, userId, expiresAt },
+    data: { token: hashToken(token), userId, expiresAt },
   });
 
   return token;
 }
 
 export async function consumeRefreshToken(token: string) {
-  const record = await prisma.refreshToken.findUnique({
-    where: { token },
-  });
+  const hashedToken = hashToken(token);
 
-  if (!record) return null;
-
-  // Delete the consumed token (single-use rotation)
-  await prisma.refreshToken.delete({ where: { id: record.id } });
+  let record;
+  try {
+    // Delete the consumed token directly (single-use rotation). This makes
+    // consumption atomic — concurrent requests with the same token can't
+    // both succeed, since only one delete can find the row.
+    record = await prisma.refreshToken.delete({ where: { token: hashedToken } });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {
+      return null;
+    }
+    throw err;
+  }
 
   if (record.expiresAt < new Date()) return null;
 

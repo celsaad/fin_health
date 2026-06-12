@@ -304,5 +304,18 @@ describe('Transaction procedures', () => {
         expect(lines[i]).toContain('income');
       }
     });
+
+    it('escapes description fields that look like spreadsheet formulas', async () => {
+      await createTx({ description: '=SUM(A1:A10)', notes: '+1; -2; @cmd' });
+
+      const res = await api()
+        .get('/api/transactions/export/csv')
+        .set('Authorization', `Bearer ${user.token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.text).toContain("'=SUM(A1:A10)");
+      expect(res.text).not.toMatch(/[^']=SUM\(A1:A10\)/);
+      expect(res.text).toContain("'+1; -2; @cmd");
+    });
   });
 });

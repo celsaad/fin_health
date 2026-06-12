@@ -19,6 +19,7 @@ RUN npm run build -w @fin-health/shared && \
 # --- Production ---
 FROM base AS production
 ENV NODE_ENV=production
+ENV TZ=UTC
 RUN addgroup -S app && adduser -S app -G app
 
 COPY --from=build /app/node_modules ./node_modules
@@ -31,4 +32,4 @@ COPY backend/package.json ./backend/
 
 USER app
 EXPOSE 3001
-CMD ["sh", "-c", "cd backend && npx prisma migrate deploy && cd .. && node backend/dist/index.js"]
+CMD ["node", "backend/dist/index.js"]

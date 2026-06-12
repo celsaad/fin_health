@@ -39,8 +39,8 @@ export async function getSummary(
   year: number,
   userCurrency: string,
 ): Promise<MonthlySummary> {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   const baseWhere = {
     userId,
@@ -81,8 +81,8 @@ export async function getMonthlyBreakdown(
   year: number,
   userCurrency: string,
 ): Promise<CategoryBreakdown[]> {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   const expenses = await prisma.transaction.groupBy({
     by: ['categoryId'],
@@ -133,8 +133,8 @@ export async function getYearlyOverview(
   year: number,
   userCurrency: string,
 ): Promise<MonthlyTotal[]> {
-  const startDate = new Date(year, 0, 1);
-  const endDate = new Date(year + 1, 0, 1);
+  const startDate = new Date(Date.UTC(year, 0, 1));
+  const endDate = new Date(Date.UTC(year + 1, 0, 1));
 
   const rows = await prisma.$queryRaw<Array<{ month: number; type: string; total: Decimal }>>`
     SELECT
@@ -207,8 +207,8 @@ export async function getCategoryBreakdown(
   year: number,
   userCurrency: string,
 ): Promise<CategorySpending[]> {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   const expenses = await prisma.transaction.groupBy({
     by: ['categoryId', 'subcategoryId'],
@@ -319,20 +319,28 @@ export async function getInsights(
   userId: string,
   month: number,
   year: number,
-  _userCurrency: string,
+  userCurrency: string,
 ): Promise<Insight[]> {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  const rate = userCurrency === 'USD' ? 1 : await getRatePerUsd(userCurrency);
+  const currencyFormatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: userCurrency,
+    maximumFractionDigits: 0,
+  });
+  const fmt = (n: number) => currencyFormatter.format(n);
+
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   // Previous month range
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
-  const prevStartDate = new Date(prevYear, prevMonth - 1, 1);
-  const prevEndDate = new Date(prevYear, prevMonth, 0, 23, 59, 59, 999);
+  const prevStartDate = new Date(Date.UTC(prevYear, prevMonth - 1, 1));
+  const prevEndDate = new Date(Date.UTC(prevYear, prevMonth, 0, 23, 59, 59, 999));
 
   // 3-month rolling window (the 3 months before current)
-  const rolling3Start = new Date(year, month - 4, 1);
-  const rolling3End = new Date(year, month - 1, 0, 23, 59, 59, 999);
+  const rolling3Start = new Date(Date.UTC(year, month - 4, 1));
+  const rolling3End = new Date(Date.UTC(year, month - 1, 0, 23, 59, 59, 999));
 
   const baseWhere = { userId, type: 'expense' as const, deletedAt: null };
 
@@ -378,8 +386,8 @@ export async function getInsights(
   });
   const categoryMap = new Map<string, string>(categories.map((c) => [c.id, c.name]));
 
-  // Build lookup maps
-  const toAmount = (d: Decimal | null) => parseFloat((d || new Decimal(0)).toString());
+  // Build lookup maps (converted from USD to the user's display currency)
+  const toAmount = (d: Decimal | null) => parseFloat((d || new Decimal(0)).toString()) * rate;
   const currentMap = new Map<string, number>(
     currentExpenses.map((e) => [e.categoryId, toAmount(e._sum.amountUsd)]),
   );
@@ -400,8 +408,8 @@ export async function getInsights(
   // 1. Spending pace
   const totalCurrentExpenses = [...currentMap.values()].reduce((s, v) => s + v, 0);
   const now = new Date();
-  const isCurrentMonth = month === now.getMonth() + 1 && year === now.getFullYear();
-  const daysInMonth = new Date(year, month, 0).getDate();
+  const isCurrentMonth = month === now.getUTCMonth() + 1 && year === now.getUTCFullYear();
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
   if (isCurrentMonth) {
     const daysElapsed = now.getDate();
@@ -414,7 +422,7 @@ export async function getInsights(
         insights.push({
           type: 'pace',
           title: 'Over-budget pace',
-          description: `At this pace, you'll spend $${Math.round(projected).toLocaleString()} — $${Math.round(diff).toLocaleString()} over your $${Math.round(overallBudget).toLocaleString()} budget.`,
+          description: `At this pace, you'll spend ${fmt(projected)} — ${fmt(diff)} over your ${fmt(overallBudget)} budget.`,
           sentiment: 'negative',
           metadata: {
             projected: Math.round(projected),
@@ -426,7 +434,7 @@ export async function getInsights(
         insights.push({
           type: 'pace',
           title: 'On track',
-          description: `Projected spending of $${Math.round(projected).toLocaleString()} is within your $${Math.round(overallBudget).toLocaleString()} budget.`,
+          description: `Projected spending of ${fmt(projected)} is within your ${fmt(overallBudget)} budget.`,
           sentiment: 'positive',
           metadata: { projected: Math.round(projected), budget: overallBudget },
         });
@@ -435,7 +443,7 @@ export async function getInsights(
       insights.push({
         type: 'pace',
         title: 'Spending pace',
-        description: `You've spent $${Math.round(totalCurrentExpenses).toLocaleString()} so far — on pace for $${Math.round(projected).toLocaleString()} this month.`,
+        description: `You've spent ${fmt(totalCurrentExpenses)} so far — on pace for ${fmt(projected)} this month.`,
         sentiment: 'neutral',
         metadata: { spent: Math.round(totalCurrentExpenses), projected: Math.round(projected) },
       });
@@ -444,7 +452,7 @@ export async function getInsights(
     insights.push({
       type: 'pace',
       title: 'Total spending',
-      description: `You spent $${Math.round(totalCurrentExpenses).toLocaleString()} this month.`,
+      description: `You spent ${fmt(totalCurrentExpenses)} this month.`,
       sentiment: 'neutral',
       metadata: { total: Math.round(totalCurrentExpenses) },
     });
@@ -506,7 +514,7 @@ export async function getInsights(
     insights.push({
       type: 'unusual',
       title: `Unusual spending in ${mostUnusual.name}`,
-      description: `$${Math.round(mostUnusual.current).toLocaleString()} vs $${Math.round(mostUnusual.avg).toLocaleString()} average — ${Math.round(mostUnusual.pct)}% above normal.`,
+      description: `${fmt(mostUnusual.current)} vs ${fmt(mostUnusual.avg)} average — ${Math.round(mostUnusual.pct)}% above normal.`,
       sentiment: 'warning',
       metadata: {
         category: mostUnusual.name,
@@ -521,7 +529,7 @@ export async function getInsights(
     insights.push({
       type: 'increase',
       title: `${biggestIncrease.name} is up`,
-      description: `Up $${Math.round(biggestIncrease.delta).toLocaleString()} compared to last month.`,
+      description: `Up ${fmt(biggestIncrease.delta)} compared to last month.`,
       sentiment: 'negative',
       metadata: { category: biggestIncrease.name, delta: Math.round(biggestIncrease.delta) },
     });
@@ -531,7 +539,7 @@ export async function getInsights(
     insights.push({
       type: 'decrease',
       title: `${biggestDecrease.name} is down`,
-      description: `Down $${Math.round(Math.abs(biggestDecrease.delta)).toLocaleString()} compared to last month.`,
+      description: `Down ${fmt(Math.abs(biggestDecrease.delta))} compared to last month.`,
       sentiment: 'positive',
       metadata: { category: biggestDecrease.name, delta: Math.round(biggestDecrease.delta) },
     });
@@ -546,8 +554,8 @@ export async function getTrend(
   userCurrency: string,
 ): Promise<TrendPoint[]> {
   const now = new Date();
-  const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
-  const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - months + 1, 1));
+  const endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
 
   const rows = await prisma.$queryRaw<
     Array<{ month: number; year: number; type: string; total: Decimal }>
@@ -597,9 +605,9 @@ export async function getTrend(
 
   const points: TrendPoint[] = [];
   for (let i = months - 1; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
+    const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    const month = date.getUTCMonth() + 1;
+    const year = date.getUTCFullYear();
     const key = `${year}-${month}`;
     const data = dataMap.get(key) || {
       income: new Decimal(0),

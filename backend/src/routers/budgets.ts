@@ -48,25 +48,54 @@ export const budgetsRouter = router({
       if (!category) throw new TRPCError({ code: 'NOT_FOUND', message: 'Category not found' });
     }
 
-    const budget = await prisma.budget.upsert({
-      where: {
-        userId_categoryId_month_year: {
+    let budget;
+    if (effectiveCategoryId) {
+      budget = await prisma.budget.upsert({
+        where: {
+          userId_categoryId_month_year: {
+            userId: ctx.userId,
+            categoryId: effectiveCategoryId,
+            month: effectiveMonth,
+            year: effectiveYear,
+          },
+        },
+        update: { amount, isRecurring: !!isRecurring },
+        create: {
+          amount,
+          month: effectiveMonth,
+          year: effectiveYear,
+          isRecurring: !!isRecurring,
+          categoryId: effectiveCategoryId,
           userId: ctx.userId,
-          categoryId: effectiveCategoryId ?? '',
+        },
+      });
+    } else {
+      const existing = await prisma.budget.findFirst({
+        where: {
+          userId: ctx.userId,
+          categoryId: null,
           month: effectiveMonth,
           year: effectiveYear,
         },
-      },
-      update: { amount, isRecurring: !!isRecurring },
-      create: {
-        amount,
-        month: effectiveMonth,
-        year: effectiveYear,
-        isRecurring: !!isRecurring,
-        categoryId: effectiveCategoryId,
-        userId: ctx.userId,
-      },
-    });
+      });
+      if (existing) {
+        budget = await prisma.budget.update({
+          where: { id: existing.id },
+          data: { amount, isRecurring: !!isRecurring },
+        });
+      } else {
+        budget = await prisma.budget.create({
+          data: {
+            amount,
+            month: effectiveMonth,
+            year: effectiveYear,
+            isRecurring: !!isRecurring,
+            categoryId: null,
+            userId: ctx.userId,
+          },
+        });
+      }
+    }
 
     return { budget: { ...budget, amount: Number(budget.amount) } };
   }),
@@ -84,25 +113,46 @@ export const budgetsRouter = router({
     const budgets = [];
 
     for (const prev of previousBudgets) {
-      const budget = await prisma.budget.upsert({
-        where: {
-          userId_categoryId_month_year: {
-            userId: ctx.userId,
-            categoryId: prev.categoryId ?? '',
+      let budget;
+      if (prev.categoryId) {
+        budget = await prisma.budget.upsert({
+          where: {
+            userId_categoryId_month_year: {
+              userId: ctx.userId,
+              categoryId: prev.categoryId,
+              month,
+              year,
+            },
+          },
+          update: {},
+          create: {
+            amount: prev.amount,
             month,
             year,
+            isRecurring: false,
+            categoryId: prev.categoryId,
+            userId: ctx.userId,
           },
-        },
-        update: {},
-        create: {
-          amount: prev.amount,
-          month,
-          year,
-          isRecurring: false,
-          categoryId: prev.categoryId,
-          userId: ctx.userId,
-        },
-      });
+        });
+      } else {
+        const existing = await prisma.budget.findFirst({
+          where: { userId: ctx.userId, categoryId: null, month, year },
+        });
+        if (existing) {
+          budget = existing;
+        } else {
+          budget = await prisma.budget.create({
+            data: {
+              amount: prev.amount,
+              month,
+              year,
+              isRecurring: false,
+              categoryId: null,
+              userId: ctx.userId,
+            },
+          });
+        }
+      }
       if (budget.createdAt.getTime() === budget.updatedAt.getTime()) copied++;
       budgets.push({ ...budget, amount: Number(budget.amount) });
     }

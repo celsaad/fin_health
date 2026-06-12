@@ -28,6 +28,9 @@ export async function generateRecurringTransactions(userId: string): Promise<num
 
   const allInserts: Array<{
     amount: (typeof templates)[number]['amount'];
+    amountUsd: (typeof templates)[number]['amount'];
+    exchangeRate: number;
+    currency: string;
     type: (typeof templates)[number]['type'];
     description: string;
     date: Date;
@@ -64,6 +67,9 @@ export async function generateRecurringTransactions(userId: string): Promise<num
 
       allInserts.push({
         amount: template.amount,
+        amountUsd: template.amount,
+        exchangeRate: 1,
+        currency: 'USD',
         type: template.type,
         description: template.description,
         date: nextDate,
