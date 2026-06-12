@@ -372,6 +372,27 @@
     "amountPositive": "O valor deve ser positivo",
     "confirmPassword": "Por favor, confirme sua senha"
   },
+  "toasts": {
+    "transactionCreated": "Transação criada com sucesso",
+    "transactionUpdated": "Transação atualizada com sucesso",
+    "transactionDeleted": "Transação excluída com sucesso",
+    "transactionsDeleted": "Transações excluídas com sucesso",
+    "transactionsExported": "Transações exportadas com sucesso",
+    "subcategoryCreated": "Subcategoria criada com sucesso",
+    "categoryRenamed": "Categoria renomeada com sucesso",
+    "subcategoryRenamed": "Subcategoria renomeada com sucesso",
+    "categoryDeleted": "Categoria excluída com sucesso",
+    "subcategoryDeleted": "Subcategoria excluída com sucesso",
+    "budgetSaved": "Orçamento salvo com sucesso",
+    "budgetDeleted": "Orçamento excluído com sucesso",
+    "budgetsCopied": "{{count}} orçamento(s) copiado(s) do mês passado",
+    "budgetsCopyNoResults": "Nenhum orçamento para copiar do mês passado",
+    "recurringCreated": "Transação recorrente criada",
+    "recurringUpdated": "Transação recorrente atualizada",
+    "recurringDeleted": "Transação recorrente excluída",
+    "recurringToggled": "Transação recorrente alternada",
+    "categoriesMerged": "Categorias mescladas com sucesso"
+  },
   "plan": {
     "upgradeTitle": "Upgrade para Pro",
     "upgradeDescription": "Este recurso está disponível no plano Pro. Faça upgrade para desbloquear insights e mais.",

@@ -20,7 +20,7 @@ describe('EditorialInsightCard', () => {
   });
 
   it('shows locked state with CTA when not pro', () => {
-    mockUsePlan.mockReturnValue({ isPro: false });
+    mockUsePlan.mockReturnValue({ isPro: false, isDisabled: false });
     mockUseInsights.mockReturnValue({ data: undefined, isLoading: false });
 
     render(<EditorialInsightCard month={3} year={2026} />);
@@ -30,7 +30,7 @@ describe('EditorialInsightCard', () => {
   });
 
   it('shows loading skeleton when pro and loading', () => {
-    mockUsePlan.mockReturnValue({ isPro: true });
+    mockUsePlan.mockReturnValue({ isPro: true, isDisabled: false });
     mockUseInsights.mockReturnValue({ data: undefined, isLoading: true });
 
     const { container } = render(<EditorialInsightCard month={3} year={2026} />);
@@ -41,7 +41,7 @@ describe('EditorialInsightCard', () => {
   });
 
   it('shows insight content when pro and data loaded', () => {
-    mockUsePlan.mockReturnValue({ isPro: true });
+    mockUsePlan.mockReturnValue({ isPro: true, isDisabled: false });
     mockUseInsights.mockReturnValue({
       data: [
         {
@@ -59,5 +59,14 @@ describe('EditorialInsightCard', () => {
     expect(screen.getByText('Great month!')).toBeInTheDocument();
     expect(screen.getByText('You are saving more.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /upgrade to pro/i })).not.toBeInTheDocument();
+  });
+
+  it('renders nothing when billing is disabled', () => {
+    mockUsePlan.mockReturnValue({ isPro: false, isDisabled: true });
+    mockUseInsights.mockReturnValue({ data: undefined, isLoading: false });
+
+    const { container } = render(<EditorialInsightCard month={3} year={2026} />);
+
+    expect(container.firstChild).toBeNull();
   });
 });

@@ -19,8 +19,10 @@ function getNextMonthName(month: number, year: number): string {
 
 export function EditorialInsightCard({ month, year, className }: EditorialInsightCardProps) {
   const { t } = useTranslation();
-  const { isPro } = usePlan();
+  const { isPro, isDisabled } = usePlan();
   const insights$ = useInsights(month, year, isPro);
+
+  if (isDisabled) return null;
 
   const nextMonthName = getNextMonthName(month, year);
 

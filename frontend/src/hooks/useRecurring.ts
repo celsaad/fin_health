@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import i18n from '@/lib/i18n';
 import { trpc } from '@/lib/trpc';
 import type { RecurringTransaction } from '@fin-health/shared/types';
 
@@ -32,7 +33,7 @@ export function useCreateRecurring() {
   return trpc.recurring.create.useMutation({
     onSuccess: () => {
       utils.recurring.list.invalidate();
-      toast.success('Recurring transaction created');
+      toast.success(i18n.t('toasts.recurringCreated'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -46,7 +47,7 @@ export function useUpdateRecurring() {
   return trpc.recurring.update.useMutation({
     onSuccess: () => {
       utils.recurring.list.invalidate();
-      toast.success('Recurring transaction updated');
+      toast.success(i18n.t('toasts.recurringUpdated'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -60,7 +61,7 @@ export function useDeleteRecurring() {
   return trpc.recurring.delete.useMutation({
     onSuccess: () => {
       utils.recurring.list.invalidate();
-      toast.success('Recurring transaction deleted');
+      toast.success(i18n.t('toasts.recurringDeleted'));
     },
     onError: (error) => {
       toast.error(error.message);
@@ -74,7 +75,7 @@ export function useToggleRecurring() {
   return trpc.recurring.toggle.useMutation({
     onSuccess: () => {
       utils.recurring.list.invalidate();
-      toast.success('Recurring transaction toggled');
+      toast.success(i18n.t('toasts.recurringToggled'));
     },
     onError: (error) => {
       toast.error(error.message);

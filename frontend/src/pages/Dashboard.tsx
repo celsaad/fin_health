@@ -11,9 +11,11 @@ import { RecentPeaks } from '@/components/dashboard/RecentPeaks';
 import { BudgetComplianceTable } from '@/components/dashboard/BudgetComplianceTable';
 import { useSummary, useCategoryBreakdown, useTrend, useRecentPeaks } from '@/hooks/useDashboard';
 import { useBudgets } from '@/hooks/useBudgets';
+import { usePlan } from '@/hooks/usePlan';
 
 export default function Dashboard() {
   const { t } = useTranslation();
+  const { isDisabled } = usePlan();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -28,7 +30,7 @@ export default function Dashboard() {
 
   const categoryBreakdown$ = useCategoryBreakdown(month, year);
   const trend$ = useTrend(6);
-  const { data: budgets } = useBudgets(month, year);
+  const { data: budgets, isError: budgetsError, refetch: refetchBudgets } = useBudgets(month, year);
   const recentPeaks$ = useRecentPeaks(month, year);
 
   // Derive month-over-month net change percentage
@@ -38,7 +40,12 @@ export default function Dashboard() {
   }, [summary$.data, prevSummary$.data]);
 
   const hasError =
-    summary$.isError || categoryBreakdown$.isError || trend$.isError || recentPeaks$.isError;
+    summary$.isError ||
+    categoryBreakdown$.isError ||
+    trend$.isError ||
+    recentPeaks$.isError ||
+    prevSummary$.isError ||
+    budgetsError;
 
   return (
     <div className="space-y-8">
@@ -59,9 +66,11 @@ export default function Dashboard() {
         <QueryError
           onRetry={() => {
             summary$.refetch();
+            prevSummary$.refetch();
             categoryBreakdown$.refetch();
             trend$.refetch();
             recentPeaks$.refetch();
+            refetchBudgets();
           }}
         />
       ) : (
@@ -79,16 +88,18 @@ export default function Dashboard() {
 
           {/* Row 2: Cash Flow Trend + Editorial Insight */}
           <section className="grid grid-cols-12 gap-8">
-            <div className="col-span-12 lg:col-span-8">
+            <div className={`col-span-12 ${isDisabled ? 'lg:col-span-12' : 'lg:col-span-8'}`}>
               {trend$.isLoading ? (
                 <CardSkeleton />
               ) : trend$.data ? (
                 <TrendChart trend={trend$.data} />
               ) : null}
             </div>
-            <div className="col-span-12 lg:col-span-4">
-              <EditorialInsightCard month={month} year={year} />
-            </div>
+            {!isDisabled && (
+              <div className="col-span-12 lg:col-span-4">
+                <EditorialInsightCard month={month} year={year} />
+              </div>
+            )}
           </section>
 
           {/* Row 3: Spending Allocation + Recent Peaks */}

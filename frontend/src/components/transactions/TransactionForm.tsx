@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import i18n from '@/lib/i18n';
+import { SUPPORTED_CURRENCIES, localeCurrency } from '@/lib/currency';
 import {
   Dialog,
   DialogContent,
@@ -33,20 +34,16 @@ import {
 import { format } from 'date-fns';
 import type { TransactionPrefillData } from '@fin-health/shared';
 
-const transactionSchema = z.object({
-  amount: z.coerce.number({ message: 'Amount is required' }).positive('Amount must be positive'),
-  type: z.enum(['expense', 'income'], {
-    required_error: 'Type is required',
-  }),
-  currency: z.string().length(3),
-  description: z.string().min(1, 'Description is required'),
-  date: z.string().min(1, 'Date is required'),
-  categoryName: z.string().min(1, 'Category is required'),
-  subcategoryName: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-type TransactionFormValues = z.infer<typeof transactionSchema>;
+interface TransactionFormValues {
+  amount: number;
+  type: 'expense' | 'income';
+  currency: string;
+  description: string;
+  date: string;
+  categoryName: string;
+  subcategoryName?: string;
+  notes?: string;
+}
 
 interface TransactionFormProps {
   open: boolean;
@@ -70,6 +67,29 @@ export function TransactionForm({
 
   const isEditing = !!transaction;
 
+  const transactionSchema = useMemo(
+    () =>
+      z.object({
+        amount: z.coerce
+          .number({ message: t('validation.required', { field: t('transactions.amount') }) })
+          .positive(t('validation.amountPositive')),
+        type: z.enum(['expense', 'income'], {
+          required_error: t('validation.required', { field: t('transactions.type') }),
+        }),
+        currency: z.string().length(3),
+        description: z
+          .string()
+          .min(1, t('validation.required', { field: t('transactions.description') })),
+        date: z.string().min(1, t('validation.required', { field: t('transactions.date') })),
+        categoryName: z
+          .string()
+          .min(1, t('validation.required', { field: t('transactions.categoryLabel') })),
+        subcategoryName: z.string().optional(),
+        notes: z.string().optional(),
+      }),
+    [t],
+  );
+
   const {
     register,
     handleSubmit,
@@ -83,7 +103,7 @@ export function TransactionForm({
     defaultValues: {
       amount: 0,
       type: 'expense',
-      currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
+      currency: localeCurrency(i18n.language),
       description: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       categoryName: '',
@@ -100,7 +120,7 @@ export function TransactionForm({
       reset({
         amount: transaction.amount,
         type: transaction.type,
-        currency: transaction.currency || (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
+        currency: transaction.currency || localeCurrency(i18n.language),
         description: transaction.description,
         date: format(new Date(transaction.date), 'yyyy-MM-dd'),
         categoryName: transaction.category.name,
@@ -122,7 +142,7 @@ export function TransactionForm({
       reset({
         amount: 0,
         type: 'expense',
-        currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
+        currency: localeCurrency(i18n.language),
         description: '',
         date: format(new Date(), 'yyyy-MM-dd'),
         categoryName: '',
@@ -202,10 +222,11 @@ export function TransactionForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="BRL">BRL</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
+                  {SUPPORTED_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>
+                      {currency}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

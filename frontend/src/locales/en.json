@@ -372,6 +372,27 @@
     "amountPositive": "Amount must be positive",
     "confirmPassword": "Please confirm your password"
   },
+  "toasts": {
+    "transactionCreated": "Transaction created successfully",
+    "transactionUpdated": "Transaction updated successfully",
+    "transactionDeleted": "Transaction deleted successfully",
+    "transactionsDeleted": "Transactions deleted successfully",
+    "transactionsExported": "Transactions exported successfully",
+    "subcategoryCreated": "Subcategory created successfully",
+    "categoryRenamed": "Category renamed successfully",
+    "subcategoryRenamed": "Subcategory renamed successfully",
+    "categoryDeleted": "Category deleted successfully",
+    "subcategoryDeleted": "Subcategory deleted successfully",
+    "budgetSaved": "Budget saved successfully",
+    "budgetDeleted": "Budget deleted successfully",
+    "budgetsCopied": "Copied {{count}} budget(s) from last month",
+    "budgetsCopyNoResults": "No budgets to copy from last month",
+    "recurringCreated": "Recurring transaction created",
+    "recurringUpdated": "Recurring transaction updated",
+    "recurringDeleted": "Recurring transaction deleted",
+    "recurringToggled": "Recurring transaction toggled",
+    "categoriesMerged": "Categories merged successfully"
+  },
   "plan": {
     "upgradeTitle": "Upgrade to Pro",
     "upgradeDescription": "This feature is available on the Pro plan. Upgrade to unlock insights and more.",

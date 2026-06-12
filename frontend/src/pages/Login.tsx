@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useMemo } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,19 +12,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-const loginSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
 export default function Login() {
   const { t } = useTranslation();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const loginSchema = useMemo(
+    () =>
+      z.object({
+        email: z.string().email(t('validation.invalidEmail')),
+        password: z.string().min(1, t('validation.required', { field: t('auth.password') })),
+      }),
+    [t],
+  );
 
   const {
     register,
@@ -38,7 +46,8 @@ export default function Login() {
     setIsSubmitting(true);
     try {
       await login(data.email, data.password);
-      navigate('/');
+      const from = (location.state as { from?: { pathname?: string } })?.from?.pathname ?? '/';
+      navigate(from);
     } catch (error: unknown) {
       toast.error(parseError(error).message);
     } finally {
@@ -78,12 +87,7 @@ export default function Login() {
             )}
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">{t('auth.password')}</Label>
-              <span className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                {t('auth.forgot')}
-              </span>
-            </div>
+            <Label htmlFor="password">{t('auth.password')}</Label>
             <div className="relative">
               <Input
                 id="password"

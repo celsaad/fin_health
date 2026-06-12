@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { env } from '@/lib/env';
+import { refreshTokens } from '@/lib/tokenRefresh';
 
 export { AppError, parseError } from '@fin-health/shared/errors';
 export type { ErrorCode } from '@fin-health/shared/errors';
@@ -34,14 +35,6 @@ api.interceptors.request.use(
 // Response interceptor — silent refresh on 401
 // ---------------------------------------------------------------------------
 
-let isRefreshing = false;
-let refreshSubscribers: Array<(token: string) => void> = [];
-
-function onTokenRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -60,38 +53,15 @@ api.interceptors.response.use(
 
     originalRequest._retry = true;
 
-    if (isRefreshing) {
-      return new Promise((resolve) => {
-        refreshSubscribers.push((newToken: string) => {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          resolve(api(originalRequest));
-        });
-      });
-    }
+    const newToken = await refreshTokens();
 
-    isRefreshing = true;
-
-    try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) throw new Error('No refresh token');
-
-      const { data } = await axios.post(`${env.VITE_API_URL}/auth/refresh`, { refreshToken });
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('refreshToken', data.refreshToken);
-
-      onTokenRefreshed(data.token);
-
-      originalRequest.headers.Authorization = `Bearer ${data.token}`;
-      return api(originalRequest);
-    } catch {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+    if (!newToken) {
       onAuthError?.();
       return Promise.reject(error);
-    } finally {
-      isRefreshing = false;
     }
+
+    originalRequest.headers.Authorization = `Bearer ${newToken}`;
+    return api(originalRequest);
   },
 );
 

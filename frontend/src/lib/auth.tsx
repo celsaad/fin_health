@@ -52,13 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (meQuery.data.featureFlags) setFeatureFlags(meQuery.data.featureFlags as FeatureFlags);
       setIsLoading(false);
     } else if (meQuery.isError) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      setHasToken(false);
-      setUser(null);
+      // Only log out on UNAUTHORIZED/FORBIDDEN errors; network errors don't touch localStorage
+      const errorCode = meQuery.error?.data?.code;
+      if (errorCode === 'UNAUTHORIZED' || errorCode === 'FORBIDDEN') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        setHasToken(false);
+        setUser(null);
+      }
       setIsLoading(false);
     }
-  }, [hasToken, meQuery.isSuccess, meQuery.isError, meQuery.data]);
+  }, [hasToken, meQuery.isSuccess, meQuery.isError, meQuery.data, meQuery.error]);
 
   // Register the refresh-failure handler so 401s go through React Router
   useEffect(() => {
@@ -68,6 +72,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       navigate('/login', { replace: true });
     });
     return () => setTRPCAuthFailure(null);
+  }, [navigate]);
+
+  // Listen for cross-tab logout via storage event
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'token' && event.newValue === null) {
+        setHasToken(false);
+        setUser(null);
+        navigate('/login', { replace: true });
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [navigate]);
 
   const login = useCallback(

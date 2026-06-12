@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/lib/i18n';
 import { useUserPreferences } from '@/contexts/UserPreferencesContext';
+import { localeCurrency } from '@/lib/currency';
 import { useSearchParams } from 'react-router-dom';
 import {
   LogOut,
@@ -111,9 +112,9 @@ export default function Settings() {
     i18n.changeLanguage(lang);
     localStorage.setItem('preferredLanguage', lang);
     setLanguage(lang);
-    const localeCurrency = lang.startsWith('pt') ? 'BRL' : 'USD';
-    saveAndBroadcastCurrency(localeCurrency);
-    api.patch('/auth/me', { currency: localeCurrency }).catch(() => {
+    const currency = localeCurrency(lang);
+    saveAndBroadcastCurrency(currency);
+    api.patch('/auth/me', { currency }).catch(() => {
       /* best-effort */
     });
     toast.success(t('settings.languageSaved'));

@@ -3,6 +3,7 @@ import { httpBatchLink } from '@trpc/client';
 import superjson from 'superjson';
 import type { AppRouter } from '@fin-health/backend/trpc';
 import { env } from '@/lib/env';
+import { refreshTokens } from '@/lib/tokenRefresh';
 
 export const trpc = createTRPCReact<AppRouter>();
 
@@ -11,28 +12,6 @@ let onAuthFailure: (() => void) | null = null;
 
 export function setTRPCAuthFailure(handler: (() => void) | null) {
   onAuthFailure = handler;
-}
-
-let isRefreshing = false;
-let refreshQueue: Array<(token: string | null) => void> = [];
-
-async function doRefresh(): Promise<string | null> {
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) return null;
-  try {
-    const res = await fetch(`${env.VITE_API_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    return data.token as string;
-  } catch {
-    return null;
-  }
 }
 
 async function authenticatedFetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -53,28 +32,15 @@ async function authenticatedFetch(url: RequestInfo | URL, init?: RequestInit): P
     return response;
   }
 
-  // Queue callers behind a single in-flight refresh
-  if (!isRefreshing) {
-    isRefreshing = true;
-    doRefresh().then((newToken) => {
-      const waiters = refreshQueue;
-      refreshQueue = [];
-      isRefreshing = false;
-      waiters.forEach((cb) => cb(newToken));
-      if (!newToken) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        onAuthFailure?.();
-      }
-    });
+  // Attempt to refresh tokens
+  const newToken = await refreshTokens();
+
+  if (!newToken) {
+    onAuthFailure?.();
+    return response;
   }
 
-  const newToken = await new Promise<string | null>((resolve) => {
-    refreshQueue.push(resolve);
-  });
-
-  if (!newToken) return response;
-
+  // Retry the request with the new token
   const retryHeaders = new Headers(init?.headers);
   retryHeaders.set('Authorization', `Bearer ${newToken}`);
   return fetch(url, { ...init, headers: retryHeaders });
