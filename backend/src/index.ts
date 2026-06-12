@@ -4,6 +4,7 @@ import app from './app';
 import prisma from './lib/prisma';
 import { logger } from './lib/logger';
 import { env } from './lib/env';
+import { cleanExpiredRefreshTokens } from './lib/refreshToken';
 
 const PORT = env.PORT;
 
@@ -52,3 +53,15 @@ setInterval(() => {
     'Heartbeat',
   );
 }, 60_000).unref();
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+cleanExpiredRefreshTokens().catch((err) => {
+  logger.error({ err }, 'Failed to clean expired refresh tokens');
+});
+
+setInterval(() => {
+  cleanExpiredRefreshTokens().catch((err) => {
+    logger.error({ err }, 'Failed to clean expired refresh tokens');
+  });
+}, ONE_DAY_MS).unref();

@@ -18,6 +18,30 @@ function cacheSlot(now = new Date()): string {
   return `${date}-${slot}`;
 }
 
+const MAX_CACHE_AGE_DAYS = 3;
+
+// Extracts the YYYY-MM-DD date portion from a cache key of the form
+// `CCY-YYYY-MM-DD-slot`.
+function keyDate(key: string): string {
+  const parts = key.split('-');
+  // parts: [CCY, YYYY, MM, DD, slot]
+  return parts.slice(1, 4).join('-');
+}
+
+// Removes cache entries whose date portion is older than MAX_CACHE_AGE_DAYS,
+// keeping the cache bounded in size over time.
+function evictStaleEntries(now = new Date()): void {
+  const cutoff = new Date(now);
+  cutoff.setUTCDate(cutoff.getUTCDate() - MAX_CACHE_AGE_DAYS);
+  const cutoffDate = cutoff.toISOString().slice(0, 10);
+
+  for (const key of rateCache.keys()) {
+    if (keyDate(key) < cutoffDate) {
+      rateCache.delete(key);
+    }
+  }
+}
+
 /**
  * Returns how many units of `currency` equal 1 USD.
  * e.g. getRatePerUsd('BRL') → 5.67 means 1 USD = 5.67 BRL
@@ -50,12 +74,21 @@ export function getRatePerUsd(currency: string): Promise<number> {
       if (!rate) throw new Error(`No rate in response for ${currency}`);
 
       rateCache.set(key, { ratePerUsd: rate });
+      evictStaleEntries();
       return rate;
     } catch (err) {
-      // For any failure (network, timeout, bad status) try stale cache before giving up
-      for (const [k, v] of rateCache) {
-        if (k.startsWith(`${currency}-`)) return v.ratePerUsd;
+      // For any failure (network, timeout, bad status) try stale cache before
+      // giving up, preferring the newest cached entry for this currency
+      // (cache keys are `CCY-YYYY-MM-DD-slot`, so the lexicographically
+      // greatest key is the most recent).
+      let newestKey: string | undefined;
+      for (const k of rateCache.keys()) {
+        if (k.startsWith(`${currency}-`) && (!newestKey || k > newestKey)) {
+          newestKey = k;
+        }
       }
+      if (newestKey) return rateCache.get(newestKey)!.ratePerUsd;
+
       throw new Error(
         `Exchange rate unavailable for ${currency}: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -82,3 +115,20 @@ export async function fromUsd(amountUsd: number, currency: string): Promise<numb
   const rate = await getRatePerUsd(currency);
   return amountUsd * rate;
 }
+
+/**
+ * Test-only helpers for inspecting/seeding the module-level rate cache
+ * without making real HTTP requests.
+ */
+export const __testing = {
+  setCacheEntry(key: string, ratePerUsd: number): void {
+    rateCache.set(key, { ratePerUsd });
+  },
+  hasCacheEntry(key: string): boolean {
+    return rateCache.has(key);
+  },
+  clearCache(): void {
+    rateCache.clear();
+  },
+  evictStaleEntries,
+};

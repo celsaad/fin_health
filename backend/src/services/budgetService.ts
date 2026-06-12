@@ -47,8 +47,8 @@ export async function getBudgetsWithSpent(
   const mergedBudgets = Array.from(budgetMap.values());
 
   // Calculate the date range for the month
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   // Get expense totals grouped by category for the month
   const expenses = await prisma.transaction.groupBy({

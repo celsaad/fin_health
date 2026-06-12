@@ -24,6 +24,12 @@ function featureFlags(): FeatureFlags {
   return { billing: env.BILLING_ENABLED };
 }
 
+// Precomputed bcrypt hash (cost 12) of an arbitrary password, used to run a
+// dummy comparePassword when the user isn't found. This keeps the timing of
+// the "user not found" and "wrong password" paths similar, so login can't be
+// used to enumerate registered emails via response-time differences.
+const DUMMY_PASSWORD_HASH = '$2a$12$CfUTOlSQL9VVw5YZXc089eirpN4rBkPQEU0oTxrBd60DtuRYUFjje';
+
 function derivePlan(subscription: Subscription | null | undefined): UserPlan {
   if (!subscription) return FREE_PLAN;
   return {
@@ -77,6 +83,9 @@ export const authRouter = router({
       include: { subscription: true },
     });
     if (!user) {
+      // Run a dummy comparison so the response time matches the
+      // "wrong password" path and doesn't leak whether the email exists.
+      await comparePassword(password, DUMMY_PASSWORD_HASH);
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
     }
 
