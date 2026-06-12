@@ -44,6 +44,7 @@ export const recurringRouter = router({
   create: protectedProcedure.input(createRecurringSchema).mutation(async ({ ctx, input }) => {
     const {
       amount,
+      currency,
       type,
       description,
       frequency,
@@ -64,6 +65,7 @@ export const recurringRouter = router({
     const template = await prisma.recurringTransaction.create({
       data: {
         amount,
+        currency: currency.toUpperCase(),
         type,
         description,
         frequency,
@@ -86,6 +88,7 @@ export const recurringRouter = router({
       const {
         id,
         amount,
+        currency,
         type,
         description,
         frequency,
@@ -104,6 +107,7 @@ export const recurringRouter = router({
 
       const updateData: Record<string, unknown> = {};
       if (amount !== undefined) updateData.amount = amount;
+      if (currency !== undefined) updateData.currency = currency.toUpperCase();
       if (type !== undefined) updateData.type = type;
       if (description !== undefined) updateData.description = description;
       if (frequency !== undefined) updateData.frequency = frequency;

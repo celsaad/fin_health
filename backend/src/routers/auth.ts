@@ -211,6 +211,7 @@ export const authRouter = router({
           select: {
             id: true,
             amount: true,
+            currency: true,
             type: true,
             description: true,
             frequency: true,

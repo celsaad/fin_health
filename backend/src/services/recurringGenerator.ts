@@ -1,5 +1,7 @@
 import { addWeeks, addMonths, addYears, isBefore, isAfter, startOfDay } from 'date-fns';
 import prisma from '../lib/prisma';
+import { toUsd } from './exchangeRate';
+import { logger } from '../lib/logger';
 
 function getNextDate(current: Date, frequency: string): Date {
   switch (frequency) {
@@ -28,7 +30,7 @@ export async function generateRecurringTransactions(userId: string): Promise<num
 
   const allInserts: Array<{
     amount: (typeof templates)[number]['amount'];
-    amountUsd: (typeof templates)[number]['amount'];
+    amountUsd: number;
     exchangeRate: number;
     currency: string;
     type: (typeof templates)[number]['type'];
@@ -46,6 +48,26 @@ export async function generateRecurringTransactions(userId: string): Promise<num
     // Skip if endDate has passed
     if (template.endDate && isBefore(startOfDay(template.endDate), today)) {
       continue;
+    }
+
+    // Resolve currency conversion once per template (generation-time rate).
+    let amountUsd: number;
+    let exchangeRate: number;
+    if (template.currency === 'USD') {
+      amountUsd = Number(template.amount);
+      exchangeRate = 1;
+    } else {
+      try {
+        const converted = await toUsd(Number(template.amount), template.currency);
+        amountUsd = converted.amountUsd;
+        exchangeRate = converted.exchangeRate;
+      } catch (err) {
+        logger.error(
+          { err, templateId: template.id },
+          'Failed to resolve exchange rate for recurring template; skipping',
+        );
+        continue;
+      }
     }
 
     // Determine start point for generation
@@ -67,9 +89,9 @@ export async function generateRecurringTransactions(userId: string): Promise<num
 
       allInserts.push({
         amount: template.amount,
-        amountUsd: template.amount,
-        exchangeRate: 1,
-        currency: 'USD',
+        amountUsd,
+        exchangeRate,
+        currency: template.currency,
         type: template.type,
         description: template.description,
         date: nextDate,

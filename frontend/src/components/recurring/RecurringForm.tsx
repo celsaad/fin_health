@@ -86,8 +86,7 @@ export function RecurringForm({ open, onOpenChange, editingTransaction }: Recurr
       reset({
         amount: editingTransaction.amount,
         type: editingTransaction.type as 'expense' | 'income',
-        currency:
-          (editingTransaction as any).currency || (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
+        currency: editingTransaction.currency || (i18n.language.startsWith('pt') ? 'BRL' : 'USD'),
         description: editingTransaction.description,
         frequency: editingTransaction.frequency as 'weekly' | 'biweekly' | 'monthly' | 'yearly',
         startDate: format(new Date(editingTransaction.startDate), 'yyyy-MM-dd'),

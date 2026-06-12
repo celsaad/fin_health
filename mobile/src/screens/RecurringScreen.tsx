@@ -18,6 +18,7 @@ import { createRecurringSchema } from '@fin-health/shared/validators';
 import { X } from 'lucide-react-native';
 import { format } from 'date-fns';
 import Toast from 'react-native-toast-message';
+import i18n from '../lib/i18n';
 import { useTheme } from '../contexts/ThemeContext';
 import {
   getRecurringTransactions,
@@ -38,7 +39,7 @@ import { FontSize, Spacing } from '../constants/theme';
 
 export default function RecurringScreen() {
   const { colors } = useTheme();
-  const { formatCurrency } = useFormatters();
+  const { formatWithCurrency } = useFormatters();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState(0); // 0 = Active, 1 = Paused
   const [showAdd, setShowAdd] = useState(false);
@@ -121,7 +122,7 @@ export default function RecurringScreen() {
                   </View>
                   <View style={styles.itemRight}>
                     <Text style={[styles.itemAmount, { color: colors.text }]}>
-                      {formatCurrency(item.amount)}
+                      {formatWithCurrency(item.amount, item.currency ?? 'USD')}
                     </Text>
                     <Switch
                       value={item.isActive}
@@ -162,6 +163,7 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
     defaultValues: {
       amount: '',
       type: 'expense' as const,
+      currency: i18n.language.startsWith('pt') ? 'BRL' : 'USD',
       description: '',
       frequency: 'monthly' as const,
       startDate: format(new Date(), 'yyyy-MM-dd'),
@@ -241,6 +243,21 @@ function AddRecurringModal({ visible, onClose }: { visible: boolean; onClose: ()
                 onSelect={(i) => setValue('type', i === 0 ? 'expense' : 'income')}
               />
             </View>
+
+            <Controller
+              control={control}
+              name="currency"
+              render={({ field: { onChange, value } }) => (
+                <View style={{ marginBottom: 16 }}>
+                  <Text style={[styles.label, { color: colors.text }]}>Currency</Text>
+                  <SegmentedControl
+                    options={['BRL', 'USD', 'EUR']}
+                    selectedIndex={Math.max(['BRL', 'USD', 'EUR'].indexOf(value ?? 'USD'), 0)}
+                    onSelect={(i) => onChange(['BRL', 'USD', 'EUR'][i])}
+                  />
+                </View>
+              )}
+            />
 
             <View style={{ marginBottom: 16 }}>
               <Text style={[styles.label, { color: colors.text, marginBottom: 8 }]}>Frequency</Text>

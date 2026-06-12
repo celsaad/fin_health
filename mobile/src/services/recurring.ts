@@ -6,6 +6,7 @@ export async function getRecurringTransactions() {
 
 export async function createRecurring(body: {
   amount: string;
+  currency?: string;
   type: string;
   description: string;
   frequency: string;
@@ -17,6 +18,7 @@ export async function createRecurring(body: {
 }) {
   const result = await trpcClient.recurring.create.mutate({
     amount: body.amount,
+    currency: body.currency,
     type: body.type as 'expense' | 'income',
     description: body.description,
     frequency: body.frequency as 'weekly' | 'biweekly' | 'monthly' | 'yearly',
@@ -33,6 +35,7 @@ export async function updateRecurring(
   id: string,
   body: Partial<{
     amount: string;
+    currency: string;
     type: string;
     description: string;
     frequency: string;

@@ -106,6 +106,7 @@ export interface Budget {
 export interface RecurringTransaction {
   id: string;
   amount: number;
+  currency: string;
   type: string;
   description: string;
   frequency: string;
