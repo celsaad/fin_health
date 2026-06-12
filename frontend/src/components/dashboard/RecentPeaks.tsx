@@ -27,7 +27,7 @@ function SkeletonRow() {
 
 export function RecentPeaks({ transactions, isLoading, className }: RecentPeaksProps) {
   const { t } = useTranslation();
-  const { formatCurrency } = useFormatters();
+  const { formatWithCurrency } = useFormatters();
 
   return (
     <Card className={className}>
@@ -74,7 +74,7 @@ export function RecentPeaks({ transactions, isLoading, className }: RecentPeaksP
                       </p>
                     </div>
                     <span className="shrink-0 text-sm font-bold text-destructive">
-                      -{formatCurrency(tx.amount)}
+                      -{formatWithCurrency(tx.amount, tx.currency ?? 'USD')}
                     </span>
                   </li>
                 );
